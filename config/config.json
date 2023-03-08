@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "bangkar",
+    "database": "exapro_mutif_02052021_produksi",
+    "host": "192.168.7.121",
+    "dialect": "postgres",
+    "port": "5432"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
