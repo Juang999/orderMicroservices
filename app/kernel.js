@@ -1,5 +1,5 @@
 const kernel = {
-    testMiddleware: require('./Middleware/testMiddleware')
+    authenticate: require('./Middleware/authenticate')
 }
 
 module.exports = kernel
