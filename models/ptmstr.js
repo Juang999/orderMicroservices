@@ -11,12 +11,22 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PtMstr.belongsTo(models.EnMstr, {
+        as: "EnMstr",
+        foreignKey: 'pt_en_id',
+        targetKey: "en_id"
+      })
     }
   }
   PtMstr.init({
-    pt_oid: DataTypes.UUID,
+    pt_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     pt_dom_id: DataTypes.INTEGER,
-    pt_en_id: DataTypes.INTEGER,
+    pt_en_id: {
+      type: DataTypes.INTEGER,
+    },
     pt_add_by: DataTypes.STRING,
     pt_add_date: DataTypes.DATE,
     pt_upd_by: DataTypes.STRING,

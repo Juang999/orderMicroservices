@@ -11,6 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      EnMstr.hasMany(models.PtMstr, {
+        as: 'PtMstr',
+        foreignKey: {
+          name: 'pt_en_id',
+          keyType: DataTypes.INTEGER
+        },
+        
+      })
     }
   }
   EnMstr.init({
@@ -25,8 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     en_upd_date: DataTypes.STRING,
     en_id: {
       type: DataTypes.INTEGER,
-      unique: true,
-      
+      unique: true
     },
     en_code: DataTypes.STRING,
     en_desc: DataTypes.STRING,
