@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       PtMstr.belongsTo(models.EnMstr, {
         as: "EnMstr",
         foreignKey: 'pt_en_id',
-        targetKey: "en_id"
+        targetKey: "en_id",
       })
     }
   }
