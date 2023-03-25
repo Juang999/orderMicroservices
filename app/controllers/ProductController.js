@@ -46,9 +46,9 @@ const ProductController = {
         })
     },
     show: (req, res) => {
-        PtMstr.findOne({
+        PtMstr.findAll({
             where: {
-                pt_id: req.params.pt_id
+                pt_desc2: req.params.pt_desc2
             },
             include: [
                 {
@@ -57,8 +57,13 @@ const ProductController = {
                     attributes: ['en_desc']
                 }
             ],
-            attributes: ['pt_id', 'pt_clothes_id']
-        }).then(result => {
+            attributes: ['pt_id', 'pt_desc2', 'pt_clothes_id', 'pt_size_code_id', 'pt_code_color_id']
+        }).then( async result => {
+            let color_id = []
+            result.forEach(element => {
+                color_id.push(element.pt_code_color_id)
+            });
+
             res.status(200)
                 .json({
                     status: "berhasil",

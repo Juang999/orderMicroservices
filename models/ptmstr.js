@@ -16,6 +16,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'pt_en_id',
         targetKey: "en_id",
       })
+
+      PtMstr.hasMany(models.InvcMstr, {
+        as: "Qty",
+        foreignKey: {
+          name: "invc_pt_id",
+          keyType: DataTypes.INTEGER
+        }
+      })
     }
   }
   PtMstr.init({
