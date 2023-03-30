@@ -11,10 +11,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PiddDet.belongsTo(models.CodeMstr, {
+        as: "PaymentType",
+        foreignKey: "pidd_payment_type",
+        targetKey: "code_id"
+      })
     }
   }
   PiddDet.init({
-    pidd_oid: DataTypes.UUID,
+    pidd_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     pidd_add_by: DataTypes.STRING,
     pidd_add_date: DataTypes.DATE,
     pidd_upd_date: DataTypes.DATE,

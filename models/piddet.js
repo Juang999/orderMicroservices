@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   PidDet.init({
-    pid_oid: DataTypes.UUID,
+    pid_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     pid_add_by: DataTypes.STRING,
     pid_add_date: DataTypes.DATE,
     pid_upd_date: DataTypes.DATE,

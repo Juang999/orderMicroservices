@@ -11,6 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      CodeMstr.hasMany(models.PiddDet, {
+        as: 'PiddDet',
+        foreignKey: {
+          name: 'pidd_payment_type',
+          keyType: DataTypes.INTEGER
+        }
+      })
     }
   }
   CodeMstr.init({
