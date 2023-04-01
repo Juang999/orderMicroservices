@@ -1,6 +1,8 @@
 const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
+const cryptr = require('cryptr')
+const crypter = new cryptr('thisIsSecretPassword')
 
 const ProductController = {
     index: async (req, res) => {
@@ -22,7 +24,6 @@ const ProductController = {
             }]
         })
         .then(result => {
-            console.log(result)
             let data = {
                 data: result,
                 totalData: limit,
@@ -37,8 +38,6 @@ const ProductController = {
                 })
         })
         .catch(err => {
-            console.log(err)
-            console.log(err.original)
             res.status(400)
                 .json({
                     status: "gagal",
@@ -97,7 +96,6 @@ const ProductController = {
         })
     },
     showSize: (req, res) => {
-        console.log(req.params)
         CodeMstr.findAll({
             where: {
                 code_id: {
@@ -172,8 +170,6 @@ const ProductController = {
             } else {
                 stock = 0
             }
-
-            console.log(stock)
 
             let data  = {
                 price: price,

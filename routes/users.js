@@ -2,13 +2,14 @@ var express = require('express');
 var router = express.Router();
 const AuthController = require("../app/controllers/AuthController");
 const {body} = require('express-validator')
+const middleware = require('../app/kernel')
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+const route = [
+  '/login', //0
+  '/profile' //1
+]
 
-router.post('/login', AuthController.login)
-router.post('/authenticate', AuthController.authenticate)
+router.post(route[0], AuthController.login)
+router.get(route[1], [middleware.authenticate], AuthController.profile)
 
 module.exports = router;

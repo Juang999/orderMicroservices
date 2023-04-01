@@ -1,11 +1,10 @@
 require('dotenv').config()
-const {TConfUser} = require("../../models")
-const encryptpwd = require('encrypt-with-password')
-let text = 'topSecretPassword'
+const {TConfUser, TConfGroup} = require("../../models")
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 const CryptoJS = require('crypto-js')
 const jwt = require('jsonwebtoken')
+const helper = require('../../helper/helper')
 
 const AuthController = {
     login: (req, res) => {
@@ -58,7 +57,7 @@ const AuthController = {
     },
     authenticate: async (req, res) => {
         try {
-            if (!req.body.secret_key) {
+            if (!req.body) {
                 res.status(300)
                     .json({
                         result: "forbidden",
@@ -69,19 +68,9 @@ const AuthController = {
                 return
             }
 
-            let secretKey = CryptoJS.AES.decrypt(req.body.secret_key, 'key').toString(CryptoJS.enc.Utf8)
+            let token = req.body.token && req.body.token.split(" ")[1]
 
-            if (secretKey != 'Aggregation Microservice') {
-                res.status(300)
-                    .json({
-                        result: "forbidden",
-                        message: "forbidden"
-                    })
-                
-                return
-            }
-
-            jwt.verify(req.body.accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
                 if(err) {
                     res.sendStatus(400)
                     return
@@ -126,6 +115,37 @@ const AuthController = {
                     message: "error, please report to customer service"
                 })
         }
+    },
+    profile: async (req, res) => {
+        helper.auth(req.get('authorization'))
+        .then(async result => {
+            let dataGroup = await TConfGroup.findOne({
+                where: {
+                    groupid: result.groupid
+                },
+                attributes: ["groupnama"]
+            })
+
+            let data = {
+                usernama: result.usernama,
+                group: dataGroup.groupnama
+            }
+
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data profile",
+                    data: data
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data profile",
+                    err: err.message
+                })
+        })
     }
 }
 

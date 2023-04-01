@@ -10,10 +10,10 @@ const route = [
     '/product/:product/color/:pt_code_color_id/size/:pt_size_code_id/price/:pi_oid/entity/:en_id' //3
 ]
 
-router.get(route[0], controller.ProductController.index)
-router.get(route[1], controller.ProductController.show)
-router.get(route[2], controller.ProductController.showSize)
-router.get(route[3], controller.ProductController.showPrinceAndQty)
+router.get(route[0], [middleware.authenticate], controller.ProductController.index)
+router.get(route[1], [middleware.authenticate], controller.ProductController.show)
+router.get(route[2], [middleware.authenticate], controller.ProductController.showSize)
+router.get(route[3], [middleware.authenticate], controller.ProductController.showPrinceAndQty)
 
 
 module.exports = router

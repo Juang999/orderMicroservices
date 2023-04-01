@@ -11,6 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      TConfUser.belongsTo(models.TConfGroup, {
+        as: "group",
+        foreignKey: {
+          name: "groupid"
+        },
+        targetKey: "groupid"
+      })
     }
   }
   TConfUser.init({
