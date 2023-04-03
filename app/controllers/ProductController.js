@@ -69,7 +69,7 @@ const ProductController = {
             let colorData = await CodeMstr.findAll({
                 where: {
                     code_id: {
-                        [Op.in]: [colorId]
+                        [Op.in]: colorId
                     }
                 },
                 attributes: ['code_id', 'code_name']
