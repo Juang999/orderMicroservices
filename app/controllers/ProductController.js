@@ -96,42 +96,30 @@ const ProductController = {
         })
     },
     showSize: async (req, res) => {
-        try {
-            let size = await CodeMstr.findAll({
-                    where: {
-                        code_id: {
-                            [Op.in]: sequelize.literal(`(SELECT pt_size_code_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
-                        }
-                    },
-                    attributes: ['code_id', 'code_name']
-                })
-
-            let grade = await PtMstr.findAll({
-                where: {
-                    pt_desc2: req.params.product
-                },
-                attributes: [sequelize.literal(`DISTINCT 'pt_class'`), 'pt_class']
-            })
-
-            let result = {
-                size: size,
-                grade: grade
-            }
-        
-                res.status(200)
+        CodeMstr.findAll({
+            where: {
+                code_id: {
+                    [Op.in]: sequelize.literal(`(SELECT pt_size_code_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
+                }
+            },
+            attributes: ['code_id', 'code_name']
+        })
+        .then(result => {
+            res.status(200)
                 .json({
                     status: "success",
-                    message: "success to get size",
+                    message: "berhasil mengambil data",
                     data: result
                 })
-        } catch (error) {
+        })
+        .catch(err => {
             res.status(400)
-            .json({
-                status: "failed",
-                message: "failed to get size",
-                error: error.message
-            })
-        }
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
     },
     showGrade: (req, res) => {
         PtMstr.findAll({
