@@ -6,45 +6,67 @@ const crypter = new cryptr('thisIsSecretPassword')
 
 const ProductController = {
     index: async (req, res) => {
-        let offset = req.query.page * 10 - 10
-        let limit = 10
+        try {
+            let offset = req.query.page * 10 - 10
+            let limit = 10
 
-        PtMstr.findAll({
-            limit: limit,
-            offset: offset,
-            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-            order: [['pt_add_date', 'desc']],
-            where: {
-                pt_pl_id: 1
-            },
-            include: [{
-                model: EnMstr,
-                as: 'EnMstr',
-                attributes: ['en_desc']
-            }]
-        })
-        .then(result => {
-            let data = {
-                data: result,
+            var data
+    
+            if (req.query.query) {
+                data = await PtMstr.findAll({
+                            limit: limit,
+                            offset: offset,
+                            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+                            order: [['pt_add_date', 'desc']],
+                            where: {
+                                pt_pl_id: 1,
+                                pt_desc2: {
+                                    [Op.like]: `%${req.query.query}%`
+                                }
+                            },
+                            include: [{
+                                model: EnMstr,
+                                as: 'EnMstr',
+                                attributes: ['en_desc']
+                            }]
+                        })    
+            } else {
+            data = await PtMstr.findAll({
+                            limit: limit,
+                            offset: offset,
+                            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+                            order: [['pt_add_date', 'desc']],
+                            where: {
+                                pt_pl_id: 1
+                            },
+                            include: [{
+                                model: EnMstr,
+                                as: 'EnMstr',
+                                attributes: ['en_desc']
+                            }]
+                        })
+            }
+    
+            let result = {
+                data: data,
                 totalData: limit,
                 page: req.query.page
             }
-
+    
             res.status(200)
                 .json({
                     status: "berhasil",
                     message: "berhasil mengambil data",
-                    data: data
+                    data: result
                 })
-        })
-        .catch(err => {
+        } catch (error) {
             res.status(400)
                 .json({
-                    status: "gagal",
+                    status: "failed",
                     message: "gagal mengambil data",
-                    error: err.message
+                    error: error.message
                 })
-        })
+        }
     },
     show: (req, res) => {
         PtMstr.findAll({
@@ -162,6 +184,8 @@ const ProductController = {
                 },
                 attributes: ['pt_id']
             })
+
+            console.info(product)
 
             let query = [
                 `(SELECT pid_oid FROM public.pid_det WHERE pid_pi_oid = '${req.params.pi_oid}' and pid_pt_id = ${product.pt_id})`
