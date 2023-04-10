@@ -24,6 +24,14 @@ module.exports = (sequelize, DataTypes) => {
           keyType: DataTypes.INTEGER
         }
       })
+
+      PtMstr.belongsTo(models.CodeMstr, {
+        as: "category",
+        foreignKey: {
+          name: "pt_group"
+        },
+        targetKey: "code_id"
+      })
     }
   }
   PtMstr.init({

@@ -18,6 +18,13 @@ module.exports = (sequelize, DataTypes) => {
           keyType: DataTypes.INTEGER
         }
       })
+
+      CodeMstr.hasMany(models.PtMstr, {
+        as: "category",
+        foreignKey: {
+          name: "pt_group"
+        }
+      })
     }
   }
   CodeMstr.init({

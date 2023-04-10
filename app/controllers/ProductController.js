@@ -245,6 +245,72 @@ const ProductController = {
                     error: error.message
                 })
         }
+    },
+    getCategory: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_id: {
+                    [Op.in]: [99288,991296,991295,991294,991292,991289,991288,991297,991293,991290,991291,991299]
+                }
+            },
+            attributes: ["code_id", "code_name"]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "failed to get data",
+                    error: err.message
+                })
+        })
+    },
+    getProductWithCategory: (req, res) => {
+        let page = (req.query.page) ? req.query.page : 1
+        let offset = page * 10 - 10
+        let limit = 10
+        
+        PtMstr.findAll({
+            where: {
+                pt_group: req.params.category_id
+            },
+            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+            include: [
+                {
+                    model: CodeMstr,
+                    as: "category",
+                    attributes: ["code_name"]
+                }
+            ],
+            limit: limit,
+            offset: offset
+        }).then(result => {
+            let data = {
+                theData: result,
+
+                page: page,
+                data: 10
+            }
+
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: data
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    messgae: "gagal mengambil data",
+                    error: err.message
+                })
+        })
     }
 }
 
