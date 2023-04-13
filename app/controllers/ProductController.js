@@ -1,4 +1,4 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 const cryptr = require('cryptr')
@@ -117,11 +117,11 @@ const ProductController = {
             })
         })
     },
-    showSize: async (req, res) => {
+    showSize: (req, res) => {
         CodeMstr.findAll({
             where: {
                 code_id: {
-                    [Op.in]: sequelize.literal(`(SELECT pt_size_code_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
+                    [Op.in]: sequelize.literal(`(SELECT pt_size_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
                 }
             },
             attributes: ['code_id', 'code_name']
@@ -185,8 +185,6 @@ const ProductController = {
                 attributes: ['pt_id']
             })
 
-            console.info(product)
-
             let query = [
                 `(SELECT pid_oid FROM public.pid_det WHERE pid_pi_oid = '${req.params.pi_oid}' and pid_pt_id = ${product.pt_id})`
             ]
@@ -247,13 +245,8 @@ const ProductController = {
         }
     },
     getCategory: (req, res) => {
-        CodeMstr.findAll({
-            where: {
-                code_id: {
-                    [Op.in]: [99288,991296,991295,991294,991292,991289,991288,991297,991293,991290,991291,991299]
-                }
-            },
-            attributes: ["code_id", "code_name"]
+        PtCatMstr.findAll({
+            attributes: ['ptcat_id', 'ptcat_desc']
         }).then(result => {
             res.status(200)
                 .json({
@@ -265,7 +258,49 @@ const ProductController = {
             res.status(400)
                 .json({
                     status: "failed",
-                    message: "failed to get data",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getSubCategory: (req, res) => {
+        console.log(req.params.cat_id)
+        PtsCatCat.findAll({
+            attributes: ["ptscat_id", "ptscat_desc"],
+            where: {
+                ptscat_ptcat_id: req.params.cat_id
+            }
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getSize: (req, res) => {
+        SizeMstr.findAll({
+            attributes: ["size_id", "size_code", "size_name", "size_desc"]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
                     error: err.message
                 })
         })

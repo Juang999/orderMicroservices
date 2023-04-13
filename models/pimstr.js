@@ -14,7 +14,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   PiMstr.init({
-    pi_oid: DataTypes.UUID,
+    pi_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      allowNull: false
+    },
     pi_dom_id: DataTypes.INTEGER,
     pi_en_id: DataTypes.INTEGER,
     pi_add_by: DataTypes.STRING,

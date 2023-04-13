@@ -5,12 +5,18 @@ const crypter = new cryptr('thisIsSecretPassword')
 const CryptoJS = require('crypto-js')
 const jwt = require('jsonwebtoken')
 const helper = require('../../helper/helper')
+const {Sequelize, Op} = require('sequelize')
 
 const AuthController = {
     login: (req, res) => {
         TConfUser.findOne({
             where: {
-                usernama: req.body.username
+                usernama: req.body.username,
+                password: req.body.password,
+                user_ptnr_id: {
+                    [Op.not]: null,
+                    [Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')`)
+                }
             },
             attributes: ['userid', 'usernama', 'password']
         }).then(async result => {
@@ -21,16 +27,6 @@ const AuthController = {
                         message: "gagal login"
                     })
                 
-                return
-            }
-            
-            if (req.body.password != result.password) {
-                res.status(400)
-                    .json({
-                        status: "ditolak",
-                        message: "gagal login"
-                    })
-
                 return
             }
 
