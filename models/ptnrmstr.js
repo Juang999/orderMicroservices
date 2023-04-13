@@ -10,7 +10,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      PtnrMstr.hasMany(models.PlansdDet, {
+        as: "plan_has_customer",
+        foreignKey: {
+          name: "plansd_ptnr_id"
+        }
+      })
     }
   }
   PtnrMstr.init({

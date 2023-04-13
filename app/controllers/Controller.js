@@ -4,7 +4,8 @@ const Controller = {
     CodeController: require('./CodeController'),
     PriceController: require('./PriceController'),
     MasterController: require('./MasterController'),
-    PartnerController: require('./PartnerController')
+    PartnerController: require('./PartnerController'),
+    PlanController: require('./PlanController')
 }
 
 module.exports = Controller
