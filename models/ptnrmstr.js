@@ -16,6 +16,13 @@ module.exports = (sequelize, DataTypes) => {
           name: "plansd_ptnr_id"
         }
       })
+
+      PtnrMstr.hasMany(models.PtnraAddr, {
+        as: "address_partner",
+        foreignKey: {
+          name: "ptnra_ptnr_oid"
+        }
+      })
     }
   }
   PtnrMstr.init({

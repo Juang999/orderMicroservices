@@ -10,6 +10,10 @@ const crypter = new cryptr('thisIsSecretPassword')
 const auth = async (token) => {
     let splittedToken = token && token.split(" ")[1]
 
+    if (!splittedToken) {
+        return
+    }
+
     let dataProfile = await jwt.verify(splittedToken, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if (err) {
             return

@@ -10,8 +10,6 @@ const ProductController = {
             let offset = req.query.page * 10 - 10
             let limit = 10
 
-            var data
-    
             if (req.query.query) {
                 data = await PtMstr.findAll({
                             limit: limit,

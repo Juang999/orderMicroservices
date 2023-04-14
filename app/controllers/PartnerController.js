@@ -1,6 +1,9 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtMstr, TConfUser} = require('../../models')
-
+const {PtMstr, TConfUser, PtnrMstr} = require('../../models')
+const {v4: uuidv4} = require('uuid')
+const helper = require('../../helper/helper')
+const moment = require('moment')
+const momentId = moment().locale('id')
 const PartnerController = {
     getPartner: (req, res) => {
         TConfUser.findAll({
@@ -25,6 +28,76 @@ const PartnerController = {
                     message: "gagal mengambil data",
                     error: err.message
                 })
+        })
+    },
+    createNewPartner: async (req, res) => {
+        let authUser = helper.auth(req.get("authorization"))
+
+        let lastCustomer = PtnrMstr.findOne({
+            where: {
+                ptnr_is_cust: 'Y'
+            },
+            order: [['ptnr_id', 'desc']],
+            attributes: ['ptnr_id']
+        })
+
+        let ptnr_id = lastCustomer.ptnr_id + 1;
+
+        let dataCustomer = await PtnrMstr.create({
+            ptnr_oid: uuidv4(),
+            ptnr_dom_id: 1,
+            ptnr_en_id: req.body.ptnr_en_id,
+            ptnr_add_by: authUser.usernama,
+            ptnr_add_date: momentId.format('YYYY-MM-DD h:mm:ss'),
+            ptnr_id: ptnr_id,
+            ptnr_code: '',
+            ptnr_name: req.body.ptnr_name,
+            ptnr_ptnrg_id: req.body.ptnr_ptnrg_id,
+            ptnr_parent: req.body.ptnr_parent,
+            ptnr_is_cust: req.body.ptnr_is_cust,
+            ptnr_is_vend: req.body.ptnr_is_vend,
+            ptnr_active: req.body.ptnr_active,
+            ptnr_dt: req.body.ptnr_dt,
+            ptnr_ac_ar_id: req.body.ptnr_ac_ar_id,
+            ptnr_sb_ar_id: req.body.ptnr_sb_ar_id,
+            ptnr_cc_ar_id: req.body.ptnr_cc_ar_id,
+            ptnr_ac_ap_id: req.body.ptnr_ac_ap_id,
+            ptnr_sb_ap_id: req.body.ptnr_sb_ap_id,
+            ptnr_cc_ap_id: req.body.ptnr_cc_ap_id,
+            ptnr_cu_id: req.body.ptnr_cu_id,
+            ptnr_limit_credit: req.body.ptnr_limit_credit,
+            ptnr_is_member: req.body.ptnr_is_member,
+            ptnr_prepaid_balance: req.body.ptnr_prepaid_balance,
+            ptnr_is_emp: req.body.ptnr_is_emp,
+            ptnr_npwp: req.body.ptnr_npwp,
+            ptnr_nppkp: req.body.ptnr_nppkp,
+            ptnr_is_writer: req.body.ptnr_is_writer,
+            ptnr_transaction_code_id: req.body.ptnr_transaction_code_id,
+            ptnr_email: req.body.ptnr_email,
+            ptnr_address_tax: req.body.ptnr_address_tax,
+            ptnr_contact_tax: req.body.ptnr_contact_tax,
+            ptnr_name_alt: req.body.ptnr_name_alt,
+            ptnr_is_ps: req.body.ptnr_is_ps,
+            ptnr_lvl_id: req.body.ptnr_lvl_id,
+            ptnr_start_periode: req.body.ptnr_start_periode,
+            ptnr_user_name: req.body.ptnr_user_name,
+            ptnr_is_bm: req.body.ptnr_is_bm,
+            ptnr_bank: req.body.ptnr_bank,
+            ptnr_no_rek: req.body.ptnr_no_rek,
+            ptnr_rek_name: req.body.ptnr_rek_name,
+            ptnr_imei: req.body.ptnr_imei,
+            ptnr_sex: req.body.ptnr_sex,
+            ptnr_goldarah: req.body.ptnr_goldarah,
+            ptnr_birthday: req.body.ptnr_birthday,
+            ptnr_birthcity: req.body.ptnr_birthcity,
+            ptnr_negara: req.body.ptnr_negara,
+            ptnr_bp_date: req.body.ptnr_bp_date,
+            ptnr_bp_type: req.body.ptnr_bp_type,
+            ptnr_waris_name: req.body.ptnr_waris_name,
+            ptnr_waris_ktp: req.body.ptnr_waris_ktp,
+            ptnr_ktp: req.body.ptnr_ktp,
+            ptnr_is_volunteer: req.body.ptnr_is_volunteer,
+            ptnr_is_sbm: req.body.ptnr_is_sbm,
         })
     }
 }
