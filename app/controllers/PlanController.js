@@ -60,7 +60,6 @@ const PlanController = {
             let user = await helper.auth(req.get("authorization"))
             console.log(req.body)
 
-
             let getPlanMaster = await PlansMstr.findOne({
                 where: {
                     plans_sales_id: user.user_ptnr_id,

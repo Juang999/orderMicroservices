@@ -1,6 +1,7 @@
 const {PtnrgGrp, PtnrMstr, PsPeriodeMstr} = require('../../models')
-const {Op} = require('sequelize')
+const {Op, Sequelize} = require('sequelize')
 const moment = require('moment')
+const helper = require('../../helper/helper')
 
 const MasterController = {
     getGroup: (req, res) => {
@@ -79,6 +80,41 @@ const MasterController = {
                         error: error.message
                     })
         }
+    },
+    getPeriodeSales: async (req, res) => {
+        let auth = await helper.auth(req.get('authorization'))
+        
+        PsPeriodeMstr.findAll({
+            where: {
+                periode_code: {
+                    [Op.eq]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
+                }
+            },
+            attributes: ["periode_code", "periode_id"]
+        }).then(results => {
+
+            let data = []
+
+            for (const result of results) {
+                data.push({
+                    periode_code: result.periode_code,
+                    periode_month: moment.months(result.periode_id - 1)
+                })
+            }
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: data
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
     }
 }
 
