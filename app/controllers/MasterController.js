@@ -90,7 +90,7 @@ const MasterController = {
                     [Op.eq]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
                 }
             },
-            attributes: ["periode_code", "periode_id"]
+            attributes: ["periode_code", 'periode_start_date', 'periode_end_date', "periode_id"]
         }).then(results => {
 
             let data = []
@@ -98,7 +98,7 @@ const MasterController = {
             for (const result of results) {
                 data.push({
                     periode_code: result.periode_code,
-                    periode_month: moment.months(result.periode_id - 1)
+                    periode_month: moment.months(result.periode_id - 1) + ' ' + moment(result.periode_start_date, 'YYYY-MM-DD').year()
                 })
             }
             res.status(200)
