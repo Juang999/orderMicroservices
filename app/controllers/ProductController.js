@@ -9,42 +9,24 @@ const ProductController = {
         try {
             let offset = req.query.page * 10 - 10
             let limit = 10
+            
+            let where = {pt_pl_id: 1}
 
-            if (req.query.query) {
-                data = await PtMstr.findAll({
-                            limit: limit,
-                            offset: offset,
-                            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-                            order: [['pt_add_date', 'desc']],
-                            where: {
-                                pt_pl_id: 1,
-                                pt_desc2: {
-                                    [Op.like]: `%${req.query.query}%`
-                                }
-                            },
-                            include: [{
-                                model: EnMstr,
-                                as: 'EnMstr',
-                                attributes: ['en_desc']
-                            }]
-                        })    
-            } else {
+            if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`} 
+
             data = await PtMstr.findAll({
-                            limit: limit,
-                            offset: offset,
-                            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-                            order: [['pt_add_date', 'desc']],
-                            where: {
-                                pt_pl_id: 1
-                            },
-                            include: [{
-                                model: EnMstr,
-                                as: 'EnMstr',
-                                attributes: ['en_desc']
-                            }]
-                        })
-            }
-    
+                        limit: limit,
+                        offset: offset,
+                        attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+                        order: [['pt_add_date', 'desc']],
+                        where: where,
+                        include: [{
+                            model: EnMstr,
+                            as: 'EnMstr',
+                            attributes: ['en_desc']
+                        }]
+                    })   
+
             let result = {
                 data: data,
                 totalData: limit,
@@ -116,13 +98,13 @@ const ProductController = {
         })
     },
     showSize: (req, res) => {
-        CodeMstr.findAll({
+        SizeMstr.findAll({
             where: {
-                code_id: {
+                size_id: {
                     [Op.in]: sequelize.literal(`(SELECT pt_size_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
                 }
             },
-            attributes: ['code_id', 'code_name']
+            attributes: ['size_id', 'size_name']
         })
         .then(result => {
             res.status(200)
@@ -146,7 +128,7 @@ const ProductController = {
             where: {
                 [Op.and]: [
                     {pt_desc2: req.params.product},
-                    {pt_size_code_id: req.params.size_id},
+                    {pt_size_id: req.params.size_id},
                     {pt_code_color_id: req.params.color_id}
                 ]
             },
@@ -176,7 +158,7 @@ const ProductController = {
                     [Op.and]: [
                         {pt_desc2: req.params.product},
                         {pt_code_color_id: req.params.pt_code_color_id},
-                        {pt_size_code_id: req.params.pt_size_code_id},
+                        {pt_size_id: req.params.pt_size_code_id},
                         {pt_class: req.params.grade}
                     ]
                 },
@@ -202,6 +184,8 @@ const ProductController = {
                     }
                 ]
             })
+
+            console.log(price)
 
             if (req.params.en_id == 1) var warehouse = 991
             if (req.params.en_id == 2) var warehouse = 20004
