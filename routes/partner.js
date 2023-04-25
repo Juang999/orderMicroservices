@@ -9,6 +9,6 @@ let route = [
 ]
 
 router.get(route[0], [middleware.authenticate], controller.PartnerController.getPartner);
-router.get(route[1], [middleware.authenticate], controller.PartnerController.createNewPartner);
+router.post(route[1], [middleware.authenticate], controller.PartnerController.createNewPartner);
 
 module.exports = router
