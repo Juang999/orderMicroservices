@@ -1,5 +1,6 @@
 const helper = {
-    auth: require('./auth')
+    auth: require('./auth'),
+    sequelize: require('./sequelize')
 }
 
 module.exports = helper
