@@ -1,4 +1,4 @@
-const {PtnrgGrp, PtnrMstr, PsPeriodeMstr} = require('../../models')
+const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const moment = require('moment')
 const helper = require('../../helper/helper')
@@ -106,6 +106,180 @@ const MasterController = {
                     status: "success",
                     message: "berhasil mengambil data",
                     data: data
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getTaxInvoice: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'fakturpajak_transactioncode'
+            },
+            attributes: ['code_id', 'code_name'],
+            order: [['code_name', 'ASC']]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengmabil data",
+                    error: err.message
+                })
+        })
+    },
+    getAddrType: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'addr_type_mstr'
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: 'gagal menmgambil data',
+                    error: err.message
+                })
+        })
+    },
+    getContactPerson: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: "ptnrac_function"
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err
+                })
+        })
+    },
+    getBpType: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'bp_type'
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getCitizen: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: "WNegara"
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getBloodGroup: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'gol_darah'
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal menngambil data",
+                    error: err.message
+                })
+        })
+    },
+    getGender: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'Jenis_Kelamin'
+            },
+            attributes: ['code_id', 'code_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getCurrency: (req, res) => {
+        CuMstr.findAll({
+            attributes: ['cu_id', 'cu_name']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'success',
+                    message: "berhasil mengambil data",
+                    data: result
                 })
         }).catch(err => {
             res.status(400)
