@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({path: 'root/microservice_dev/orderMicroservice/.env'})
 const {TConfUser, TConfGroup} = require("../../models")
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
@@ -44,6 +44,7 @@ const AuthController = {
                     data: token
                 })
         }).catch(err => {
+            console.log(err)
             res.status(400)
                 .json({
                     status: "gagal",
