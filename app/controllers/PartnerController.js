@@ -136,8 +136,7 @@ const PartnerController = {
             ptnra_dom_id: req.body.partnerDomainId,
             ptnra_en_id: req.body.partnerEntityId,
             ptnra_add_by: authUser.usernama,
-            ptnra_add_date: moment().tz('Asia/Jakarta').moment('YYYY-MM-DDTHH:mm:ss'),
-            ptnra_line: req.body.partnerLine,
+            ptnra_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
             ptnra_line_1: req.body.partnerLine1,
             ptnra_line_2: req.body.partnerLine2,
             ptnra_line_3: req.body.partnerLine3,
@@ -168,29 +167,29 @@ const PartnerController = {
         })
     },
     createContactPerson: async (req, res) => {
+        let authUser = await helper.auth(req.get('authorization'))
+
         let lastConcactPersonCustomer = await PtnracCntc.findOne({
             where: {
-                addrc_ptnra_oid: customerAddress.ptnra_oid
+                addrc_ptnra_oid: req.body.pertnerAccountAddressOid
             },
             attributes: ['ptnrac_seq']
         })
 
-        let seq = (lastConcactPersonCustomer != null) ? lastAddressCustomer.ptnrac_seq + 1 : 1
+        let seq = (lastConcactPersonCustomer != null) ? lastConcactPersonCustomer.ptnrac_seq + 1 : 1
 
         PtnracCntc.create({
             ptnrac_oid: uuidv4(),
-            addrc_ptnra_oid: customerAddress.ptnra_oid,
-            ptnrac_add_by: customerAddress.ptnra_add_by,
-            ptnrac_add_date: customerAddress.ptnra_add_date,
+            addrc_ptnra_oid: req.body.pertnerAccountAddressOid,
+            ptnrac_add_by: authUser.usernama,
+            ptnrac_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
             ptnrac_seq: seq,
-            ptnrac_function: req.body.ptnrac_function, 
-            ptnrac_contact_name: req.body.contact_name,
-            ptnrac_phone_1: req.body.phone_1,
-            ptnrac_phone_2: req.body.phone_2,
-            ptnrac_email: req.body.email,
+            ptnrac_function: req.body.partnerAccountFunction, 
+            ptnrac_contact_name: req.body.partnerContactName,
+            ptnrac_phone_1: req.body.partnerPhone1,
+            ptnrac_phone_2: req.body.partnerContact2,
+            ptnrac_email: req.body.partnerContactEmail,
             ptnrac_dt: date
-            // ptnrac_upd_by: 
-            // ptnrac_upd_date:
         }).then(result => {
             res.status(200)
                 .json({
@@ -216,7 +215,13 @@ const PartnerController = {
                 ptnr_id: {
                     [Op.not]: authUser.user_ptnr_id
                 }
-            }
+            },
+            include: [
+                {
+                    model: PtnraAddr,
+                    as: 'address_partner'
+                }
+            ]
         }).then(result => {
             res.status(200)
                 .json({
@@ -229,6 +234,33 @@ const PartnerController = {
                 .json({
                     status: 'failed',
                     message: 'gagal mengambil data',
+                    error: err.message
+                })
+        })
+    },
+    getDetailAddressCustomer: (req, res) => {
+        PtnraAddr.findAll({
+            where: {
+                ptnra_oid: req.params.ptnra_oid
+            },
+            include: [
+                {
+                    model: PtnracCntc,
+                    as: 'contact_person'
+                }
+            ]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
                     error: err.message
                 })
         })

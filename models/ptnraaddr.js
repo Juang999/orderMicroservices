@@ -18,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         targetKey: "ptnr_oid"
       })
+
+      PtnraAddr.hasMany(models.PtnracCntc, {
+        as: "contact_person",
+        foreignKey: 'addrc_ptnra_oid'
+      })
     }
   }
   PtnraAddr.init({
