@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PtnracCntc.belongsTo(models.PtnraAddr, {
+        as: 'address',
+        foreignKey: 'addrc_ptnra_oid',
+        targetKey: 'ptnra_oid'
+      })
     }
   }
   PtnracCntc.init({
