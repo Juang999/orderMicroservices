@@ -1,4 +1,4 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 const cryptr = require('cryptr')
@@ -7,28 +7,51 @@ const crypter = new cryptr('thisIsSecretPassword')
 const ProductController = {
     index: async (req, res) => {
         try {
-            let offset = req.query.page * 10 - 10
+            let page = (req.query.page == null) ? 1 : req.query.page
+
+            let offset = page * 10 - 10
             let limit = 10
             
-            let where = {pt_pl_id: 1}
+            let where = {
+                pt_pl_id: 1,
+                pt_size_id: {
+                    [Op.gt]: 0
+                },
+                pt_code_color_id: {
+                    [Op.gt]: 0
+                },
+                pt_cat_id: {
+                    [Op.gt]: 0
+                },
+                pt_ptscat_id: {
+                    [Op.gt]: 0
+                },
+                pt_desc2: {
+                    [Op.not]: null
+                }
+            }
 
             if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`} 
 
-            data = await PtMstr.findAll({
+            let datas = await PtMstr.findAll({
                         limit: limit,
                         offset: offset,
-                        attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-                        order: [['pt_add_date', 'desc']],
+                        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('pt_desc2')), 'pt_desc2'], 'pt_clothes_id', 'pt_en_id'],
+                        order: [['pt_desc2', 'desc']],
                         where: where,
-                        include: [{
-                            model: EnMstr,
-                            as: 'EnMstr',
-                            attributes: ['en_desc']
-                        }]
-                    })   
+                    })
+
+            for (const data of datas) {
+                data.dataValues.EnMstr = await EnMstr.findOne({
+                    where: {
+                        en_id: data.pt_en_id
+                    },
+                    attributes: ['en_desc']
+                })
+            }
 
             let result = {
-                data: data,
+                data: datas,
                 totalData: limit,
                 page: req.query.page
             }
@@ -105,7 +128,8 @@ const ProductController = {
                     [Op.in]: sequelize.literal(`(SELECT pt_size_id FROM public.pt_mstr WHERE (pt_desc2 = '${req.params.product}' AND pt_code_color_id = ${req.params.pt_code_color_id}))`)
                 }
             },
-            attributes: ['size_id', 'size_name']
+            attributes: ['size_id', 'size_name'],
+            order: [['size_id', 'asc']]
         })
         .then(result => {
             res.status(200)
@@ -186,8 +210,6 @@ const ProductController = {
                 ]
             })
 
-            console.log(price)
-
             if (req.params.en_id == 1) var warehouse = 991
             if (req.params.en_id == 2) var warehouse = 20004
             if (req.params.en_id == 3) var warehouse = 992 
@@ -219,6 +241,7 @@ const ProductController = {
                     data: data
                 })
         } catch (error) {
+            console.log(error)
             res.status(400)
                 .json({
                     status: "failed",
