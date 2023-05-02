@@ -15,7 +15,8 @@ let route = [
     '/citizen', //8
     '/blood_group', //9
     '/gender', //10
-    '/currency' //11
+    '/currency', //11
+    '/entity' //12
 ]
 
 router.get(route[0], [middleware.authenticate], controller.MasterController.getGroup)
@@ -30,5 +31,6 @@ router.get(route[8], [middleware.authenticate], controller.MasterController.getC
 router.get(route[9], [middleware.authenticate], controller.MasterController.getBloodGroup)
 router.get(route[10], [middleware.authenticate], controller.MasterController.getGender)
 router.get(route[11], [middleware.authenticate], controller.MasterController.getCurrency)
+router.get(route[12], [middleware.authenticate], controller.MasterController.getEntity)
 
 module.exports = router
