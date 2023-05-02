@@ -1,4 +1,4 @@
-const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr} = require('../../models')
+const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const moment = require('moment')
 const helper = require('../../helper/helper')
@@ -278,6 +278,25 @@ const MasterController = {
             res.status(200)
                 .json({
                     status: 'success',
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getEntity: (req, res) => {
+        EnMstr.findAll({
+            attributes: ['en_id', 'en_code', 'en_desc']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "success",
                     message: "berhasil mengambil data",
                     data: result
                 })
