@@ -7,20 +7,35 @@ let date = moment().tz('Asia/Jakarta').format('YYYY-MM-DD') +' '+ moment().tz('A
 
 const PartnerController = {
     getPartner: (req, res) => {
-        TConfUser.findAll({
-            where: {
-                user_ptnr_id: {
-                    [Op.not]: null,
-                    [Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')`)
-                }
-            },
-            attributes: ["userid", "usernama", "user_ptnr_id"]
+        let whereClause = {
+            ptnr_is_cust: 'Y',
+            ptnr_is_vend: 'N',
+            ptnr_is_emp: 'N'
+        }
+
+        if (req.query.name) whereClause.ptnr_name = {[Op.like]: `%${req.query.name}%`}
+
+        let page = (req.query.page == null) ? 1 : req.query.page
+        let offset = page * 10 - 10
+        let limit = 20
+
+        PtnrMstr.findAll({
+            where: whereClause,
+            offset: offset,
+            limit: limit,
+            attributes: ['ptnr_oid', 'ptnr_id', 'ptnr_name']
         }).then(result => {
+            let final = {
+                data: result,
+                page: page,
+                total_data: limit
+            }
+
             res.status(200)
                 .json({
                     status: "success",
                     message: "berhasil mengambil data",
-                    data: result
+                    data: final
                 })
         }).catch(err => {
             res.status(400)
