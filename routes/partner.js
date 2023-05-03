@@ -5,6 +5,7 @@ const middleware = require('../app/kernel')
 
 let route = [
     '/partner', //0
+    
     '/create-partner', //1
     '/create-address-partner', //2
     '/create-contact-person', //3
