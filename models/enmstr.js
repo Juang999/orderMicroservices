@@ -16,8 +16,17 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'pt_en_id',
           keyType: DataTypes.INTEGER
-        },
-        
+        }
+      })
+
+      EnMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_entity',
+        foreignKey: 'ptnr_en_id'
+      })
+
+      EnMstr.hasMany(models.PtnraAddr, {
+        as: 'ptnra_entity',
+        foreignKey: 'ptnra_en_id'
       })
     }
   }

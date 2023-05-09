@@ -23,6 +23,48 @@ module.exports = (sequelize, DataTypes) => {
           name: "ptnra_ptnr_oid"
         }
       })
+
+      PtnrMstr.belongsTo(models.PtnrgGrp, {
+        as: "ptnr_group",
+        targetKey: 'ptnrg_id',
+        foreignKey: 'ptnr_ptnrg_id'
+      })
+
+      PtnrMstr.belongsTo(models.CodeMstr, {
+        as: 'ptnr_gender',
+        targetKey: 'code_id',
+        foreignKey: 'ptnr_sex'
+      })
+
+      PtnrMstr.belongsTo(models.CodeMstr, {
+        as: 'ptnr_transaction',
+        targetKey: 'code_id',
+        foreignKey: 'ptnr_transaction_code_id'
+      })
+
+      PtnrMstr.belongsTo(models.CodeMstr, {
+        as: "ptnr_blood_group",
+        targetKey: 'code_id',
+        foreignKey: 'ptnr_goldarah'
+      })
+
+      PtnrMstr.belongsTo(models.CodeMstr, {
+        as: 'ptnr_nation',
+        targetKey: 'code_id',
+        foreignKey: 'ptnr_negara'
+      })
+
+      PtnrMstr.belongsTo(models.CodeMstr, {
+        as: 'ptnr_sales_type',
+        targetKey: 'code_id',
+        foreignKey: 'ptnr_bp_type'
+      })
+
+      PtnrMstr.belongsTo(models.EnMstr, {
+        as: 'ptnr_entity',
+        targetKey: 'en_id',
+        foreignKey: 'ptnr_en_id'
+      })
     }
   }
   PtnrMstr.init({

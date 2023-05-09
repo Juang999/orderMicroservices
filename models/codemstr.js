@@ -25,6 +25,31 @@ module.exports = (sequelize, DataTypes) => {
           name: "pt_group"
         }
       })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_gender',
+        foreignKey: 'ptnr_sex'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_transaction',
+        foreignKey: 'ptnr_transaction_code_id'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_blood_group',
+        foreignKey: 'ptnr_goldarah'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_nation',
+        foreignKey: 'ptnr_negara'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_sales_type',
+        foreignKey: 'ptnr_bp_type'
+      })
     }
   }
   CodeMstr.init({
