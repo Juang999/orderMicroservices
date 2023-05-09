@@ -92,7 +92,7 @@ const PartnerController = {
             ptnr_id: ptnr_id,
             ptnr_code: partner_code,
             ptnr_name: (req.body.partnerName)? req.body.partnerName : null,
-            ptnr_ptnrg_id: (req.body.partnerGroupId)? req.body.partnerGroupId : 'N',
+            ptnr_ptnrg_id: req.body.partnerGroupId,
             ptnr_is_cust: (req.body.partnerIsCustomer)? req.body.partnerIsCustomer : 'N',
             ptnr_is_vend: (req.body.partnerIsVendor)? req.body.partnerIsVendor : 'N',
             ptnr_active: (req.body.partnerActive)? req.body.partnerActive : 'N',
@@ -132,6 +132,8 @@ const PartnerController = {
                 data: result
             })
         }).catch(err => {
+            console.log(err)
+
             res.status(400)
             .json({
                 status: "failed",
