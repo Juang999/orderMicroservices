@@ -34,14 +34,12 @@ const PartnerController = {
                     attributes: ['ptnrg_desc']
                 }
             ]
-
         }).then(result => {
             let final = {
                 data: result,
                 page: page,
                 total_data: limit
             }
-
             res.status(200)
                 .json({
                     status: "success",
@@ -85,7 +83,7 @@ const PartnerController = {
 
         let partner_code = ptnr_code + '00' + req.body.entityId + base_zero.substring(0, base_zero.length - string.substring(4).length) + string.substring(4)
 
-        let dataCustomer = await PtnrMstr.create({
+        PtnrMstr.create({
             ptnr_oid: uuidv4(),
             ptnr_dom_id: 1,
             ptnr_en_id: req.body.entityId,
@@ -93,11 +91,11 @@ const PartnerController = {
             ptnr_add_date: date,
             ptnr_id: ptnr_id,
             ptnr_code: partner_code,
-            ptnr_name: req.body.partnerName,
+            ptnr_name: (req.body.partnerName)? req.body.partnerName : null,
             ptnr_ptnrg_id: req.body.partnerGroupId,
-            ptnr_is_cust: req.body.partnerIsCustomer,
-            ptnr_is_vend: req.body.partnerIsVendor,
-            ptnr_active: req.body.partnerActive,
+            ptnr_is_cust: (req.body.partnerIsCustomer)? req.body.partnerIsCustomer : 'N',
+            ptnr_is_vend: (req.body.partnerIsVendor)? req.body.partnerIsVendor : 'N',
+            ptnr_active: (req.body.partnerActive)? req.body.partnerActive : 'N',
             ptnr_dt: date,
             ptnr_ac_ar_id: 0,
             ptnr_sb_ar_id: 0,
@@ -105,27 +103,27 @@ const PartnerController = {
             ptnr_ac_ap_id: 0,
             ptnr_sb_ap_id: 0,
             ptnr_cc_ap_id: 0,
-            ptnr_cu_id: req.body.partnerCurrencyId,
+            ptnr_cu_id: (req.body.partnerCurrencyId) ? req.body.partnerCurrencyId : null,
             ptnr_limit_credit: 0,
-            ptnr_is_member: req.body.partnerIsMember,
-            ptnr_is_emp: req.body.partnerIsEmployee,
-            ptnr_is_writer: req.body.partnerIsWriter,
-            ptnr_transaction_code_id: req.body.partnerTransactionCodeId,
-            ptnr_email: req.body.partnerEmail,
+            ptnr_is_member: (req.body.partnerIsMember) ? req.body.partnerIsMember : 'N',
+            ptnr_is_emp: (req.body.partnerIsEmployee) ? req.body.partnerIsEmployee : 'N',
+            ptnr_is_writer: (req.body.partnerIsWriter) ? req.body.partnerIsWriter : 'N',
+            ptnr_transaction_code_id: (req.body.partnerTransactionCodeId) ? req.body.partnerTransactionCodeId : null,
+            ptnr_email: (req.body.partnerEmail) ? req.body.partnerEmail : null,
             ptnr_address_tax: '-',
             ptnr_contact_tax: '-',
-            ptnr_name_alt: req.body.partnerNameAlternative,
-            ptnr_is_ps: req.body.partnerIsPs,
+            ptnr_name_alt: (req.body.partnerNameAlternative) ? req.body.partnerNameAlternative : null,
+            ptnr_is_ps: (req.body.partnerIsPs) ? req.body.partnerIsPs : null,
             ptnr_start_periode: moment().tz('Asia/Jakarta').format('YYYYMMDD'),
-            ptnr_is_bm: req.body.partnerIsBm,
-            ptnr_sex: req.body.partnerSex,
+            ptnr_is_bm: (req.body.partnerIsBm) ? req.body.partnerIsBm : 'N',
+            ptnr_sex: (req.body.partnerSex) ? req.body.partnerSex : null,
             ptnr_goldarah: req.body.partnerBloodGroup,
             ptnr_birthday: moment(req.body.partnerDateBirthday).format('YYYY-MM-DD'),
             ptnr_negara: req.body.partnerNation,
-            ptnr_bp_date: moment(req.body.partnerBpDate).format('YYYY-MM-DD'),
-            ptnr_bp_type: req.body.partnerBpType,
-            ptnr_is_volunteer: req.body.partnerIsVolunteer,
-            ptnr_is_sbm: req.body.partnerIsSbm,
+            ptnr_bp_date: (req.body.partnerBpType) ? moment(req.body.partnerBpDate).format('YYYY-MM-DD') : null,
+            ptnr_bp_type: (req.body.partnerBpType) ? req.body.partnerBpType : null,
+            ptnr_is_volunteer: (req.body.partnerIsVolunteer) ? req.body.partnerIsVolunteer : null,
+            ptnr_is_sbm: (req.body.partnerIsSbm) ? req.body.partnerIsSbm : 'N',
         }).then(result => {
             res.status(200)
             .json({
@@ -134,6 +132,8 @@ const PartnerController = {
                 data: result
             })
         }).catch(err => {
+            console.log(err)
+
             res.status(400)
             .json({
                 status: "failed",
@@ -210,6 +210,21 @@ const PartnerController = {
                     error: err.message
                 })
         })
+    },
+    getCustomer: async (req, res) => {
+        try {
+            let authUser = await helper.auth(req.get('authorization'));
+    
+            let result = await PtnrMstr.findAll({
+                where: {
+                    ptnr_id: {
+                        [Op.in]: Sequelize.literal(`(SELECT )`)
+                    }
+                }
+            })
+        } catch (error) {
+            
+        }
     }
 }
 
