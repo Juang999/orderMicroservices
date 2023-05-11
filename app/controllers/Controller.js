@@ -5,7 +5,10 @@ const Controller = {
     PriceController: require('./PriceController'),
     MasterController: require('./MasterController'),
     PartnerController: require('./PartnerController'),
-    PlanController: require('./PlanController')
+    PlanController: require('./PlanController'),
+    PartnerAddressController: require('./PartnerAddressController'),
+    ParnterContactController: require('./PartnerContactController'),
+    VisitController: require('./VisitController')
 }
 
 module.exports = Controller

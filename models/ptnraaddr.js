@@ -23,6 +23,12 @@ module.exports = (sequelize, DataTypes) => {
         as: "contact_person",
         foreignKey: 'addrc_ptnra_oid'
       })
+
+      PtnraAddr.belongsTo(models.EnMstr, {
+        as: 'ptnra_entity',
+        targetKey: 'en_id',
+        foreignKey: 'ptnra_en_id'
+      })
     }
   }
   PtnraAddr.init({

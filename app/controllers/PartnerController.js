@@ -1,5 +1,6 @@
 const {Sequelize, Op} = require('sequelize')
-const {TConfUser, PtnrMstr, PtnraAddr, PtnracCntc} = require('../../models')
+const {TConfUser, PtnrMstr, PtnraAddr, PtnracCntc, PtnrgGrp, CodeMstr, EnMstr} = require('../../models')
+
 const {v4: uuidv4} = require('uuid')
 const helper = require('../../helper/helper')
 const moment = require('moment')
@@ -7,20 +8,43 @@ let date = moment().tz('Asia/Jakarta').format('YYYY-MM-DD') +' '+ moment().tz('A
 
 const PartnerController = {
     getPartner: (req, res) => {
-        TConfUser.findAll({
-            where: {
-                user_ptnr_id: {
-                    [Op.not]: null,
-                    [Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')`)
+        let whereClause = {
+            ptnr_is_cust: 'Y',
+            ptnr_is_emp: 'N',
+            ptnr_active: 'Y'
+        }
+
+        if (req.query.name) whereClause.ptnr_name = {[Op.like]: `%${req.query.name}%`}
+        if (req.query.is_vendor) whereClause.ptnr_is_vend = req.query.is_vendor
+
+        let page = (req.query.page == null) ? 1 : req.query.page
+        let offset = page * 10 - 10
+        let limit = 20
+
+        PtnrMstr.findAll({
+            where: whereClause,
+            offset: offset,
+            limit: limit,
+            attributes: ['ptnr_oid', 'ptnr_id', 'ptnr_name', 'ptnr_add_date', 'ptnr_ptnrg_id'],
+            order: [['ptnr_add_date', 'desc']],
+            include: [
+                {
+                    model: PtnrgGrp,
+                    as: 'ptnr_group',
+                    attributes: ['ptnrg_desc']
                 }
-            },
-            attributes: ["userid", "usernama", "user_ptnr_id"]
+            ]
         }).then(result => {
+            let final = {
+                data: result,
+                page: page,
+                total_data: limit
+            }
             res.status(200)
                 .json({
                     status: "success",
                     message: "berhasil mengambil data",
-                    data: result
+                    data: final
                 })
         }).catch(err => {
             res.status(400)
@@ -59,7 +83,7 @@ const PartnerController = {
 
         let partner_code = ptnr_code + '00' + req.body.entityId + base_zero.substring(0, base_zero.length - string.substring(4).length) + string.substring(4)
 
-        let dataCustomer = await PtnrMstr.create({
+        PtnrMstr.create({
             ptnr_oid: uuidv4(),
             ptnr_dom_id: 1,
             ptnr_en_id: req.body.entityId,
@@ -67,11 +91,11 @@ const PartnerController = {
             ptnr_add_date: date,
             ptnr_id: ptnr_id,
             ptnr_code: partner_code,
-            ptnr_name: req.body.partnerName,
+            ptnr_name: (req.body.partnerName)? req.body.partnerName : null,
             ptnr_ptnrg_id: req.body.partnerGroupId,
-            ptnr_is_cust: req.body.partnerIsCustomer,
-            ptnr_is_vend: req.body.partnerIsVendor,
-            ptnr_active: req.body.partnerActive,
+            ptnr_is_cust: (req.body.partnerIsCustomer)? req.body.partnerIsCustomer : 'N',
+            ptnr_is_vend: (req.body.partnerIsVendor)? req.body.partnerIsVendor : 'N',
+            ptnr_active: (req.body.partnerActive)? req.body.partnerActive : 'N',
             ptnr_dt: date,
             ptnr_ac_ar_id: 0,
             ptnr_sb_ar_id: 0,
@@ -79,131 +103,43 @@ const PartnerController = {
             ptnr_ac_ap_id: 0,
             ptnr_sb_ap_id: 0,
             ptnr_cc_ap_id: 0,
-            ptnr_cu_id: req.body.partnerCurrencyId,
+            ptnr_cu_id: (req.body.partnerCurrencyId) ? req.body.partnerCurrencyId : null,
             ptnr_limit_credit: 0,
-            ptnr_is_member: req.body.partnerIsMember,
-            ptnr_is_emp: req.body.partnerIsEmployee,
-            ptnr_is_writer: req.body.partnerIsWriter,
-            ptnr_transaction_code_id: req.body.partnerTransactionCodeId,
-            ptnr_email: req.body.partnerEmail,
+            ptnr_is_member: (req.body.partnerIsMember) ? req.body.partnerIsMember : 'N',
+            ptnr_is_emp: (req.body.partnerIsEmployee) ? req.body.partnerIsEmployee : 'N',
+            ptnr_is_writer: (req.body.partnerIsWriter) ? req.body.partnerIsWriter : 'N',
+            ptnr_transaction_code_id: (req.body.partnerTransactionCodeId) ? req.body.partnerTransactionCodeId : null,
+            ptnr_email: (req.body.partnerEmail) ? req.body.partnerEmail : null,
             ptnr_address_tax: '-',
             ptnr_contact_tax: '-',
-            ptnr_name_alt: req.body.partnerNameAlternative,
-            ptnr_is_ps: req.body.partnerIsPs,
+            ptnr_name_alt: (req.body.partnerNameAlternative) ? req.body.partnerNameAlternative : null,
+            ptnr_is_ps: (req.body.partnerIsPs) ? req.body.partnerIsPs : null,
             ptnr_start_periode: moment().tz('Asia/Jakarta').format('YYYYMMDD'),
-            ptnr_is_bm: req.body.partnerIsBm,
-            ptnr_sex: req.body.partnerSex,
+            ptnr_is_bm: (req.body.partnerIsBm) ? req.body.partnerIsBm : 'N',
+            ptnr_sex: (req.body.partnerSex) ? req.body.partnerSex : null,
             ptnr_goldarah: req.body.partnerBloodGroup,
             ptnr_birthday: moment(req.body.partnerDateBirthday).format('YYYY-MM-DD'),
             ptnr_negara: req.body.partnerNation,
-            ptnr_bp_date: moment(req.body.partnerBpDate).format('YYYY-MM-DD'),
-            ptnr_bp_type: req.body.partnerBpType,
-            ptnr_is_volunteer: req.body.partnerIsVolunteer,
-            ptnr_is_sbm: req.body.partnerIsSbm,
+            ptnr_bp_date: (req.body.partnerBpType) ? moment(req.body.partnerBpDate).format('YYYY-MM-DD') : null,
+            ptnr_bp_type: (req.body.partnerBpType) ? req.body.partnerBpType : null,
+            ptnr_is_volunteer: (req.body.partnerIsVolunteer) ? req.body.partnerIsVolunteer : null,
+            ptnr_is_sbm: (req.body.partnerIsSbm) ? req.body.partnerIsSbm : 'N',
         }).then(result => {
             res.status(200)
-                .json({
-                    status: "success",
-                    message: 'berhasil membuat customer baru',
-                    data: result
-                })
+            .json({
+                status: "success",
+                message: 'berhasil membuat customer baru',
+                data: result
+            })
         }).catch(err => {
+            console.log(err)
+
             res.status(400)
-                .json({
-                    status: "failed",
-                    message: "gagal membuat customer baru",
-                    error: err.message
-                })
-        })
-    },
-    createAddressPartner: async (req, res) => {
-        // getLastIdFromTable ptnra_addr
-        let authUser = await helper.auth(req.get('authorization'))
-
-        let lastAddressCustomer = await PtnraAddr.findOne({
-            where: {
-                ptnra_active: 'Y'
-            },
-            order: [['ptnra_id', 'desc']],
-            attributes: ['ptnra_id']
-        })
-
-        let ptnra_id = lastAddressCustomer.ptnra_id + 1
-        
-        PtnraAddr.create({
-            ptnra_oid: uuidv4(),
-            ptnra_id: ptnra_id,
-            ptnra_dom_id: req.body.partnerDomainId,
-            ptnra_en_id: req.body.partnerEntityId,
-            ptnra_add_by: authUser.usernama,
-            ptnra_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
-            ptnra_line_1: req.body.partnerLine1,
-            ptnra_line_2: req.body.partnerLine2,
-            ptnra_line_3: req.body.partnerLine3,
-            ptnra_phone_1: req.body.partnerPhone1,
-            ptnra_phone_2: req.body.partnerPhone2,
-            ptnra_fax_1: req.body.partnerFax1,
-            ptnra_fax_2: req.body.partnerFax2,
-            ptnra_zip: req.body.partnerZip,
-            ptnra_ptnr_oid: req.body.partnerOid,
-            ptnra_addr_type: req.body.partnerAddressType,
-            ptnra_comment: req.body.partnerComment,
-            ptnra_active: (req.body.ptnra_active) ? req.body.ptnra_active : 'Y',
-            ptnra_dt: date
-        }).then(result => {
-            res.status(200)
-                .json({
-                    status: "success",
-                    message: "berhasil membuat data",
-                    data: result
-                })
-        }).catch(err => {
-            res.status(400)
-                .json({
-                    status: "failed",
-                    message: "gagal membuat data",
-                    error: err.message
-                })
-        })
-    },
-    createContactPerson: async (req, res) => {
-        let authUser = await helper.auth(req.get('authorization'))
-
-        let lastConcactPersonCustomer = await PtnracCntc.findOne({
-            where: {
-                addrc_ptnra_oid: req.body.pertnerAccountAddressOid
-            },
-            attributes: ['ptnrac_seq']
-        })
-
-        let seq = (lastConcactPersonCustomer != null) ? lastConcactPersonCustomer.ptnrac_seq + 1 : 1
-
-        PtnracCntc.create({
-            ptnrac_oid: uuidv4(),
-            addrc_ptnra_oid: req.body.pertnerAccountAddressOid,
-            ptnrac_add_by: authUser.usernama,
-            ptnrac_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
-            ptnrac_seq: seq,
-            ptnrac_function: req.body.partnerAccountFunction, 
-            ptnrac_contact_name: req.body.partnerContactName,
-            ptnrac_phone_1: req.body.partnerPhone1,
-            ptnrac_phone_2: req.body.partnerContact2,
-            ptnrac_email: req.body.partnerContactEmail,
-            ptnrac_dt: date
-        }).then(result => {
-            res.status(200)
-                .json({
-                    status: "success",
-                    message: "berhasil membuat data kontak personal",
-                    data: result
-                })
-        }).catch(err => {
-            res.status(400)
-                .json({
-                    status: "failed",
-                    message: "gagal membuat kontak personal",
-                    error: err.message
-                })
+            .json({
+                status: "failed",
+                message: "gagal membuat customer baru",
+                error: err.message
+            })
         })
     },
     getDetailCustomer: async (req, res) => {
@@ -218,9 +154,46 @@ const PartnerController = {
             },
             include: [
                 {
+                    model: CodeMstr,
+                    as: 'ptnr_gender',
+                    attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
+
+                },
+                {
+                    model: CodeMstr,
+                    as: 'ptnr_transaction',
+                    attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
+                },
+                {
+                    model: CodeMstr,
+                    as: 'ptnr_blood_group',
+                    attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
+                },
+                {
+                    model: CodeMstr,
+                    as: 'ptnr_nation',
+                    attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
+                },
+                {
+                    model: CodeMstr,
+                    as: 'ptnr_sales_type',
+                    attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
+                },
+                {
+                    model: EnMstr,
+                    as: 'ptnr_entity',
+                    attributes: ['en_id', 'en_desc']
+                },
+                {
+                    model: PtnrgGrp,
+                    as: 'ptnr_group',
+                    attributes: ['ptnrg_desc']
+                },
+                {
                     model: PtnraAddr,
-                    as: 'address_partner'
-                }
+                    as: 'address_partner',
+                    attributes: ['ptnra_oid', 'ptnra_line', 'ptnra_line_1', 'ptnra_line_2', 'ptnra_line_3', 'ptnra_phone_1', 'ptnra_fax_1', 'ptnra_zip']
+                },
             ]
         }).then(result => {
             res.status(200)
@@ -238,32 +211,20 @@ const PartnerController = {
                 })
         })
     },
-    getDetailAddressCustomer: (req, res) => {
-        PtnraAddr.findAll({
-            where: {
-                ptnra_oid: req.params.ptnra_oid
-            },
-            include: [
-                {
-                    model: PtnracCntc,
-                    as: 'contact_person'
+    getCustomer: async (req, res) => {
+        try {
+            let authUser = await helper.auth(req.get('authorization'));
+    
+            let result = await PtnrMstr.findAll({
+                where: {
+                    ptnr_id: {
+                        [Op.in]: Sequelize.literal(`(SELECT )`)
+                    }
                 }
-            ]
-        }).then(result => {
-            res.status(200)
-                .json({
-                    status: "success",
-                    message: "berhasil mengambil data",
-                    data: result
-                })
-        }).catch(err => {
-            res.status(400)
-                .json({
-                    status: "failed",
-                    message: "gagal mengambil data",
-                    error: err.message
-                })
-        })
+            })
+        } catch (error) {
+            
+        }
     }
 }
 
