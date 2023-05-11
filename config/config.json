@@ -3,7 +3,7 @@
     "username": "mutifserver",
     "password": "MutifServer123@#",
     "database": "exapro_mutif_23042023_produksi",
-    "host": "203.175.10.171",
+    "host": "127.0.0.1",
     "dialect": "postgres",
     "port": "5433"
   },
