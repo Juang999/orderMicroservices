@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PsPeriodeMstr.hasMany(models.PlansMstr, {
+        as: 'periode',
+        foreignKey: 'plans_periode'
+      })
     }
   }
   PsPeriodeMstr.init({
