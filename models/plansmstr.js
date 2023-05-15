@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PlansMstr.belongsTo(models.PsPeriodeMstr, {
+        as: 'periode',
+        targetKey: 'periode_code',
+        foreignKey: 'plans_periode'
+      })
     }
   }
   PlansMstr.init({
