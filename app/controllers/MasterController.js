@@ -1,6 +1,5 @@
 const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
-const moment = require('moment')
 const helper = require('../../helper/helper')
 
 const MasterController = {
@@ -52,60 +51,47 @@ const MasterController = {
         })
     },
     getPeriode: async (req, res) => {
-        try {
-            let rawPeriodes = await PsPeriodeMstr.findAll({
-                attributes: ['periode_code', 'periode_id']
-            })
-    
-            let periode = []
-
-            for (const rawPeriode of rawPeriodes) {
-                periode.push({
-                    periode_code: rawPeriode.periode_code,
-                    periode_month: moment.months(rawPeriode.periode_id - 1)
-                })
-            }
-
+        PsPeriodeMstr.findAll({
+            attributes: [
+                        'periode_code', 
+                        [Sequelize.literal(`year(periode_start_date)`), 'periode_year'],
+                        [Sequelize.literal(`to_char(periode_start_date, 'Month')`), 'periode_month']
+                    ]
+        }).then(result => {
             res.status(200)
-                .json({
-                        status: "success",
-                        message: "berhasil mengambil data",
-                        data: periode
-                    })
-        } catch (error) {
+            .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        }).catch(err => {
             res.status(400)
                 .json({
-                        status: "failed",
-                        message: "gagal mengambil data",
-                        error: error.message
-                    })
-        }
+                    status: "failed",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
     },
     getPeriodeSales: async (req, res) => {
         let auth = await helper.auth(req.get('authorization'))
         
         PsPeriodeMstr.findAll({
+            attributes: [
+                        "periode_code", 
+                        [Sequelize.literal(`concat(replace(to_char(periode_start_date, 'Month'), ' ', ''), ' ', year(periode_start_date))`), 'periode_periode']
+                    ],
             where: {
                 periode_code: {
-                    [Op.eq]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
+                    [Op.in]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
                 }
             },
-            attributes: ["periode_code", 'periode_start_date', 'periode_end_date', "periode_id"]
-        }).then(results => {
-
-            let data = []
-
-            for (const result of results) {
-                data.push({
-                    periode_code: result.periode_code,
-                    periode_month: moment.months(result.periode_id - 1) + ' ' + moment(result.periode_start_date, 'YYYY-MM-DD').year()
-                })
-            }
+        }).then(result => {
             res.status(200)
                 .json({
                     status: "success",
                     message: "berhasil mengambil data",
-                    data: data
+                    data: result
                 })
         }).catch(err => {
             res.status(400)

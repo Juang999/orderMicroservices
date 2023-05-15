@@ -1,4 +1,4 @@
-const {PlansMstr, PlansdDet, PlansptdDet, PtnrMstr, PtnraAddr, sequelize} = require('.././../models')
+const {PlansMstr, PlansdDet, PlansptdDet, PtnrMstr, PtnraAddr, PsPeriodeMstr} = require('.././../models')
 const helper = require('../../helper/helper')
 const {Sequelize, Op} = require('sequelize')
 const moment = require('moment')
@@ -6,54 +6,41 @@ const {v4: uuidv4} = require('uuid')
 
 const PlanController = {
     getPlan: async (req, res) => {
-        try {
-            let user = await helper.auth(req.get("authorization"))
+        let authUser = await helper.auth(req.get('authorization'))
 
-            let startDate = (req.query.start_date) ? moment(req.query.start_date) : moment().locale('id').startOf('month').format('2022-MM-DD')
-            let endDate = (req.query.end_date) ? moment(req.query.end_date) : moment().locale('id').endOf('month').format('2022-MM-DD')
+        PlansMstr.findAll({
+            where: {
+                plans_sales_id: authUser.user_ptnr_id,
+                plans_periode: {
+                    [Op.in]: Sequelize.literal(`(SELECT periode_code FROM public.psperiode_mstr WHERE periode_id >= (SELECT periode_id FROM public.psperiode_mstr WHERE periode_code = '${moment().format('YYYYMM')}'))`)
+                }
+            },
+            include: [
+                {
+                    model: PsPeriodeMstr,
+                    as: 'periode',
+                    attributes: [[Sequelize.literal(`replace(to_char(periode_start_date, 'Month'), ' ', '')`), 'month']]
+                }
+            ],
+            attributes: ['plans_oid']
 
-            let string = `(SELECT plans_oid FROM public.plans_mstr 
-                            WHERE plans_sales_id = ${user.user_ptnr_id} 
-                            AND plans_periode = (SELECT periode_code FROM public.psperiode_mstr
-                            WHERE periode_start_date = '${startDate}' 
-                            AND periode_end_date = '${endDate}'))`
 
-            let planDetail = await PlansdDet.findAll({
-                where: {
-                    plansd_plans_oid: {
-                        [Op.eq]: Sequelize.literal(string)
-                    }
-                },
-                include: [
-                    {
-                        model: PtnrMstr,
-                        as: 'PlansCustomer',
-                        attributes: ['ptnr_id', 'ptnr_code', 'ptnr_name'],
-                        include: [
-                            {
-                                model: PtnraAddr,
-                                as: 'address_partner',
-                                attributes: ["ptnra_line_1", "ptnra_line_2", "ptnra_line_3"]
-                            }
-                        ]
-                    }
-                ]
-            })
-
+        }).then(result => {
             res.status(200)
                 .json({
                     status: "success",
-                    message: "berhasil mengambil data",
-                    data: planDetail
+                    message: "berhasil mengambil data planning",
+                    data: result
                 })
-        } catch (error) {
+        }).catch(err => {
+            console.log(err)
             res.status(400)
                 .json({
                     status: "failed",
                     message: "gagal mengambil data",
-                    error: error.message
+                    error: err.message
                 })
-        }
+        })
     },
     createUnplan: async (req, res) => {
         try {
@@ -98,6 +85,54 @@ const PlanController = {
                 .json({
                     status: "failed",
                     message: "gagal membuat data",
+                    error: error.message
+                })
+        }
+    },
+    getCustomerPerPeriode: async (req, res) => {
+        try {
+            let user = await helper.auth(req.get("authorization"))
+
+            let periode = (req.query.periode) ? req.query.periode : moment().format('YYYYMM')
+
+            let string = `(SELECT plans_oid FROM public.plans_mstr 
+                            WHERE plans_sales_id = ${user.user_ptnr_id} 
+                            AND plans_periode = '${periode}')`
+
+            let planDetail = await PlansdDet.findAll({
+                where: {
+                    plansd_plans_oid: {
+                        [Op.eq]: Sequelize.literal(string)
+                    }
+                },
+                include: [
+                    {
+                        model: PtnrMstr,
+                        as: 'PlansCustomer',
+                        attributes: ['ptnr_id', 'ptnr_code', 'ptnr_name'],
+                        include: [
+                            {
+                                model: PtnraAddr,
+                                as: 'address_partner',
+                                attributes: ["ptnra_line_1", "ptnra_line_2", "ptnra_line_3"]
+                            }
+                        ]
+                    }
+                ]
+            })
+
+            res.status(200)
+                .json({
+                    status: "success",
+                    message: "berhasil mengambil data",
+                    data: planDetail
+                })
+        } catch (error) {
+            console.log(error)
+            res.status(400)
+                .json({
+                    status: "failed",
+                    message: "gagal mengambil data",
                     error: error.message
                 })
         }
