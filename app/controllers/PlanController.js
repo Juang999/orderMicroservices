@@ -95,11 +95,13 @@ const PlanController = {
 
             let periode = (req.query.periode) ? req.query.periode : moment().format('YYYYMM')
 
-            let string = `(SELECT plans_oid FROM public.plans_mstr 
-                            WHERE plans_sales_id = ${user.user_ptnr_id} 
-                            AND plans_periode = '${periode}')`
+            let string = `(
+                        SELECT plans_oid FROM public.plans_mstr
+                        WHERE plans_sales_id = ${user.user_ptnr_id}
+                        and plans_periode = '${periode}'
+                        )`
 
-            let planDetail = await PlansdDet.findAll({
+            let plansdDet = await PlansdDet.findAll({
                 where: {
                     plansd_plans_oid: {
                         [Op.eq]: Sequelize.literal(string)
@@ -109,23 +111,17 @@ const PlanController = {
                     {
                         model: PtnrMstr,
                         as: 'PlansCustomer',
-                        attributes: ['ptnr_id', 'ptnr_code', 'ptnr_name'],
-                        include: [
-                            {
-                                model: PtnraAddr,
-                                as: 'address_partner',
-                                attributes: ["ptnra_line_1", "ptnra_line_2", "ptnra_line_3"]
-                            }
-                        ]
+                        attributes: ['ptnr_oid', 'ptnr_name']
                     }
-                ]
+                ],
+                attributes: ['plansd_oid', 'plansd_ptnr_id', 'plansd_amount']
             })
 
             res.status(200)
                 .json({
                     status: "success",
                     message: "berhasil mengambil data",
-                    data: planDetail
+                    data: plansdDet
                 })
         } catch (error) {
             console.log(error)
