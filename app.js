@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var host = 'http://localhost'
 var port = 3000
+var upload = require('express-fileupload')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -18,6 +19,10 @@ var partnerContactRouter = require('./routes/partner-contact-address');
 var visitRouter = require('./routes/visit');
 
 var app = express();
+
+// file-upload expressjs
+app.use(upload())
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
