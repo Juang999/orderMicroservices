@@ -65,6 +65,11 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'en_id',
         foreignKey: 'ptnr_en_id'
       })
+
+      PtnrMstr.hasMany(models.VisitedDet, {
+        as: "detail_visit",
+        foreignKey: "visited_ptnr_id"
+      })
     }
   }
   PtnrMstr.init({
