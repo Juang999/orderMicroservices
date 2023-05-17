@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      VisitMstr.hasMany(models.VisitedDet, {
+        as: "visit_detail",
+        foreignKey: "visited_visit_code"
+      })
     }
   }
   VisitMstr.init({
