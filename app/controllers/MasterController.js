@@ -1,6 +1,7 @@
 const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../helper/helper')
+const moment = require('moment')
 
 const MasterController = {
     getGroup: (req, res) => {
@@ -294,6 +295,23 @@ const MasterController = {
                     error: err.message
                 })
         })
+    },
+    getTimeStamp: (req, res) => {
+        let timestamp = {
+            day: moment().format('dddd'),
+            
+            month: moment().format('MMMM'),
+            year: moment().format('YYYY'),
+            time: moment().format('HH:mm:ss'),
+            timestamp: moment().format('YYYY-MM-DD HH:mm:ss')
+        }
+
+        res.status(200)
+            .json({
+                status: "berhasil",
+                message: "berhasil mengambil data timestamp",
+                data: timestamp
+            })
     }
 }
 
