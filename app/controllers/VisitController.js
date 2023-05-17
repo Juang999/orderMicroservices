@@ -3,6 +3,12 @@ const {Sequelize, Op} = require('sequelize')
 const helper = require('../../helper/helper')
 const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
+const express = require('express')
+const upload = require('express-fileupload')
+
+const app = express()
+
+app.use(upload())
 
 const VisitController = {
     getVisitingSchedule: async (req, res) => {
@@ -161,35 +167,59 @@ const VisitController = {
         })
     },
     checkIn: async (req, res) => {
-        let authUser = await helper.auth(req.get('authorization'))
-
-        let checkLastData = await VisitedDet.findOne({
-            where: {
-                [Op.and]: {
-                    visited_check_in: {
-                        [Op.not]: null
-                    },
-                    visited_check_out: {
-                        [Op.is]: null
-                    },
-                    visited_visit_code: {
-                        [Op.eq]: req.body.visit_code
+        try {              
+            let checkLastData = await VisitedDet.findOne({
+                where: {
+                    [Op.and]: {
+                        visited_check_in: {
+                            [Op.not]: null
+                        },
+                        visited_check_out: {
+                            [Op.is]: null
+                        },
+                        visited_visit_code: {
+                            [Op.eq]: req.body.visit_code
+                        }
                     }
                 }
-            }
-        })
+            })
 
-        if (checkLastData) {
-            res.status(500)
+            const file = req.files.file
+            const fileName = file.name
+
+            if (checkLastData) {
+                res.status(500)
+                    .json({
+                        status: "gagal",
+                        message: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`,
+                        visited_oid: checkLastData.visited_oid
+                    })
+                
+                return
+            }
+
+            file.mv(`${__dirname}/../../Storage/Image/Checkin/${fileName}`, (err) => {
+                console.log(err)
+                if (err) {
+                    res.status(400)
+                        .json(err)
+                }
+            })
+
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil upload gambar"
+                })
+        } catch (error) {
+            console.log(error)
+            req.status(400)
                 .json({
                     status: "gagal",
-                    message: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`
+                    message: "gagal upload data",
+                    errorr: error.message
                 })
-            
-            return
         }
-
-
     }
 }
 

@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const controller = require('../app/controllers/Controller')
 const middleware = require('../app/kernel')
+const {query, body} = require('express-validator')
 
 let route = [
     '/get-visiting-schedule', //1
@@ -9,7 +10,7 @@ let route = [
     '/get-detail-visiting/:visited_oid', //2
     '/create-schedule', //3
     '/create-list-customer-to-visit', //4
-    '/checkin' //5
+    '/checkin/:visited_oid' //5
 ]
 
 router.get(route[0], [middleware.authenticate], controller.VisitController.getVisitingSchedule)
@@ -17,6 +18,6 @@ router.get(route[1], [middleware.authenticate], controller.VisitController.getDe
 router.get(route[2], [middleware.authenticate], controller.VisitController.getDetailVisiting)
 router.post(route[3], [middleware.authenticate], controller.VisitController.createSchedule)
 router.post(route[4], [middleware.authenticate], controller.VisitController.createListCustomerToVisit)
-router.patch(route[5], [middleware.authenticate], controller.VisitController.checkIn)
+router.patch(route[5], [middleware.authenticate, middleware.VisitRequest],  controller.VisitController.checkIn)
 
 module.exports = router
