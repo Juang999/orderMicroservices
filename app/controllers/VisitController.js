@@ -5,6 +5,7 @@ const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
 const express = require('express')
 const upload = require('express-fileupload')
+const path = require('path')
 
 const app = express()
 
@@ -186,6 +187,7 @@ const VisitController = {
 
             const file = req.files.file
             const fileName = file.name
+            const pathFile = path.join(__dirname, '../../public/images/checkin')
 
             if (checkLastData) {
                 res.status(500)
@@ -198,11 +200,23 @@ const VisitController = {
                 return
             }
 
-            file.mv(`${__dirname}/../../Storage/Image/Checkin/${fileName}`, (err) => {
+            file.mv(`${pathFile}/${fileName}`, (err) => {
                 console.log(err)
                 if (err) {
                     res.status(400)
                         .json(err)
+                }
+            })
+
+            VisitedDet.update({
+                visited_lat_gps_check_in: req.body.checkin_lat,
+                visited_long_gps_check_in: req.body.checkin_long,
+                visited_address_gps_check_in: req.body.checkin_address,
+                visited_check_in: req.body.checkin_checkin,
+                visited_foto: fileName
+            }, {
+                where: {
+                    visited_oid: req.params.visited_oid
                 }
             })
 
@@ -220,6 +234,32 @@ const VisitController = {
                     errorr: error.message
                 })
         }
+    },
+    checkOut: (req, res) => {
+        VisitedDet.update({
+            visited_lat_gps_check_out: req.body.checkout_lat,
+            visited_long_gps_check_out: req.body.checkout_long,
+            visited_address_gps_check_out: req.body.checkout_address,
+            visited_checkout: req.body.checkout_checkout,
+        }, {
+            where: {
+                visited_oid: req.params.visited_oid
+            }
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil checkout',
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal checkout",
+                    error: err.message
+                })
+        })
     }
 }
 
