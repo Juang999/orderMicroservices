@@ -1,6 +1,7 @@
 const kernel = {
     authenticate: require('./Middleware/authenticate'),
-    VisitRequest: require('./Middleware/requests/VisitRequest')
+    CheckinRequest: require('./Middleware/requests/CheckinRequest'),
+    CheckoutRequest: require('./Middleware/requests/CheckoutRequest')
 }
 
 module.exports = kernel
