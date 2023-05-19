@@ -1,10 +1,14 @@
 const {check, validationResult} = require('express-validator')
 
 const rules = [
-    check('visit_code').notEmpty().isString()
+    check('visit_code').notEmpty().isString(),
+    check('checkin_lat').notEmpty().isNumeric(),
+    check('checkin_long').notEmpty().isNumeric(),
+    check('checkin_address').notEmpty().isString(),
+    check('checkin_checkin').notEmpty()
 ]
 
-const VisitRequest = [
+const CheckinRequest = [
     // rules
     rules,
     // middleware
@@ -22,4 +26,4 @@ const VisitRequest = [
     }
 ]
 
-module.exports = VisitRequest
+module.exports = CheckinRequest
