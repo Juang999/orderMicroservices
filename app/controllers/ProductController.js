@@ -351,6 +351,81 @@ const ProductController = {
                     error: err.message
                 })
         })
+    },
+    getAllProduct: (req, res) => {
+        let page = (req.query.page) ? req.query.page : 1
+        let limit = 20
+        let offset = (limit * page) - limit
+
+        let where = {pt_pl_id: 1}
+        let whereLocation = {invc_loc_id: {[Op.in]: [10001, 300018, 200010]}}
+    
+        if (req.query.entity > 0) where.pt_en_id = req.query.entity
+        if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`}
+        if (req.query.category) where.pt_cat_id = req.query.category
+
+        PtMstr.findAll({
+            limit: limit,
+            offset: offset,
+            attributes: ['pt_code', 'pt_desc1'],
+            where: where,
+            order: [['pt_desc1', 'asc']],
+            include: [
+                {
+                    model: EnMstr,
+                    as: 'EnMstr',
+                    attributes: ['en_desc']
+                },
+                {
+                    model: PtCatMstr,
+                    as: 'category_product',
+                    attributes: ['ptcat_desc']
+                },
+                {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    attributes: ['invc_qty_available'],
+                    where: whereLocation,
+                    required: false
+                }
+            ],
+            raw: true,
+            nest: true
+        }).then(results => {
+            for (const result of results) {
+                if (result.Qty.invc_qty_available == null) {
+                    result.Qty.invc_qty_available = '0.00000000'
+                }
+
+                if (result.category_product.ptcat_desc == null) {
+                    result.category_product.ptcat_desc = '-'
+                }
+
+                if (result.pt_cat_id == null) {
+                    result.pt_cat_id = '-'
+                }
+            }
+
+            let data = {
+                product: results,
+                page: page,
+                totalData: results.length
+            }
+
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil data produk",
+                    data: data
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data produk",
+                    error: err.message
+                })
+        })
     }
 }
 
