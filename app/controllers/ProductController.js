@@ -364,7 +364,7 @@ const ProductController = {
         if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`}
         if (req.query.category) where.pt_cat_id = req.query.category
 
-        PtMstr.findAll({
+        PtMstr.findAndCountAll({
             limit: limit,
             offset: offset,
             attributes: ['pt_code', 'pt_desc1'],
@@ -385,14 +385,21 @@ const ProductController = {
                     model: InvcMstr,
                     as: 'Qty',
                     attributes: ['invc_qty_available'],
-                    where: whereLocation,
+                    where:{
+                        [Op.or]: {
+                            invc_loc_id: 10001,
+                            invc_loc_id: 300018,
+                            invc_loc_id: 200010
+                        },
+                    },
                     required: false
                 }
             ],
             raw: true,
             nest: true
         }).then(results => {
-            for (const result of results) {
+            for (const result of results.rows) {
+
                 if (result.Qty.invc_qty_available == null) {
                     result.Qty.invc_qty_available = '0.00000000'
                 }
@@ -407,9 +414,10 @@ const ProductController = {
             }
 
             let data = {
-                product: results,
+                product: results.rows,
                 page: page,
-                totalData: results.length
+                totalData: results.rows.length,
+                totalPage: Math.ceil(results.count / limit)
             }
 
             res.status(200)
