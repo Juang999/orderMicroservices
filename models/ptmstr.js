@@ -19,10 +19,9 @@ module.exports = (sequelize, DataTypes) => {
 
       PtMstr.hasMany(models.InvcMstr, {
         as: "Qty",
-        foreignKey: {
-          name: "invc_pt_id",
-          keyType: DataTypes.INTEGER
-        }
+        foreignKeyConstraint: true,
+        foreignKey: 'invc_pt_id',
+        sourceKey: 'pt_id',
       })
 
       PtMstr.belongsTo(models.CodeMstr, {
@@ -31,6 +30,12 @@ module.exports = (sequelize, DataTypes) => {
           name: "pt_group"
         },
         targetKey: "code_id"
+      })
+
+      PtMstr.belongsTo(models.PtCatMstr, {
+        as: 'category_product',
+        targetKey: 'ptcat_id',
+        foreignKey: 'pt_cat_id'
       })
     }
   }
@@ -47,7 +52,10 @@ module.exports = (sequelize, DataTypes) => {
     pt_add_date: DataTypes.DATE,
     pt_upd_by: DataTypes.STRING,
     pt_upd_date: DataTypes.DATE,
-    pt_id: DataTypes.INTEGER,
+    pt_id: {
+      type: DataTypes.INTEGER,
+      unique: true
+    },
     pt_code: DataTypes.STRING,
     pt_desc1: DataTypes.STRING,
     pt_desc2: DataTypes.STRING,
