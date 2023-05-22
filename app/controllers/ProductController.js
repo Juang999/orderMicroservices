@@ -410,7 +410,6 @@ const ProductController = {
             distinct: true
         }).then(results => {
             for (const result of results.rows) {
-
                 if (result.Qty.invc_qty_available == null) {
                     result.Qty.invc_qty_available = '0.00000000'
                 }
