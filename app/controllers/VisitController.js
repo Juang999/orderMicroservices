@@ -21,16 +21,24 @@ const VisitController = {
             let where = {
                 visit_sales_id: authUser.user_ptnr_id
             }
-    
-            if (req.query.periode) {
+
+            if (req.body.periode) {
+
+
                 let periode = await PsPeriodeMstr.findOne({
                     where: {
                         periode_code: req.query.periode
                     }
                 })
     
-                where.visit_startdate = periode.periode_start_date
+                where.visit_startdate = {[Op.between]: [periode.periode_start_date, periode.periode_end_date]}
+            } else {
+                let startDate = moment().startOf('month').format('YYYY-MM-DD')
+                let endDate = moment().endOf('momth').format('YYYY-MM-DD')
+
+                where.visit_startdate = {[Op.between]: [startDate, endDate]}
             }
+
     
             let visitDate = await VisitMstr.findAll({
                 where: where,
