@@ -22,15 +22,13 @@ const VisitController = {
                 visit_sales_id: authUser.user_ptnr_id
             }
 
-            if (req.body.periode) {
-
-
+            if (req.query.periode) {
                 let periode = await PsPeriodeMstr.findOne({
                     where: {
                         periode_code: req.query.periode
                     }
                 })
-    
+
                 where.visit_startdate = {[Op.between]: [periode.periode_start_date, periode.periode_end_date]}
             } else {
                 let startDate = moment().startOf('month').format('YYYY-MM-DD')
@@ -269,6 +267,48 @@ const VisitController = {
                 .json({
                     status: "gagal",
                     message: "gagal checkout",
+                    error: err.message
+                })
+        })
+    },
+    deleteFromListSchedule: (req, res) => {
+        VisitedDet.destroy({
+            where: {
+                visited_oid: req.params.visited_oid
+            }
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil menghapus data dari list jadwal",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: 'gagal',
+                    message: "gagal menghapus data dari list jadwal",
+                    error: err.message
+                })
+        })
+    },
+    deleteSchedule: (req, res) => {
+        VisitMstr.destroy({
+            where: {
+                visit_code: req.params.visit_code
+            }
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil menghapus jadwal",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal menghapus jadwal",
                     error: err.message
                 })
         })
