@@ -357,8 +357,8 @@ const ProductController = {
         let limit = 20
         let offset = (limit * page) - limit
 
-        let where = {pt_pl_id: 1}
-        let whereLocation = {invc_loc_id: {[Op.in]: [10001, 300018, 200010]}}
+        let where = {pt_pl_id: 1, pt_desc1: {[Op.not]: null}}
+        console.log(where)
     
         if (req.query.entity > 0) where.pt_en_id = req.query.entity
         if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`}
@@ -386,17 +386,28 @@ const ProductController = {
                     as: 'Qty',
                     attributes: ['invc_qty_available'],
                     where:{
-                        [Op.or]: {
-                            invc_loc_id: 10001,
-                            invc_loc_id: 300018,
-                            invc_loc_id: 200010
-                        },
+                        [Op.or]: [
+                            {
+                                invc_loc_id: {
+                                    [Op.eq]: 10001
+                                },
+                            },{
+                                invc_loc_id: {
+                                    [Op.eq]: 300018
+                                },
+                            },{
+                                invc_loc_id: {
+                                    [Op.eq]: 200010
+                                }
+                            }
+                        ],
                     },
                     required: false
                 }
             ],
             raw: true,
-            nest: true
+            nest: true,
+            distinct: true
         }).then(results => {
             for (const result of results.rows) {
 
