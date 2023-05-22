@@ -22,7 +22,7 @@ const VisitController = {
                 visit_sales_id: authUser.user_ptnr_id
             }
 
-            if (req.body.periode) {
+            if (req.query.periode) {
 
 
                 let periode = await PsPeriodeMstr.findOne({
