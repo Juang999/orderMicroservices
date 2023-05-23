@@ -118,9 +118,11 @@ const VisitController = {
         try {
             let authUser = await helper.auth(req.get('authorization'))
 
-            let lastData = await VisitMstr.count()
+            let lastData = await VisitMstr.findOne({
+                order: [['visit_add_date', 'desc']]
+            })
 
-            let totalData = (lastData == 0) ? 1 : lastData + 1;
+            let totalData = (lastData.length == 0) ? 1 : parseInt(lastData.visit_code.substring(12)) + 1;
 
             let visit_code = `VST0${authUser.en_id}456${moment().format('MMYY')}${totalData}`
 
@@ -142,6 +144,7 @@ const VisitController = {
                     data: visit_mstr
                 })
         } catch (error) {
+            console.log(error)
             res.status(400)
                 .json({
                     status: "gagal",
