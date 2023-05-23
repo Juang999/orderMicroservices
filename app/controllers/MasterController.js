@@ -312,6 +312,34 @@ const MasterController = {
                 message: "berhasil mengambil data timestamp",
                 data: timestamp
             })
+    },
+    getDefaultPeriode: (req, res) => {
+        PsPeriodeMstr.findOne({
+            where: {
+                periode_start_date: {
+                    [Op.eq]: moment().startOf('month').format('YYYY-MM-DD')
+                }
+            },
+            attributes: [
+                    'periode_code', 
+                    [Sequelize.literal(`concat(replace(to_char(periode_start_date, 'DD'), ' ', ''), ' ', replace(to_char(periode_start_date, 'month'), ' ', ''), ' ', replace(to_char(periode_start_date, 'YYYY'), ' ', ''))`), 'start_periode'],
+                    [Sequelize.literal(`concat(replace(to_char(periode_end_date, 'DD'), ' ', ''), ' ', replace(to_char(periode_end_date, 'month'), ' ', ''), ' ', replace(to_char(periode_end_date, 'YYYY'), ' ', ''))`), 'end_periode']
+                ]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil mengambil data periode default',
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data periode default",
+                    error: err.message
+                })
+        })
     }
 }
 
