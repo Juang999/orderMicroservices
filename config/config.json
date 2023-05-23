@@ -5,7 +5,11 @@
     "database": "exapro_mutif_23042023_produksi",
     "host": "127.0.0.1",
     "dialect": "postgres",
-    "port": "5433"
+    "port": "5433",
+    "dialectOptions": {
+      "useUTC": false
+    },
+    "timezone": "+07:00"
   },
   "test": {
     "username": "root",

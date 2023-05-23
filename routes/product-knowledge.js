@@ -12,7 +12,8 @@ const route = [
     '/category', //5
     '/product/category/:category_id', //6
     '/category/sub_category/:cat_id', //7
-    '/size' //8
+    '/size', //8
+    '/get-all-product' //9
 ]
 
 router.get(route[0], [middleware.authenticate], controller.ProductController.index)
@@ -20,9 +21,10 @@ router.get(route[1], [middleware.authenticate], controller.ProductController.sho
 router.get(route[2], [middleware.authenticate], controller.ProductController.showSize)
 router.get(route[3], [middleware.authenticate], controller.ProductController.showPrinceAndQty)
 router.get(route[4], [middleware.authenticate], controller.ProductController.showGrade)
-router.get(route[5], [middleware.authenticate], controller.ProductController.getCategory)
+router.get(route[5], controller.ProductController.getCategory)
 router.get(route[6], [middleware.authenticate], controller.ProductController.getProductWithCategory)
 router.get(route[7], [middleware.authenticate], controller.ProductController.getSubCategory)
 router.get(route[8], [middleware.authenticate], controller.ProductController.getSize)
+router.get(route[9], controller.ProductController.getAllProduct)
 
 module.exports = router
