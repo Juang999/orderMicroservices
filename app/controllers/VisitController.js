@@ -1,4 +1,4 @@
-const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr} = require('../../models')
+const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, PlansdDet} = require('../../models')
 const {Sequelize, Op} = require('sequelize')
 const helper = require('../../helper/helper')
 const moment = require('moment')
@@ -118,9 +118,11 @@ const VisitController = {
         try {
             let authUser = await helper.auth(req.get('authorization'))
 
-            let lastData = await VisitMstr.count()
+            let lastData = await VisitMstr.findOne({
+                order: [['visit_add_date', 'desc']]
+            })
 
-            let totalData = (lastData == 0) ? 1 : lastData + 1;
+            let totalData = (lastData.length == 0) ? 1 : parseInt(lastData.visit_code.substring(12)) + 1;
 
             let visit_code = `VST0${authUser.en_id}456${moment().format('MMYY')}${totalData}`
 
@@ -142,6 +144,7 @@ const VisitController = {
                     data: visit_mstr
                 })
         } catch (error) {
+            console.log(error)
             res.status(400)
                 .json({
                     status: "gagal",
@@ -312,6 +315,35 @@ const VisitController = {
                     error: err.message
                 })
         })
+    },
+    getCustomerPerPeriode: async (req, res) => {
+        try {
+            let user = await helper.auth(req.get('authorization'))
+
+            let customer = await PtnrMstr.findAll({
+                where: {
+                    ptnr_id: {
+                        [Op.in]: Sequelize.literal(`(SELECT plansd_ptnr_id FROM public.plansd_det WHERE plansd_plans_oid = (SELECT plans_oid FROM public.plans_mstr WHERE plans_periode = (SELECT periode_code FROM public.psperiode_mstr WHERE periode_start_date = '${moment().startOf('month').format('YYYY-MM-DD')}')))`)
+                    }
+                },
+                attributes: ['ptnr_name', 'ptnr_id']
+            })
+
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil data kostumer per periode",
+                    data: customer
+                })
+        } catch (error) {
+            console.log(error)
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data kostumer per periode",
+                    error: error.message
+                })
+        }
     }
 }
 
