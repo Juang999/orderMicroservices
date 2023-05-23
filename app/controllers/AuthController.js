@@ -1,11 +1,12 @@
 require('dotenv').config()
-const {TConfUser, TConfGroup} = require("../../models")
+const {TConfUser, TConfGroup, PlansMstr, VisitMstr} = require("../../models")
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 const CryptoJS = require('crypto-js')
 const jwt = require('jsonwebtoken')
 const helper = require('../../helper/helper')
 const {Sequelize, Op} = require('sequelize')
+const moment = require('moment/moment')
 
 const AuthController = {
     login: (req, res) => {
@@ -113,35 +114,84 @@ const AuthController = {
         }
     },
     profile: async (req, res) => {
-        helper.auth(req.get('authorization'))
-        .then(async result => {
+        try {
+            let user = await helper.auth(req.get('authorization'))
+
             let dataGroup = await TConfGroup.findOne({
                 where: {
-                    groupid: result.groupid
+                    groupid: user.groupid
                 },
                 attributes: ["groupnama"]
             })
 
-            let data = {
-                usernama: result.usernama,
-                group: dataGroup.groupnama
-            }
+            let countPlanning = await PlansMstr.count({
+                where: {
+                    [Op.and]: {
+                        plans_sales_id: {
+                            [Op.eq]: user.user_ptnr_id
+                        },
+                        plans_periode: {
+                            [Op.in]: Sequelize.literal(`(SELECT periode_code FROM public.psperiode_mstr WHERE YEAR(periode_start_date) = '${moment().format('YYYY')}')`)
+                        }
+                    }
+                }
+            })
 
+            let countScheduleVisiting = await VisitMstr.count({
+                where: {
+                    [Op.and]: {
+                        visit_sales_id: {
+                            [Op.eq]: user.user_ptnr_id
+                        },
+                        visit_startdate: {
+                            [Op.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
+                        }
+                    }
+                }
+            })
+
+            let countHasVisited = await VisitMstr.count({
+                where: {
+                    [Op.and]: {
+                        visit_sales_id: {
+                            [Op.eq]: user.user_ptnr_id
+                        },
+                        visit_startdate: {
+                            [Op.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
+                        },
+                        visit_status: {
+                            [Op.eq]: 'Y'
+                        }
+                    }
+                }
+            })
+
+            let data = {
+                usernama: user.usernama,
+                group: dataGroup.groupnama,
+                userphone: user.userphone,
+                countPlanning: countPlanning,
+                visit: {
+                    visited: countHasVisited,
+                    totalVisit: countScheduleVisiting
+                }
+            }
+    
             res.status(200)
                 .json({
                     status: "success",
                     message: "berhasil mengambil data profile",
                     data: data
                 })
-        })
-        .catch(err => {
+        } catch (error) {
+            console.log(error)
             res.status(400)
                 .json({
-                    status: "failed",
-                    message: "gagal mengambil data profile",
-                    err: err.message
+                    status: 'gagal',
+                    message: 'gagal mengambil data profile',
+                    error: error.message
                 })
-        })
+        }
     }
 }
 
