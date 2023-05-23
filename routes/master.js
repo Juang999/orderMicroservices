@@ -17,7 +17,8 @@ let route = [
     '/gender', //10
     '/currency', //11
     '/entity', //12
-    '/timestamp' //13
+    '/timestamp', //13
+    '/default-periode' //14
 ]
 
 router.get(route[0], [middleware.authenticate], controller.MasterController.getGroup)
@@ -34,5 +35,6 @@ router.get(route[10], [middleware.authenticate], controller.MasterController.get
 router.get(route[11], [middleware.authenticate], controller.MasterController.getCurrency)
 router.get(route[12], controller.MasterController.getEntity)
 router.get(route[13], [middleware.authenticate], controller.MasterController.getTimeStamp)
+router.get(route[14], controller.MasterController.getDefaultPeriode)
 
 module.exports = router
