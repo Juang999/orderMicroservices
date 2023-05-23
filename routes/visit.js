@@ -13,7 +13,8 @@ let route = [
     '/checkin/:visited_oid', //5
     '/checkout/:visited_oid', //6
     '/delete-list-schedule/:visited_oid', //7
-    '/delete-schedule/:visit_code' //8
+    '/delete-schedule/:visit_code', //8
+    '/get-customer-per-periode' //9
 ]
 
 router.get(route[0], [middleware.authenticate], controller.VisitController.getVisitingSchedule)
@@ -25,5 +26,6 @@ router.patch(route[5], [middleware.authenticate, middleware.CheckinRequest],  co
 router.patch(route[6], [middleware.authenticate, middleware.CheckoutRequest], controller.VisitController.checkOut)
 router.delete(route[7], [middleware.authenticate], controller.VisitController.deleteFromListSchedule)
 router.delete(route[8], [middleware.authenticate], controller.VisitController.deleteSchedule)
+router.get(route[9], [middleware.authenticate],controller.VisitController.getCustomerPerPeriode)
 
 module.exports = router
