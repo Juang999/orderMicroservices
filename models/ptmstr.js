@@ -37,6 +37,18 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'ptcat_id',
         foreignKey: 'pt_cat_id'
       })
+
+      PtMstr.hasMany(models.PidDet, {
+        as: 'price',
+        sourceKey: 'pt_id',
+        foreignKey: 'pid_pt_id'
+      })
+
+      PtMstr.belongsTo(models.PtsCatCat, {
+        as: 'sub_category',
+        targetKey: 'ptscat_id',
+        foreignKey: 'pt_ptscat_id'
+      })
     }
   }
   PtMstr.init({
@@ -94,7 +106,11 @@ module.exports = (sequelize, DataTypes) => {
     pt_qty: DataTypes.INTEGER,
     pt_additional: DataTypes.INTEGER,
     pt_year: DataTypes.DATE,
-    pt_clothes_id: DataTypes.INTEGER
+    pt_clothes_id: DataTypes.INTEGER,
+    pt_size_id: DataTypes.INTEGER,
+    pt_code_color_id: DataTypes.INTEGER,
+    pt_ptscat_id: DataTypes.INTEGER,
+    pt_cat_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

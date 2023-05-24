@@ -1,61 +1,62 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 
 const ProductController = {
-    index: async (req, res) => {
+    getProductByPriceCategory: async (req, res) => {
         try {
             let page = (req.query.page == null) ? 1 : req.query.page
 
-            let offset = page * 10 - 10
             let limit = 10
+            let offset = (page * limit) - limit
+            let whereSubquery = (req.query.pi_oid) ? `WHERE pid_pi_oid = '${req.query.pi_oid}'` : ''
             
             let where = {
-                pt_pl_id: 1,
-                pt_size_id: {
-                    [Op.gt]: 0
-                },
-                pt_code_color_id: {
-                    [Op.gt]: 0
-                },
-                pt_cat_id: {
-                    [Op.gt]: 0
-                },
-                pt_ptscat_id: {
-                    [Op.gt]: 0
+                pt_id: {
+                    [Op.in]: Sequelize.literal(`(SELECT DISTINCT(pid_pt_id) FROM public.pid_det ${whereSubquery})`)
                 },
                 pt_desc2: {
                     [Op.not]: null
                 }
             }
 
-            if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`} 
+            if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+            if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
+            if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
+            if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
 
-            let datas = await PtMstr.findAll({
+            let {count, rows} = await PtMstr.findAndCountAll({
                         limit: limit,
                         offset: offset,
-                        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('pt_desc2')), 'pt_desc2'], 'pt_clothes_id', 'pt_en_id'],
-                        order: [['pt_desc2', 'desc']],
+                        attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+                        order: [['pt_desc2', 'asc']],
                         where: where,
+                        include: [
+                            {
+                                model: EnMstr,
+                                as: 'EnMstr',
+                                attributes: ['en_id', 'en_desc'],
+                            },{
+                                model: PtCatMstr,
+                                as: 'category_product',
+                                attributes: [['ptcat_desc', 'category']]
+                            },{
+                                model: PtsCatCat,
+                                as: 'sub_category',
+                                attributes: [['ptscat_desc', 'sub_category']]
+                            }
+                        ]
                     })
 
-            for (const data of datas) {
-                data.dataValues.EnMstr = await EnMstr.findOne({
-                    where: {
-                        en_id: data.pt_en_id
-                    },
-                    attributes: ['en_desc']
-                })
+            let result = {
+                data: rows,
+                totalData: rows.length,
+                page: page,
+                totalPage: Math.ceil(count/limit)
             }
 
-            let result = {
-                data: datas,
-                totalData: limit,
-                page: req.query.page
-            }
-    
             res.status(200)
                 .json({
                     status: "berhasil",
@@ -444,6 +445,66 @@ const ProductController = {
                     error: err.message
                 })
         })
+    },
+    getProductByLocation: (req, res) => {
+        let page = (req.query.page == null) ? 1 : req.query.page
+
+            let limit = 10
+            let offset = (page * limit) - limit
+            let whereSubquery = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
+            
+            let where = {
+                pt_id: {
+                    [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereSubquery}))`)
+                },
+                pt_desc2: {
+                    [Op.not]: null
+                }
+            }
+
+            if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
+            if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
+            if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
+            if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+
+            PtMstr.findAndCountAll({
+                    limit: limit,
+                    offset: offset,
+                    attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+                    order: [['pt_desc2', 'asc']],
+                    where: where,
+                    include: [
+                        {
+                            model: EnMstr,
+                            as: 'EnMstr',
+                            attributes: ['en_id', 'en_desc'],
+                        },{
+                            model: PtCatMstr,
+                            as: 'category_product',
+                            attributes: [['ptcat_desc', 'category']]
+                        },{
+                            model: PtsCatCat,
+                            as: 'sub_category',
+                            attributes: [['ptscat_desc', 'sub_category']]
+                        }
+                    ],
+                    distinct: true
+                }).then(result => {
+                    let theResult = {
+                        data: result.rows,
+                        totalData: result.rows.length,
+                        page: page,
+                        totalPage: Math.ceil(result.count/limit)
+                    }
+
+                    res.status(200)
+                        .json({
+                            status: "berhasil",
+                            message: "berhasil mengambil data produk berdasarkan lokasi",
+                            data: theResult
+                        })
+                })
+
     }
 }
 
