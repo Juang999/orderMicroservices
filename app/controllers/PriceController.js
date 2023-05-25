@@ -3,10 +3,7 @@ const {PiMstr} = require("../../models")
 const PriceController = {
     getPriceType: (req, res) => {
         PiMstr.findAll({
-            where: {
-                pi_ptnrg_id: req.params.group_id
-            },
-            attributes: ['pi_oid', 'pi_desc', 'pi_code']
+            attributes: ['pi_oid', 'pi_desc', 'pi_start_date', 'pi_end_date'],
         }).then(result => {
             res.status(200)
                 .json({
