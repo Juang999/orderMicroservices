@@ -1,4 +1,4 @@
-const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr} = require('../../models')
+const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr, LocMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../helper/helper')
 const moment = require('moment')
@@ -337,6 +337,31 @@ const MasterController = {
                 .json({
                     status: "gagal",
                     message: "gagal mengambil data periode default",
+                    error: err.message
+                })
+        })
+    },
+    getLocation: (req, res) => {
+        LocMstr.findAll({
+            where: {
+                loc_id: {
+                    [Op.in]: [10001, 200010, 300018]
+                }
+            },
+            attributes: ['loc_id', 'loc_desc'],
+            order: [['loc_id', 'asc']]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    messaeg: 'berhasil mengambil data lokasi',
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: 'gagal mengambil data lokasi',
                     error: err.message
                 })
         })

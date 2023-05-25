@@ -18,7 +18,8 @@ let route = [
     '/currency', //11
     '/entity', //12
     '/timestamp', //13
-    '/default-periode' //14
+    '/default-periode', //14
+    '/get-location' //15
 ]
 
 router.get(route[0], [middleware.authenticate], controller.MasterController.getGroup)
@@ -36,5 +37,6 @@ router.get(route[11], [middleware.authenticate], controller.MasterController.get
 router.get(route[12], controller.MasterController.getEntity)
 router.get(route[13], [middleware.authenticate], controller.MasterController.getTimeStamp)
 router.get(route[14], controller.MasterController.getDefaultPeriode)
+router.get(route[15], controller.MasterController.getLocation)
 
 module.exports = router
