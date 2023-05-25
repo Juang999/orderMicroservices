@@ -20,6 +20,8 @@ const ProductController = {
                 }
             }
 
+            let wherePricelist = (req.query.pi_oid) ? {pi_oid: req.query.pi_oid} : '';
+
             if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
             if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
             if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
@@ -53,9 +55,7 @@ const ProductController = {
                                         model: PiMstr,
                                         as: 'price_list',
                                         attributes: ['pi_oid', 'pi_desc'],
-                                        where: {
-                                            pi_oid: req.query.pi_oid
-                                        }
+                                        where: wherePricelist
                                     }
                                 ]
                             }
@@ -176,6 +176,12 @@ const ProductController = {
         })
     },
     showProductByLocation: (req, res) => {
+        let idLocation
+
+        if (req.params.entity == 1) {idLocation = 10001}
+        if (req.params.entity == 2) {idLocation = 200010}
+        if (req.params.entity == 3) {idLocation = 300018}
+
         PtMstr.findOne({
             where: {
                 [Op.and]: {
@@ -222,7 +228,7 @@ const ProductController = {
                             as: 'location',
                             attributes: ['loc_id', 'loc_desc'],
                             where: {
-                                loc_id: req.params.loc_id
+                                loc_id: idLocation
                             }
                         }
                     ]
@@ -535,35 +541,23 @@ const ProductController = {
 
             let limit = 10
             let offset = (page * limit) - limit
-            let whereSubquery = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
-            
-            let where = {
-                pt_id: {
-                    [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereSubquery}))`)
-                }
-            }
+            let whereLocation = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
 
             if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
             if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
             if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
             if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
 
-            if (req.query.loc_id == null) {
-                res.status(300)
-                    .json({
-                        status: 'gagal',
-                        message: 'harus memilih lokasi terlebih dahulu'
-                    })
-
-                return
-            }
-
             PtMstr.findAndCountAll({
                     limit: limit,
                     offset: offset,
                     attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
                     order: [['pt_desc2', 'asc']],
-                    where: where,
+                    where: {
+                        pt_id: {
+                            [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereLocation}))`)
+                        }
+                    },
                     include: [
                         {
                             model: EnMstr,
@@ -582,7 +576,9 @@ const ProductController = {
                             as: 'Qty',
                             attributes: ['invc_oid', 'invc_pt_id', 'invc_loc_id'],
                             where: {
-                                invc_loc_id: req.query.loc_id
+                                invc_loc_id: {
+                                    [Op.in]: whereLocation
+                                }
                             },
                             include: [
                                 {
