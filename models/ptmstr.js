@@ -49,6 +49,18 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'ptscat_id',
         foreignKey: 'pt_ptscat_id'
       })
+
+      PtMstr.belongsTo(models.CodeMstr, {
+        as: 'color',
+        targetKey: 'code_id',
+        foreignKey: 'pt_code_color_id'
+      })
+
+      PtMstr.belongsTo(models.SizeMstr, {
+        as: 'size',
+        targetKey: 'size_id',
+        foreignKey: 'pt_size_id'
+      })
     }
   }
   PtMstr.init({

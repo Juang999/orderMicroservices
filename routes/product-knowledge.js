@@ -5,7 +5,7 @@ const middleware = require('../app/kernel')
 
 const route = [
     '/get-product-by-price-category', //0
-    '/show/:pt_id', //1
+    '/show-product-by-price-category/:pt_id/pi_oid/:pi_oid/entity/:entity', //1
     '/product/:product/color/:pt_code_color_id', //2
     '/product/:product/color/:pt_code_color_id/size/:pt_size_code_id/price/:pi_oid/entity/:en_id/grade/:grade', //3
     '/product/:product/color/:color_id/size/:size_id', //4
@@ -14,11 +14,13 @@ const route = [
     '/category/sub_category/:cat_id', //7
     '/size', //8
     '/get-all-product', //9
-    '/get-product-by-location' //10
+    '/get-product-by-location', //10
+    '/show-product-by-location/:pt_id/loc_id/:loc_id'
 ]
+console.log(route[1])
 
 router.get(route[0], [middleware.authenticate], controller.ProductController.getProductByPriceCategory)
-router.get(route[1], [middleware.authenticate], controller.ProductController.show)
+router.get(route[1], [middleware.authenticate], controller.ProductController.showProductByPriceCategory)
 router.get(route[2], [middleware.authenticate], controller.ProductController.showSize)
 router.get(route[3], [middleware.authenticate], controller.ProductController.showPrinceAndQty)
 router.get(route[4], [middleware.authenticate], controller.ProductController.showGrade)
@@ -28,5 +30,6 @@ router.get(route[7], [middleware.authenticate], controller.ProductController.get
 router.get(route[8], [middleware.authenticate], controller.ProductController.getSize)
 router.get(route[9], controller.ProductController.getAllProduct)
 router.get(route[10], [middleware.authenticate], controller.ProductController.getProductByLocation)
+router.get(route[11], [middleware.authenticate], controller.ProductController.showProductByLocation)
 
 module.exports = router
