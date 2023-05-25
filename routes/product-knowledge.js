@@ -15,7 +15,7 @@ const route = [
     '/size', //8
     '/get-all-product', //9
     '/get-product-by-location', //10
-    '/show-product-by-location/:pt_id/loc_id/:loc_id'
+    '/show-product-by-location/:pt_id/entity/:entity', //11
 ]
 console.log(route[1])
 
