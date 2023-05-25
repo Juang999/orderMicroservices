@@ -1,7 +1,8 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 const cryptr = require('cryptr')
+const { read } = require('fs')
 const crypter = new cryptr('thisIsSecretPassword')
 
 const ProductController = {
@@ -16,9 +17,6 @@ const ProductController = {
             let where = {
                 pt_id: {
                     [Op.in]: Sequelize.literal(`(SELECT DISTINCT(pid_pt_id) FROM public.pid_det ${whereSubquery})`)
-                },
-                pt_desc2: {
-                    [Op.not]: null
                 }
             }
 
@@ -38,14 +36,28 @@ const ProductController = {
                                 model: EnMstr,
                                 as: 'EnMstr',
                                 attributes: ['en_id', 'en_desc'],
-                            },{
+                            }, {
                                 model: PtCatMstr,
                                 as: 'category_product',
                                 attributes: [['ptcat_desc', 'category']]
-                            },{
+                            }, {
                                 model: PtsCatCat,
                                 as: 'sub_category',
                                 attributes: [['ptscat_desc', 'sub_category']]
+                            }, {
+                                model: PidDet,
+                                as: 'price',
+                                attributes: ['pid_pt_id', 'pid_pi_oid'],
+                                include: [
+                                    {
+                                        model: PiMstr,
+                                        as: 'price_list',
+                                        attributes: ['pi_oid', 'pi_desc'],
+                                        where: {
+                                            pi_oid: req.query.pi_oid
+                                        }
+                                    }
+                                ]
                             }
                         ]
                     })
@@ -72,53 +84,180 @@ const ProductController = {
                 })
         }
     },
-    show: (req, res) => {
-        PtMstr.findAll({
+    showProductByPriceCategory: (req, res) => {
+        let entityWarehouse
+
+        if (req.params.entity == 1) {entityWarehouse = 10001}
+        if (req.params.entity == 2) {entityWarehouse = 200010}
+        if (req.params.entity == 3) {entityWarehouse = 30008}
+
+        PtMstr.findOne({
             where: {
-                pt_desc2: req.params.pt_desc2
+                [Op.and]: {
+                    pt_id: {
+                        [Op.eq]: req.params.pt_id
+                    },
+                }
             },
+            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
             include: [
                 {
                     model: EnMstr,
                     as: 'EnMstr',
                     attributes: ['en_id', 'en_desc']
+                },{
+                    model: PidDet,
+                    as: 'price',
+                    attributes: ['pid_oid', 'pid_pt_id', 'pid_pi_oid'],
+                    where: {
+                        pid_pi_oid: req.params.pi_oid
+                    },
+                    include: [
+                        {
+                            model: PiMstr,
+                            as: 'price_list',
+                            attributes: ['pi_oid', 'pi_desc']
+                        }, {
+                            model: PiddDet,
+                            as: 'detail_price',
+                            attributes: ['pidd_price', 'pidd_disc'],
+                            include: [
+                                {
+                                    model: CodeMstr,
+                                    as: 'PaymentType',
+                                    attributes: ['code_code', 'code_id', 'code_desc']
+                                }
+                            ]
+                        }
+                    ]
+                }, {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    attributes: ['invc_qty_available'],
+                    include: [
+                        {
+                            model: LocMstr,
+                            as: 'location',
+                            attributes: ['loc_id', 'loc_desc']
+                        }
+                    ]
+                }, {
+                    model: PtCatMstr,
+                    as: 'category_product',
+                    attributes: ['ptcat_desc']
+                }, {
+                    model: PtsCatCat,
+                    as: 'sub_category',
+                    attributes: ['ptscat_desc']
+                }, {
+                    model: CodeMstr,
+                    as: 'color',
+                    attributes: ['code_desc']
+                }, {
+                    model: SizeMstr,
+                    as: 'size',
+                    attributes: ['size_desc']
                 }
-            ],
-            attributes: ['pt_desc2', 'pt_clothes_id', 'pt_code_color_id']
-        }).then( async result => {
-            let colorId = []
-
-            for (const product of result) {
-                colorId.push(product.dataValues.pt_code_color_id)
-            }
-
-            let colorData = await CodeMstr.findAll({
-                where: {
-                    code_id: {
-                        [Op.in]: colorId
-                    }
-                },
-                attributes: ['code_id', 'code_name']
-            })
-
-            let data = {
-                data: result[0].dataValues,
-                color: colorData
-            }
-
+            ]
+        }).then(result => {
             res.status(200)
-            .json({
-                status: "berhasil",
-                message: "berhasil mengambli data",
-                data: data
-            })
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil detail data",
+                    data: result
+                })
         }).catch(err => {
             res.status(400)
-            .json({
-                status: "gagal",
-                message: "gagal mengambil data",
-                error: err.message
-            })
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil detail data",
+                    error: err.message
+                })
+        })
+    },
+    showProductByLocation: (req, res) => {
+        PtMstr.findOne({
+            where: {
+                [Op.and]: {
+                    pt_id: {
+                        [Op.eq]: req.params.pt_id
+                    },
+                }
+            },
+            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+            include: [
+                {
+                    model: EnMstr,
+                    as: 'EnMstr',
+                    attributes: ['en_id', 'en_desc']
+                },{
+                    model: PidDet,
+                    as: 'price',
+                    attributes: ['pid_oid', 'pid_pt_id', 'pid_pi_oid'],
+                    include: [
+                        {
+                            model: PiMstr,
+                            as: 'price_list',
+                            attributes: ['pi_oid', 'pi_desc']
+                        }, {
+                            model: PiddDet,
+                            as: 'detail_price',
+                            attributes: ['pidd_price', 'pidd_disc'],
+                            include: [
+                                {
+                                    model: CodeMstr,
+                                    as: 'PaymentType',
+                                    attributes: ['code_code', 'code_id', 'code_desc']
+                                }
+                            ]
+                        }
+                    ]
+                }, {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    attributes: ['invc_qty_available'],
+                    include: [
+                        {
+                            model: LocMstr,
+                            as: 'location',
+                            attributes: ['loc_id', 'loc_desc'],
+                            where: {
+                                loc_id: req.params.loc_id
+                            }
+                        }
+                    ]
+                }, {
+                    model: PtCatMstr,
+                    as: 'category_product',
+                    attributes: ['ptcat_desc']
+                }, {
+                    model: PtsCatCat,
+                    as: 'sub_category',
+                    attributes: ['ptscat_desc']
+                }, {
+                    model: CodeMstr,
+                    as: 'color',
+                    attributes: ['code_desc']
+                }, {
+                    model: SizeMstr,
+                    as: 'size',
+                    attributes: ['size_desc']
+                }
+            ]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil detail data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil detail data",
+                    error: err.message
+                })
         })
     },
     showSize: (req, res) => {
@@ -456,9 +595,6 @@ const ProductController = {
             let where = {
                 pt_id: {
                     [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereSubquery}))`)
-                },
-                pt_desc2: {
-                    [Op.not]: null
                 }
             }
 
@@ -466,6 +602,16 @@ const ProductController = {
             if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
             if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
             if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+
+            if (req.query.loc_id == null) {
+                res.status(300)
+                    .json({
+                        status: 'gagal',
+                        message: 'harus memilih lokasi terlebih dahulu'
+                    })
+
+                return
+            }
 
             PtMstr.findAndCountAll({
                     limit: limit,
@@ -478,14 +624,28 @@ const ProductController = {
                             model: EnMstr,
                             as: 'EnMstr',
                             attributes: ['en_id', 'en_desc'],
-                        },{
+                        }, {
                             model: PtCatMstr,
                             as: 'category_product',
                             attributes: [['ptcat_desc', 'category']]
-                        },{
+                        }, {
                             model: PtsCatCat,
                             as: 'sub_category',
                             attributes: [['ptscat_desc', 'sub_category']]
+                        }, {
+                            model: InvcMstr,
+                            as: 'Qty',
+                            attributes: ['invc_oid', 'invc_pt_id', 'invc_loc_id'],
+                            where: {
+                                invc_loc_id: req.query.loc_id
+                            },
+                            include: [
+                                {
+                                    model: LocMstr,
+                                    as: 'location',
+                                    attributes: ['loc_id', 'loc_desc']
+                                }
+                            ]
                         }
                     ],
                     distinct: true
@@ -502,6 +662,14 @@ const ProductController = {
                             status: "berhasil",
                             message: "berhasil mengambil data produk berdasarkan lokasi",
                             data: theResult
+                        })
+                }).catch(err => {
+                    console.log(err)
+                    res.status(400)
+                        .json({
+                            status: 'gagal',
+                            message: 'gagal mengambil data produk berdasarkan lokasi',
+                            error: err.message
                         })
                 })
 
