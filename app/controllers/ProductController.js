@@ -100,6 +100,7 @@ const ProductController = {
                 }
             },
             attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+            order: [['pt_clothes_id', 'desc']],
             include: [
                 {
                     model: EnMstr,
