@@ -152,7 +152,8 @@ const ProductController = {
         }).then( async result => {            
             let location = await InvcMstr.findOne({
                 where: {
-                    invc_loc_id: entityWarehouse
+                    invc_loc_id: entityWarehouse,
+                    invc_pt_id: result.dataValues.pt_id
                 },
                 attributes: ['invc_qty_available'],
                 include: [
