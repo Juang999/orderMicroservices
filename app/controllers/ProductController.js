@@ -31,7 +31,7 @@ const ProductController = {
                         limit: limit,
                         offset: offset,
                         attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
-                        order: [['pt_desc2', 'asc']],
+                        order: [['pt_clothes_id', 'desc']],
                         where: where,
                         include: [
                             {
@@ -100,7 +100,6 @@ const ProductController = {
                 }
             },
             attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-            order: [['pt_clothes_id', 'desc']],
             include: [
                 {
                     model: EnMstr,
