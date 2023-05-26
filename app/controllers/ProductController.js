@@ -131,17 +131,6 @@ const ProductController = {
                         }
                     ]
                 }, {
-                    model: InvcMstr,
-                    as: 'Qty',
-                    attributes: ['invc_qty_available'],
-                    include: [
-                        {
-                            model: LocMstr,
-                            as: 'location',
-                            attributes: ['loc_id', 'loc_desc']
-                        }
-                    ]
-                }, {
                     model: PtCatMstr,
                     as: 'category_product',
                     attributes: ['ptcat_desc']
@@ -159,7 +148,29 @@ const ProductController = {
                     attributes: ['size_desc']
                 }
             ]
-        }).then(result => {
+        }).then( async result => {            
+            let location = await InvcMstr.findOne({
+                where: {
+                    invc_loc_id: entityWarehouse
+                },
+                attributes: ['invc_qty_available'],
+                include: [
+                    {
+                        model: LocMstr,
+                        as: 'location',
+                        attributes: ['loc_id', 'loc_desc']
+                    }
+                ]
+            })
+
+            if (location) {
+                result.dataValues.status = 'DIJUAL'
+                result.dataValues.Qty = location
+            } else {
+                result.dataValues.status = 'PRE-ORDER'
+                result.dataValues.Qty = []
+            }
+
             res.status(200)
                 .json({
                     status: "berhasil",
