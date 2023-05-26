@@ -553,7 +553,7 @@ const ProductController = {
 
             let limit = 10
             let offset = (page * limit) - limit
-            let whereLocation = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
+            let whereLocation = (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
 
             if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
             if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
