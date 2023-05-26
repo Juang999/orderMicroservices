@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PiMstr.hasMany(models.PidDet, {
+        as: 'list_price',
+        sourceKey: 'pi_oid',
+        foreignKey: 'pid_pi_oid'
+      })
     }
   }
   PiMstr.init({

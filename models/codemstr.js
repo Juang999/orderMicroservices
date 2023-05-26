@@ -50,6 +50,12 @@ module.exports = (sequelize, DataTypes) => {
         as: 'ptnr_sales_type',
         foreignKey: 'ptnr_bp_type'
       })
+
+      CodeMstr.hasMany(models.PtMstr, {
+        as: 'color',
+        sourceKey: 'code_id',
+        foreignKey: 'pt_code_color_id'
+      })
     }
   }
   CodeMstr.init({

@@ -1,61 +1,74 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 const cryptr = require('cryptr')
+const { read } = require('fs')
 const crypter = new cryptr('thisIsSecretPassword')
 
 const ProductController = {
-    index: async (req, res) => {
+    getProductByPriceCategory: async (req, res) => {
         try {
             let page = (req.query.page == null) ? 1 : req.query.page
 
-            let offset = page * 10 - 10
             let limit = 10
+            let offset = (page * limit) - limit
+            let whereSubquery = (req.query.pi_oid) ? `WHERE pid_pi_oid = '${req.query.pi_oid}'` : ''
             
             let where = {
-                pt_pl_id: 1,
-                pt_size_id: {
-                    [Op.gt]: 0
-                },
-                pt_code_color_id: {
-                    [Op.gt]: 0
-                },
-                pt_cat_id: {
-                    [Op.gt]: 0
-                },
-                pt_ptscat_id: {
-                    [Op.gt]: 0
-                },
-                pt_desc2: {
-                    [Op.not]: null
+                pt_id: {
+                    [Op.in]: Sequelize.literal(`(SELECT DISTINCT(pid_pt_id) FROM public.pid_det ${whereSubquery})`)
                 }
             }
 
-            if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`} 
+            let wherePricelist = (req.query.pi_oid) ? {pi_oid: req.query.pi_oid} : '';
 
-            let datas = await PtMstr.findAll({
+            if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+            if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
+            if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
+            if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
+
+            let {count, rows} = await PtMstr.findAndCountAll({
                         limit: limit,
                         offset: offset,
-                        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('pt_desc2')), 'pt_desc2'], 'pt_clothes_id', 'pt_en_id'],
-                        order: [['pt_desc2', 'desc']],
+                        attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+                        order: [['pt_desc2', 'asc']],
                         where: where,
+                        include: [
+                            {
+                                model: EnMstr,
+                                as: 'EnMstr',
+                                attributes: ['en_id', 'en_desc'],
+                            }, {
+                                model: PtCatMstr,
+                                as: 'category_product',
+                                attributes: [['ptcat_desc', 'category']]
+                            }, {
+                                model: PtsCatCat,
+                                as: 'sub_category',
+                                attributes: [['ptscat_desc', 'sub_category']]
+                            }, {
+                                model: PidDet,
+                                as: 'price',
+                                attributes: ['pid_pt_id', 'pid_pi_oid'],
+                                include: [
+                                    {
+                                        model: PiMstr,
+                                        as: 'price_list',
+                                        attributes: ['pi_oid', 'pi_desc'],
+                                        where: wherePricelist
+                                    }
+                                ]
+                            }
+                        ]
                     })
 
-            for (const data of datas) {
-                data.dataValues.EnMstr = await EnMstr.findOne({
-                    where: {
-                        en_id: data.pt_en_id
-                    },
-                    attributes: ['en_desc']
-                })
+            let result = {
+                data: rows,
+                totalData: rows.length,
+                page: page,
+                totalPage: Math.ceil(count/limit)
             }
 
-            let result = {
-                data: datas,
-                totalData: limit,
-                page: req.query.page
-            }
-    
             res.status(200)
                 .json({
                     status: "berhasil",
@@ -72,53 +85,186 @@ const ProductController = {
                 })
         }
     },
-    show: (req, res) => {
-        PtMstr.findAll({
+    showProductByPriceCategory: (req, res) => {
+        let entityWarehouse
+
+        if (req.params.entity == 1) {entityWarehouse = 10001}
+        if (req.params.entity == 2) {entityWarehouse = 200010}
+        if (req.params.entity == 3) {entityWarehouse = 30008}
+
+        PtMstr.findOne({
             where: {
-                pt_desc2: req.params.pt_desc2
+                [Op.and]: {
+                    pt_id: {
+                        [Op.eq]: req.params.pt_id
+                    },
+                }
             },
+            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
             include: [
                 {
                     model: EnMstr,
                     as: 'EnMstr',
                     attributes: ['en_id', 'en_desc']
+                },{
+                    model: PidDet,
+                    as: 'price',
+                    attributes: ['pid_oid', 'pid_pt_id', 'pid_pi_oid'],
+                    where: {
+                        pid_pi_oid: req.params.pi_oid
+                    },
+                    include: [
+                        {
+                            model: PiMstr,
+                            as: 'price_list',
+                            attributes: ['pi_oid', 'pi_desc']
+                        }, {
+                            model: PiddDet,
+                            as: 'detail_price',
+                            attributes: ['pidd_price', 'pidd_disc'],
+                            include: [
+                                {
+                                    model: CodeMstr,
+                                    as: 'PaymentType',
+                                    attributes: ['code_code', 'code_id', 'code_desc']
+                                }
+                            ]
+                        }
+                    ]
+                }, {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    attributes: ['invc_qty_available'],
+                    include: [
+                        {
+                            model: LocMstr,
+                            as: 'location',
+                            attributes: ['loc_id', 'loc_desc']
+                        }
+                    ]
+                }, {
+                    model: PtCatMstr,
+                    as: 'category_product',
+                    attributes: ['ptcat_desc']
+                }, {
+                    model: PtsCatCat,
+                    as: 'sub_category',
+                    attributes: ['ptscat_desc']
+                }, {
+                    model: CodeMstr,
+                    as: 'color',
+                    attributes: ['code_desc']
+                }, {
+                    model: SizeMstr,
+                    as: 'size',
+                    attributes: ['size_desc']
                 }
-            ],
-            attributes: ['pt_desc2', 'pt_clothes_id', 'pt_code_color_id']
-        }).then( async result => {
-            let colorId = []
-
-            for (const product of result) {
-                colorId.push(product.dataValues.pt_code_color_id)
-            }
-
-            let colorData = await CodeMstr.findAll({
-                where: {
-                    code_id: {
-                        [Op.in]: colorId
-                    }
-                },
-                attributes: ['code_id', 'code_name']
-            })
-
-            let data = {
-                data: result[0].dataValues,
-                color: colorData
-            }
-
+            ]
+        }).then(result => {
             res.status(200)
-            .json({
-                status: "berhasil",
-                message: "berhasil mengambli data",
-                data: data
-            })
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil detail data",
+                    data: result
+                })
         }).catch(err => {
             res.status(400)
-            .json({
-                status: "gagal",
-                message: "gagal mengambil data",
-                error: err.message
-            })
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil detail data",
+                    error: err.message
+                })
+        })
+    },
+    showProductByLocation: (req, res) => {
+        let idLocation
+
+        if (req.params.entity == 1) {idLocation = 10001}
+        if (req.params.entity == 2) {idLocation = 200010}
+        if (req.params.entity == 3) {idLocation = 300018}
+
+        PtMstr.findOne({
+            where: {
+                [Op.and]: {
+                    pt_id: {
+                        [Op.eq]: req.params.pt_id
+                    },
+                }
+            },
+            attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+            include: [
+                {
+                    model: EnMstr,
+                    as: 'EnMstr',
+                    attributes: ['en_id', 'en_desc']
+                },{
+                    model: PidDet,
+                    as: 'price',
+                    attributes: ['pid_oid', 'pid_pt_id', 'pid_pi_oid'],
+                    include: [
+                        {
+                            model: PiMstr,
+                            as: 'price_list',
+                            attributes: ['pi_oid', 'pi_desc']
+                        }, {
+                            model: PiddDet,
+                            as: 'detail_price',
+                            attributes: ['pidd_price', 'pidd_disc'],
+                            include: [
+                                {
+                                    model: CodeMstr,
+                                    as: 'PaymentType',
+                                    attributes: ['code_code', 'code_id', 'code_desc']
+                                }
+                            ]
+                        }
+                    ]
+                }, {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    attributes: ['invc_qty_available'],
+                    include: [
+                        {
+                            model: LocMstr,
+                            as: 'location',
+                            attributes: ['loc_id', 'loc_desc'],
+                            where: {
+                                loc_id: idLocation
+                            }
+                        }
+                    ]
+                }, {
+                    model: PtCatMstr,
+                    as: 'category_product',
+                    attributes: ['ptcat_desc']
+                }, {
+                    model: PtsCatCat,
+                    as: 'sub_category',
+                    attributes: ['ptscat_desc']
+                }, {
+                    model: CodeMstr,
+                    as: 'color',
+                    attributes: ['code_desc']
+                }, {
+                    model: SizeMstr,
+                    as: 'size',
+                    attributes: ['size_desc']
+                }
+            ]
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil detail data",
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil detail data",
+                    error: err.message
+                })
         })
     },
     showSize: (req, res) => {
@@ -176,79 +322,24 @@ const ProductController = {
                 })
         })
     },
-    showPrinceAndQty: async (req, res) => {
-        try {
-            let product = await PtMstr.findOne({
-                where: {
-                    [Op.and]: [
-                        {pt_desc2: req.params.product},
-                        {pt_code_color_id: req.params.pt_code_color_id},
-                        {pt_size_id: req.params.pt_size_code_id},
-                        {pt_class: req.params.grade}
-                    ]
-                },
-                attributes: ['pt_id']
-            })
-
-            let query = [
-                `(SELECT pid_oid FROM public.pid_det WHERE pid_pi_oid = '${req.params.pi_oid}' and pid_pt_id = ${product.pt_id})`
-            ]
-
-            let price = await PiddDet.findAll({
-                where: {
-                    pidd_pid_oid: {
-                        [Op.eq]: sequelize.literal(query[0])
-                    }
-                },
-                attributes: ['pidd_price', 'pidd_payment_type', 'pidd_disc'],
-                include: [
-                    {
-                        model: CodeMstr,
-                        as: "PaymentType",
-                        attributes: ["code_name"]
-                    }
-                ]
-            })
-
-            if (req.params.en_id == 1) var warehouse = 991
-            if (req.params.en_id == 2) var warehouse = 20004
-            if (req.params.en_id == 3) var warehouse = 992 
-
-            let rawStock = await InvcMstr.findOne({
-                where: {
-                    [Op.and]: [
-                        {invc_pt_id: product.pt_id},
-                        {invc_loc_id: warehouse}
-                    ]
-                }
-            })
-
-            if (rawStock != null) {
-                stock = (rawStock.invc_qty_show_available != null) ? Math.ceil(rawStock.invc_qty * rawStock.invc_qty_show_available) : 0
-            } else {
-                stock = 0
-            }
-
-            let data  = {
-                price: price,
-                stock: stock
-            }
-
+    showPriceAndQty: async (req, res) => {
+        PiMstr.findAll({
+            attributes: ['pi_oid', 'pi_desc', 'pi_start_date', 'pi_end_date']
+        }).then(result => {
             res.status(200)
                 .json({
-                    status: "success",
-                    message: "success to get data",
-                    data: data
+                    status: "berhasil",
+                    message: "berhasil mengambil data price list",
+                    data: result
                 })
-        } catch (error) {
-            console.log(error)
+        }).catch(err => {
             res.status(400)
                 .json({
-                    status: "failed",
-                    message: "failed to get data",
-                    error: error.message
+                    status: "gagal",
+                    message: "gagal mengambil data price list",
+                    error: err.message
                 })
-        }
+        })
     },
     getCategory: (req, res) => {
         PtCatMstr.findAll({
@@ -445,6 +536,85 @@ const ProductController = {
                     error: err.message
                 })
         })
+    },
+    getProductByLocation: (req, res) => {
+        let page = (req.query.page == null) ? 1 : req.query.page
+
+            let limit = 10
+            let offset = (page * limit) - limit
+            let whereLocation = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
+
+            if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
+            if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
+            if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
+            if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+
+            PtMstr.findAndCountAll({
+                    limit: limit,
+                    offset: offset,
+                    attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+                    order: [['pt_desc2', 'asc']],
+                    where: {
+                        pt_id: {
+                            [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereLocation}))`)
+                        }
+                    },
+                    include: [
+                        {
+                            model: EnMstr,
+                            as: 'EnMstr',
+                            attributes: ['en_id', 'en_desc'],
+                        }, {
+                            model: PtCatMstr,
+                            as: 'category_product',
+                            attributes: [['ptcat_desc', 'category']]
+                        }, {
+                            model: PtsCatCat,
+                            as: 'sub_category',
+                            attributes: [['ptscat_desc', 'sub_category']]
+                        }, {
+                            model: InvcMstr,
+                            as: 'Qty',
+                            attributes: ['invc_oid', 'invc_pt_id', 'invc_loc_id'],
+                            where: {
+                                invc_loc_id: {
+                                    [Op.in]: whereLocation
+                                }
+                            },
+                            include: [
+                                {
+                                    model: LocMstr,
+                                    as: 'location',
+                                    attributes: ['loc_id', 'loc_desc']
+                                }
+                            ]
+                        }
+                    ],
+                    distinct: true
+                }).then(result => {
+                    let theResult = {
+                        data: result.rows,
+                        totalData: result.rows.length,
+                        page: page,
+                        totalPage: Math.ceil(result.count/limit)
+                    }
+
+                    res.status(200)
+                        .json({
+                            status: "berhasil",
+                            message: "berhasil mengambil data produk berdasarkan lokasi",
+                            data: theResult
+                        })
+                }).catch(err => {
+                    console.log(err)
+                    res.status(400)
+                        .json({
+                            status: 'gagal',
+                            message: 'gagal mengambil data produk berdasarkan lokasi',
+                            error: err.message
+                        })
+                })
+
     }
 }
 

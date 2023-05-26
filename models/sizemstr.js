@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      SizeMstr.hasMany(models.PtMstr, {
+        as: 'size',
+        sourceKey: 'size_id',
+        foreignKey: 'pt_size_id'
+      })
     }
   }
   SizeMstr.init({
