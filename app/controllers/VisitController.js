@@ -1,4 +1,4 @@
-const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, PlansdDet} = require('../../models')
+const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, PlansdDet, CodeMstr} = require('../../models')
 const {Sequelize, Op} = require('sequelize')
 const helper = require('../../helper/helper')
 const moment = require('moment')
@@ -344,6 +344,52 @@ const VisitController = {
                     error: error.message
                 })
         }
+    },
+    getVisitType: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'visiting'
+            },
+            order: [['code_default', 'desc']],
+            attributes: ['code_oid', 'code_id', 'code_field', 'code_code', 'code_name', 'code_desc']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil mengambil data',
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: 'gagal',
+                    message: 'gagal mengambil data',
+                    error: err.message
+                })
+        })
+    },
+    getOutputVisitType: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'output-visiting'
+            },
+            order: [['code_default', 'desc']],
+            attributes: ['code_oid', 'code_id', 'code_field', 'code_code', 'code_name', 'code_desc']
+        }).then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil mengambil data',
+                    data: result
+                })
+        }).catch(err => {
+            res.status(400)
+                .json({
+                    status: 'gagal',
+                    message: 'gagal mengambil data',
+                    error: err.message
+                })
+        })
     }
 }
 
