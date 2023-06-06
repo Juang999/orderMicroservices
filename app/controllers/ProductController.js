@@ -31,7 +31,7 @@ const ProductController = {
                         limit: limit,
                         offset: offset,
                         attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
-                        order: [['pt_desc2', 'asc']],
+                        order: [['pt_clothes_id', 'asc']],
                         where: where,
                         include: [
                             {
@@ -132,17 +132,6 @@ const ProductController = {
                         }
                     ]
                 }, {
-                    model: InvcMstr,
-                    as: 'Qty',
-                    attributes: ['invc_qty_available'],
-                    include: [
-                        {
-                            model: LocMstr,
-                            as: 'location',
-                            attributes: ['loc_id', 'loc_desc']
-                        }
-                    ]
-                }, {
                     model: PtCatMstr,
                     as: 'category_product',
                     attributes: ['ptcat_desc']
@@ -160,7 +149,30 @@ const ProductController = {
                     attributes: ['size_desc']
                 }
             ]
-        }).then(result => {
+        }).then( async result => {            
+            let location = await InvcMstr.findOne({
+                where: {
+                    invc_loc_id: entityWarehouse,
+                    invc_pt_id: result.dataValues.pt_id
+                },
+                attributes: ['invc_qty_available'],
+                include: [
+                    {
+                        model: LocMstr,
+                        as: 'location',
+                        attributes: ['loc_id', 'loc_desc']
+                    }
+                ]
+            })
+
+            if (location) {
+                result.dataValues.status = 'DIJUAL'
+                result.dataValues.Qty = location
+            } else {
+                result.dataValues.status = 'PRE-ORDER'
+                result.dataValues.Qty = []
+            }
+
             res.status(200)
                 .json({
                     status: "berhasil",
@@ -542,23 +554,25 @@ const ProductController = {
 
             let limit = 10
             let offset = (page * limit) - limit
-            let whereLocation = (req.query.loc_id) ? req.query.loc_id : [10001, 200010, 300018]
+            let whereLocation = (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
 
-            if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
-            if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
-            if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
-            if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
+            let where ={
+                pt_id: {
+                    [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereLocation}))`)
+                }
+            }
+
+            if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
+            if (req.query.category) {where.pt_cat_id = {[Op.eq]: req.query.category}}
+            if (req.query.subcategory) {where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}}
+            if (req.query.entity) {where.pt_en_id = {[Op.eq]: req.query.entity}}
 
             PtMstr.findAndCountAll({
                     limit: limit,
                     offset: offset,
                     attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
-                    order: [['pt_desc2', 'asc']],
-                    where: {
-                        pt_id: {
-                            [Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereLocation}))`)
-                        }
-                    },
+                    order: [['pt_clothes_id', 'asc']],
+                    where: where,
                     include: [
                         {
                             model: EnMstr,
