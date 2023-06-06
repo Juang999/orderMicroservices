@@ -5,7 +5,7 @@ const middleware = require('../app/kernel')
 
 const route = [
     '/get-product-by-price-category', //0
-    '/show-product-by-price-category/:pt_id/pi_oid/:pi_oid/entity/:entity', //1
+    '/show-product-by-price-category/:pt_id/pi_oid/:pi_oid', //1
     '/product/:product/color/:pt_code_color_id', //2
     '/get-price-list', //3
     '/product/:product/color/:color_id/size/:size_id', //4

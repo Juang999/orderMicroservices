@@ -85,12 +85,6 @@ const ProductController = {
         }
     },
     showProductByPriceCategory: (req, res) => {
-        let entityWarehouse
-
-        if (req.params.entity == 1) {entityWarehouse = 10001}
-        if (req.params.entity == 2) {entityWarehouse = 200010}
-        if (req.params.entity == 3) {entityWarehouse = 30008}
-
         PtMstr.findOne({
             where: {
                 [Op.and]: {
@@ -146,31 +140,26 @@ const ProductController = {
                     model: SizeMstr,
                     as: 'size',
                     attributes: ['size_desc']
+                }, {
+                    model: InvcMstr,
+                    as: 'Qty',
+                    where: {
+                        invc_loc_id: {
+                            [Op.in]: [10001, 200010, 30008]
+                        }
+                    },
+                    attributes: ['invc_qty_available'],
+                    include: [
+                        {
+                            model: LocMstr,
+                            as: 'location',
+                            attributes: ['loc_id', 'loc_desc']
+                        }
+                    ]
                 }
             ]
-        }).then( async result => {            
-            let location = await InvcMstr.findOne({
-                where: {
-                    invc_loc_id: entityWarehouse,
-                    invc_pt_id: result.dataValues.pt_id
-                },
-                attributes: ['invc_qty_available'],
-                include: [
-                    {
-                        model: LocMstr,
-                        as: 'location',
-                        attributes: ['loc_id', 'loc_desc']
-                    }
-                ]
-            })
-
-            if (location) {
-                result.dataValues.status = 'DIJUAL'
-                result.dataValues.Qty = location
-            } else {
-                result.dataValues.status = 'PRE-ORDER'
-                result.dataValues.Qty = []
-            }
+        }).then( result => {
+            result.dataValues.status = (result.Qty.length != 0) ? 'DIJUAL' : 'PRE-ORDER'
 
             res.status(200)
                 .json({
