@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var upload = require('express-fileupload')
 var host = 'http://localhost'
 var port = 3003
 
