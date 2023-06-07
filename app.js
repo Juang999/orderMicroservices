@@ -1,10 +1,9 @@
+require('dotenv').config()
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var host = 'http://localhost'
-var port = 3000
 var upload = require('express-fileupload')
 
 var indexRouter = require('./routes/index');
@@ -62,8 +61,8 @@ app.use(function(err, req, res, next) {
 });
 
 // running server
-app.listen(port, () => {
-  console.log(`site: ${host}:${port}`)
+app.listen(process.env.PORT, () => {
+  console.log(`site: ${process.env.HOST}:${process.env.PORT}`)
 })
 
 module.exports = app;

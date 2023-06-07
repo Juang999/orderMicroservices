@@ -50,7 +50,9 @@ module.exports = (sequelize, DataTypes) => {
     visited_check_out: DataTypes.DATE,
     visited_lat_gps_check_out: DataTypes.INTEGER,
     visited_long_gps_check_out: DataTypes.INTEGER,
-    visited_address_gps_check_out: DataTypes.STRING
+    visited_address_gps_check_out: DataTypes.STRING,
+    visited_objective: DataTypes.INTEGER,
+    visited_output: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

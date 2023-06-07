@@ -5,7 +5,8 @@ const rules = [
     check('checkout_lat').notEmpty().isNumeric(),
     check('checkout_long').notEmpty().isNumeric(),
     check('checkout_address').notEmpty().isString(),
-    check('checkout_checkout').notEmpty()
+    check('result').notEmpty().isString(),
+    check('output').notEmpty().isNumeric()
 ]
 
 const CheckoutRequest = [
@@ -15,7 +16,7 @@ const CheckoutRequest = [
     (req, res, next) => {
         const errors = validationResult(req)
 
-        if (!errors) {
+        if (!errors.isEmpty()) {
             res.status(400)
                 .json(errors.array())
         

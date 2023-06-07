@@ -5,7 +5,7 @@ const rules = [
     check('checkin_lat').notEmpty().isNumeric(),
     check('checkin_long').notEmpty().isNumeric(),
     check('checkin_address').notEmpty().isString(),
-    check('checkin_checkin').notEmpty()
+    check('objective').notEmpty().isNumeric(),
 ]
 
 const CheckinRequest = [
