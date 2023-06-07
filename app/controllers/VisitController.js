@@ -120,7 +120,7 @@ const VisitController = {
 
             let lastData = await VisitMstr.findOne({
                 order: [['visit_add_date', 'desc']]
-            })
+        })
 
             let totalData = (lastData.length == 0) ? 1 : parseInt(lastData.visit_code.substring(12)) + 1;
 
@@ -153,7 +153,9 @@ const VisitController = {
                 })
         }
     },
-    createListCustomerToVisit: (req, res) => {
+    createListCustomerToVisit: async (req, res) => {
+        let authUser = await helper.auth(req.get('authorization'))
+
         VisitedDet.create({
             visited_oid: uuidv4(),
             visited_visit_code: req.body.visit_code,
@@ -161,7 +163,9 @@ const VisitController = {
             visited_ptnr_id: req.body.ptnr_id,
             visited_cus_name: req.body.cus_name,
             visited_cus_address: req.body.cus_address,
-            visited_cus_phone: req.body.cus_phone
+            visited_cus_phone: req.body.cus_phone,
+            visited_add_by: req.body.usernama,
+            visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
         }).then(result => {
             res.status(200)
                 .json({
@@ -225,8 +229,9 @@ const VisitController = {
                 visited_lat_gps_check_in: req.body.checkin_lat,
                 visited_long_gps_check_in: req.body.checkin_long,
                 visited_address_gps_check_in: req.body.checkin_address,
-                visited_check_in: req.body.checkin_checkin,
-                visited_foto: `images/${file.name}`
+                visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
+                visited_foto: `images/${file.name}`,
+                visited_objective: req.body.objective
             }, {
                 where: {
                     visited_oid: req.params.visited_oid
@@ -248,12 +253,18 @@ const VisitController = {
                 })
         }
     },
-    checkOut: (req, res) => {
+    checkOut: async (req, res) => {
+        let authUser = await helper.auth(req.get('authorization'))
+
         VisitedDet.update({
             visited_lat_gps_check_out: req.body.checkout_lat,
             visited_long_gps_check_out: req.body.checkout_long,
             visited_address_gps_check_out: req.body.checkout_address,
-            visited_check_out: req.body.checkout_checkout,
+            visited_check_out: moment().format('YYYY-MM-DD HH:mm:ss'),
+            visited_result: req.body.result,
+            visited_output: req.body.output,
+            visited_upd_by: authUser.usernama,
+            visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
         }, {
             where: {
                 visited_oid: req.params.visited_oid
@@ -266,6 +277,7 @@ const VisitController = {
                     data: result
                 })
         }).catch(err => {
+            console.log(err)
             res.status(400)
                 .json({
                     status: "gagal",
