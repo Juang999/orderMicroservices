@@ -19,7 +19,10 @@ let route = [
     '/entity', //12
     '/timestamp', //13
     '/default-periode', //14
-    '/get-location' //15
+    '/get-location', //15
+    '/get-payment-type', //16
+    '/get-payment-method', // 17
+    '/get-creditterms-mstr', // 18
 ]
 
 router.get(route[0], [middleware.authenticate], controller.MasterController.getGroup)
@@ -38,5 +41,8 @@ router.get(route[12], controller.MasterController.getEntity)
 router.get(route[13], [middleware.authenticate], controller.MasterController.getTimeStamp)
 router.get(route[14], controller.MasterController.getDefaultPeriode)
 router.get(route[15], controller.MasterController.getLocation)
+router.get(route[16], controller.MasterController.getPaymentType)
+router.get(route[17], controller.MasterController.getPaymentMethod)
+router.get(route[18], controller.MasterController.getCreditTermsMstr)
 
 module.exports = router

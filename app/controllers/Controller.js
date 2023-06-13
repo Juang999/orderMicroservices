@@ -8,7 +8,8 @@ const Controller = {
     PlanController: require('./PlanController'),
     PartnerAddressController: require('./PartnerAddressController'),
     ParnterContactController: require('./PartnerContactController'),
-    VisitController: require('./VisitController')
+    VisitController: require('./VisitController'),
+    SalesQuotationController: require('./SalesQuotationController')
 }
 
 module.exports = Controller
