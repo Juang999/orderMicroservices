@@ -64,19 +64,31 @@ const VisitController = {
             where: {
                 visit_code: req.params.visit_code
             },
-            include: [
-                {
-                    model: VisitedDet,
-                    as: 'visit_detail',
-                    attributes: ['visited_oid', 'visited_cus_name', 'visited_cus_phone', 'visited_cus_address', 'visited_type'],
-                }
-            ],
             attributes: [
                 "visit_code", 
                 [Sequelize.literal(`concat(replace(to_char(visit_startdate, 'Day'), ' ', ''), ', ', to_char(visit_startdate, 'YYYY'), ' ', replace(to_char(visit_startdate, 'Month'), ' ', ''), ' ', to_char(visit_startdate, 'DD'))`), "visit_startdate"], 
                 [Sequelize.literal(`concat(replace(to_char(visit_enddate, 'Day'), ' ', ''), ', ', to_char(visit_enddate, 'YYYY'), ' ', replace(to_char(visit_enddate, 'Month'), ' ', ''), ' ', to_char(visit_enddate, 'DD'))`), "visit_enddate"], 
                 "visit_status"
             ]
+        }).then( async result => {
+            if (!result) {
+                res.status(400)
+                    .json({
+                        status: "gagal",
+                        message: 'data tidak ada',
+                    })
+            }
+
+            let visited_detail = await VisitedDet.findAndCountAll({
+                where: {
+                    visited_visit_code: result.visit_code
+                },
+                attributes: ['visited_oid', 'visited_cus_name', 'visited_cus_phone', 'visited_cus_address', 'visited_type'],
+            })
+
+            result.dataValues.visited_detail = (visited_detail.length == 0) ? {count: 0, rows: []} : visited_detail
+
+            return result
         }).then(result => {
             res.status(200)
                 .json({
