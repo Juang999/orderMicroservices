@@ -365,6 +365,102 @@ const MasterController = {
                     error: err.message
                 })
         })
+    },
+    getPaymentType: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'payment_type'
+            },
+            attributes: ['code_oid', 'code_id', 'code_name']
+        })
+        .then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil mengambil data',
+                    data: result
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getPaymentMethod: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'payment_methode'
+            },
+            attributes: ['code_oid', 'code_id', 'code_name']
+        })
+        .then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getCreditTermsMstr: (req, res) => {
+        CodeMstr.findAll({
+            where: {
+                code_field: 'creditterms_mstr'
+            },
+            attributes: ['code_oid', 'code_id', 'code_name']
+        })
+        .then(result => {
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    message: "berhasil mengambil data",
+                    data: result
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: "gagal mengambil data",
+                    error: err.message
+                })
+        })
+    },
+    getLocationGit: (req, res) => {
+        LocMstr.findAll({
+            where: {
+                loc_id: 100025
+            },
+            attributes: ['loc_id', 'loc_desc']
+        })
+        .then(result => {
+            res.status(200)
+                .json({
+                    status: 'berhasil',
+                    message: 'berhasil mengambil data',
+                    data: result
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: 'gagal',
+                    message: 'gagal mengambil data',
+                    error: err.message
+                })
+        })
     }
 }
 
