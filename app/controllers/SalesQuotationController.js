@@ -156,4 +156,4 @@ const SalesQuotationController = {
 	}
 }
 
-module.exports = SalesQuotationController``
+module.exports = SalesQuotationController
