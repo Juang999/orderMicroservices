@@ -4,25 +4,25 @@ const controller = require('../app/controllers/Controller')
 const middleware = require('../app/kernel')
 
 let route = [
-    '/group', //0
-    '/customer', //1,
-    '/periode', //2
-    '/periode-customer', //3
-    '/tax_invoice', //4
-    '/addr_type', //5
-    '/contact_person', //6
-    '/bp_type', //7
-    '/citizen', //8
-    '/blood_group', //9
-    '/gender', //10
-    '/currency', //11
-    '/entity', //12
-    '/timestamp', //13
-    '/default-periode', //14
-    '/get-location', //15
-    '/get-payment-type', //16
-    '/get-payment-method', // 17
-    '/get-creditterms-mstr', // 18
+	'/group', //0
+	'/customer', //1,
+	'/periode', //2
+	'/periode-customer', //3
+	'/tax_invoice', //4
+	'/addr_type', //5
+	'/contact_person', //6
+	'/bp_type', //7
+	'/citizen', //8
+	'/blood_group', //9
+	'/gender', //10
+	'/currency', //11
+	'/entity', //12
+	'/timestamp', //13
+	'/default-periode', //14
+	'/get-location', //15
+	'/get-payment-type', //16
+	'/get-payment-method', // 17
+	'/get-creditterms-mstr', // 18
 ]
 
 router.get(route[0], [middleware.authenticate], controller.MasterController.getGroup)

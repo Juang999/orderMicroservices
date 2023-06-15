@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     sqd_add_date: DataTypes.DATE,
     sqd_upd_by: DataTypes.STRING,
     sqd_upd_date: DataTypes.DATE,
-    sqd_sq_oid: DataTypes.INTEGER,
+    sqd_sq_oid: DataTypes.UUID,
     sqd_seq: DataTypes.INTEGER,
     sqd_is_additional_charge: DataTypes.STRING,
     sqd_si_id: DataTypes.INTEGER,

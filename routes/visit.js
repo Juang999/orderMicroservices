@@ -5,18 +5,18 @@ const middleware = require('../app/kernel')
 const {query, body} = require('express-validator')
 
 let route = [
-    '/get-visiting-schedule', //1
-    '/get-detail-visiting-schedule/:visit_code', //2
-    '/get-detail-visiting/:visited_oid', //2
-    '/create-schedule', //3
-    '/create-list-customer-to-visit', //4
-    '/checkin/:visited_oid', //5
-    '/checkout/:visited_oid', //6
-    '/delete-list-schedule/:visited_oid', //7
-    '/delete-schedule/:visit_code', //8
-    '/get-customer-per-periode', //9
-    '/get-visiting-type', //10
-    '/get-output-visiting-type' //11
+	'/get-visiting-schedule', //1
+	'/get-detail-visiting-schedule/:visit_code', //2
+	'/get-detail-visiting/:visited_oid', //2
+	'/create-schedule', //3
+	'/create-list-customer-to-visit', //4
+	'/checkin/:visited_oid', //5
+	'/checkout/:visited_oid', //6
+	'/delete-list-schedule/:visited_oid', //7
+	'/delete-schedule/:visit_code', //8
+	'/get-customer-per-periode', //9
+	'/get-visiting-type', //10
+	'/get-output-visiting-type' //11
 ]
 
 router.get(route[0], [middleware.authenticate], controller.VisitController.getVisitingSchedule)

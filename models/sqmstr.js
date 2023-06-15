@@ -10,11 +10,24 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      SqMstr.hasOne(models.SoMstr, {
+        as: 'sales_order',
+        foreignKey: 'so_ref_sq_oid',
+        sourceKey: 'sq_oid'
+      })
+
+      SqMstr.belongsTo(models.PtnrMstr, {
+        as: 'sold_to',
+        foreignKey: 'sq_ptnr_id_sold',
+        targetKey: 'ptnr_id'
+      })
     }
   }
   SqMstr.init({
-    sq_oid: DataTypes.UUID,
+    sq_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     sq_dom_id: DataTypes.INTEGER,
     sq_en_id: DataTypes.INTEGER,
     sq_add_by: DataTypes.STRING,

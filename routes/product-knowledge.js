@@ -4,20 +4,19 @@ const controller = require('../app/controllers/Controller')
 const middleware = require('../app/kernel')
 
 const route = [
-    '/get-product-by-price-category', //0
-    '/show-product-by-price-category/:pt_id/pi_oid/:pi_oid', //1
-    '/product/:product/color/:pt_code_color_id', //2
-    '/get-price-list', //3
-    '/product/:product/color/:color_id/size/:size_id', //4
-    '/category', //5
-    '/product/category/:category_id', //6
-    '/category/sub_category/:cat_id', //7
-    '/size', //8
-    '/get-all-product', //9
-    '/get-product-by-location', //10
-    '/show-product-by-location/:pt_id/entity/:entity', //11
+	'/get-product-by-price-category', //0
+	'/show-product-by-price-category/:pt_id/pi_oid/:pi_oid', //1
+	'/product/:product/color/:pt_code_color_id', //2
+	'/get-price-list', //3
+	'/product/:product/color/:color_id/size/:size_id', //4
+	'/category', //5
+	'/product/category/:category_id', //6
+	'/category/sub_category/:cat_id', //7
+	'/size', //8
+	'/get-all-product', //9
+	'/get-product-by-location', //10
+	'/show-product-by-location/:pt_id/entity/:entity', //11
 ]
-console.log(route[1])
 
 router.get(route[0], [middleware.authenticate], controller.ProductController.getProductByPriceCategory)
 router.get(route[1], [middleware.authenticate], controller.ProductController.showProductByPriceCategory)
