@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   AcMstr.init({
-    ac_oid: DataTypes.UUID,
+    ac_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     ac_dom_id: DataTypes.INTEGER,
     ac_add_by: DataTypes.STRING,
     ac_add_date: DataTypes.DATE,
@@ -43,7 +46,10 @@ module.exports = (sequelize, DataTypes) => {
     ac_is_cf: DataTypes.STRING
   }, {
     sequelize,
+    schema: 'public',
     modelName: 'AcMstr',
+    tableName: 'ac_mstr',
+    timestamps: false
   });
   return AcMstr;
 };
