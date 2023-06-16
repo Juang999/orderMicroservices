@@ -34,7 +34,7 @@ const auth = async (token) => {
                 },{
                     model: PtnrMstr,
                     as: 'detail_user',
-                    attributes: ['ptnr_id', 'ptnr_code', 'ptnr_name', 'ptnr_ptnrg_id']
+                    attributes: ['ptnr_id', 'ptnr_dom_id', 'ptnr_en_id', 'ptnr_code', 'ptnr_name', 'ptnr_ptnrg_id']
                 }
             ],
             raw: true,
