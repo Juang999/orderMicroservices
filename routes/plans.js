@@ -4,9 +4,9 @@ const controller = require('../app/controllers/Controller')
 const middleware = require('../app/kernel')
 
 let route = [
-    '/get-plan', //0
-    '/create-unplan', //1
-    '/customer-per-periode' //2
+	'/get-plan', //0
+	'/create-unplan', //1
+	'/customer-per-periode' //2
 ]
 
 router.get(route[0], [middleware.authenticate], controller.PlanController.getPlan)

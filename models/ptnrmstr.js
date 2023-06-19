@@ -70,6 +70,18 @@ module.exports = (sequelize, DataTypes) => {
         as: "detail_visit",
         foreignKey: "visited_ptnr_id"
       })
+
+      PtnrMstr.hasOne(models.TConfUser, {
+        as: 'user_account',
+        foreignKey: 'user_ptnr_id',
+        sourceKey: 'ptnr_id'
+      })
+
+      PtnrMstr.hasMany(models.SqMstr, {
+        as: 'sales_quotation',
+        foreignKey: 'sq_ptnr_id_sold',
+        sourceKey: 'ptnr_id'
+      })
     }
   }
   PtnrMstr.init({
