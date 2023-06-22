@@ -1,4 +1,4 @@
-const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr} = require('../../models')
+const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../helper/helper')
 const {v4: uuidv4} = require('uuid')
@@ -98,16 +98,68 @@ const SalesQuotationController = {
 			})
 	},
 	createSalesQuotation: async (req, res) => {
+		
+		let partnerCustomer = await PtnrMstr.findOne({
+			where: {
+				ptnr_id: req.body.sq_ptnr_id_sold
+			}
+		})
+
+		let partnerGroup = await PtnrgGrp.findOne({
+			where: {
+				ptnrg_id: partnerCustomer.ptnr_ptnrg_id
+			}
+		})
+
+		let debt = await ArMstr.findAll({
+			where: {
+				[Op.and]: {
+					ar_bill_to: req.body.sq_ptnr_id_sold,
+					ar_amount: {
+						[Op.gt]: Sequelize.col('ar_pay_amount')
+					}
+				}
+			},
+			attributes: [[Sequelize.fn('sum', Sequelize.literal('ar_amount - ar_pay_amount')), 'debt_total']]
+		})
+
+		let total = debt.debt_total + req.body.sq_total
+
+		if (partnerCustomer.ptnr_limit_credit > 0) {
+			if ( total >= partnerCustomer.ptnr_limit_credit) {
+				res.status(400)
+					.json({
+						status: 'gagal',
+						error: 'total dari pembelian barang dan piutangmu melebihi limit'
+					})
+				
+				return
+			}
+		}
+
+		if (partnerGroup.ptnrg_limit_credit  > 0) {
+			if (total >= partnerGroup.ptnrg_limit_credit) {
+				res.status(400)
+					.json({
+						status: 'gagal',
+						error: 'total dari pembelian barang dan piutangmu melebihi limit'
+					})
+	
+				return
+			}
+		}
+
+		let transaction
+		
 		try {
+			transaction = await sequelize.transaction()
+
 			let authUser = await helper.auth(req.get('authorization'))
 
-			let partnerCustomer = await PtnrMstr.findOne({
-				where: {
-					ptnr_id: req.body.sq_ptnr_id_sold
-				}
-			})
 
-			const sqCode = `SQ${authUser.detail_user.ptnr_en_id}0${moment().format('YYMM')}`
+			let countDataSQ = await SqMstr.count()
+
+			const sqCode = `SQ${authUser.detail_user.ptnr_en_id}0${moment().format('MMYY')}00${countDataSQ + 1}`
 
 			let headerSalesQuotation = await SqMstr.create({
 				sq_oid: uuidv4(),
@@ -129,7 +181,7 @@ const SalesQuotationController = {
 				sq_disc_header: 0,
 				sq_total: req.body.sq_total,
 				sq_close_date: moment(req.body.sq_close_date).format('YYYY-MM-DD'),
-				sq_trans_id: 'I',
+				sq_trans_id: 'D',
 				sq_trans_rmks: (req.body.sq_trans_rmks) ? req.body.sq_trans_rmks : null,
 				sq_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
 				sq_cu_id: req.body.sq_cu_id,
@@ -156,7 +208,9 @@ const SalesQuotationController = {
 				sq_ship_to: (req.body.sq_is_dropshipper == 'Y' ) ? req.body.sq_ship_to : null
 			})
 
-			for (const bodySalesQuotation of JSON.parse(req.body.sq_body_sales_quotation)) {
+			let convertToJson = JSON.parse(req.body.sq_body_sales_quotation)
+
+			for (const bodySalesQuotation of convertToJson) {
 				let countDetailProductSalesQuotation = await SqdDet.count({
 					where: {
 						sqd_sq_oid: headerSalesQuotation.sq_oid
@@ -164,7 +218,7 @@ const SalesQuotationController = {
 				})
 
 				let sequenceDetailProductSalesQuotation = (countDetailProductSalesQuotation) ? countDetailProductSalesQuotation + 1 : 1
-				
+
 				await SqdDet.create({
 					sqd_oid: uuidv4(),
 					sqd_dom_id: headerSalesQuotation.sq_dom_id,
@@ -174,62 +228,32 @@ const SalesQuotationController = {
 					sqd_sq_oid: headerSalesQuotation.sq_oid,
 					sqd_seq: sequenceDetailProductSalesQuotation,
 					sqd_is_additional_charge: 'N',
-					sqd_si_id: headerSalesQuotation.sq_si_id,
+					sqd_si_id: 992,
 					sqd_pt_id: bodySalesQuotation.sqd_pt_id,
 					sqd_rmks: (bodySalesQuotation.sqd_rmks) ? bodySalesQuotation.sqd_rmks : null,
 					sqd_qty: bodySalesQuotation.sqd_qty,
 					sqd_qty_allocated: bodySalesQuotation.sqd_qty_allocated,
-					sqd_qty_picked: bodySalesQuotation.sqd_qty_picked,
-					sqd_qty_shipment: bodySalesQuotation.sqd_qty_shipment,
-					sqd_qty_pending_inv: bodySalesQuotation.sqd_qty_pending_inv,
-					sqd_qty_invoice: bodySalesQuotation.sqd_qty_invoice,
-					sqd_um: bodySalesQuotation.sqd_um,
 					sqd_cost: bodySalesQuotation.sqd_cost,
 					sqd_price: bodySalesQuotation.sqd_price,
-					sqd_disc: bodySalesQuotation.sqd_disc,
 					sqd_sales_ac_id: bodySalesQuotation.sqd_sales_ac_id,
 					sqd_sales_sb_id: bodySalesQuotation.sqd_sales_sb_id,
 					sqd_sales_cc_id: bodySalesQuotation.sqd_sales_cc_id,
-					sqd_disc_ac_id: bodySalesQuotation.sqd_disc_ac_id,
 					sqd_um_conv: bodySalesQuotation.sqd_um_conv,
 					sqd_qty_real: bodySalesQuotation.sqd_qty_real,
 					sqd_taxable: bodySalesQuotation.sqd_taxable,
 					sqd_tax_inc: bodySalesQuotation.sqd_tax_inc,
 					sqd_tax_class: bodySalesQuotation.sqd_tax_class,
-					sqd_status: bodySalesQuotation.sqd_status,
-					sqd_dt: bodySalesQuotation.sqd_dt,
-					sqd_payment: bodySalesQuotation.sqd_payment,
-					sqd_dp: bodySalesQuotation.sqd_dp,
-					sqd_sales_unit: bodySalesQuotation.sqd_sales_unit,
-					sqd_loc_id: bodySalesQuotation.sqd_loc_id,
-					sqd_serial: bodySalesQuotation.sqd_serial,
-					sqd_qty_return: bodySalesQuotation.sqd_qty_return,
-					sqd_ppn_type: bodySalesQuotation.sqd_ppn_type,
-					sqd_pod_oid: bodySalesQuotation.sqd_pod_oid,
-					sqd_qty_ir: bodySalesQuotation.sqd_qty_ir,
-					sqd_invc_oid: bodySalesQuotation.sqd_invc_oid,
-					sqd_invc_loc_id: bodySalesQuotation.sqd_invc_loc_id,
-					sqd_need_date: bodySalesQuotation.sqd_need_date,
-					sqd_qty_transfer_receipt: bodySalesQuotation.sqd_qty_transfer_receipt,
-					sqd_qty_transfer_issue: bodySalesQuotation.sqd_qty_transfer_issue,
-					sqd_total_amount_price: bodySalesQuotation.sqd_total_amount_price,
-					sbd_qty_riud: bodySalesQuotation.sbd_qty_riud,
-					sbd_qty_processed: bodySalesQuotation.sbd_qty_processed,
-					sbd_qty_completed: bodySalesQuotation.sbd_qty_completed,
-					sqd_qty_transfer: bodySalesQuotation.sqd_qty_transfer,
-					sqd_qty_so: bodySalesQuotation.sqd_qty_so,
-					sqd_qty_maxorder: bodySalesQuotation.sqd_qty_maxorder,
-					sqd_commision: bodySalesQuotation.sqd_commision,
-					sqd_commision_total: bodySalesQuotation.sqd_commision_total,
-					sqd_sales_unit_total: bodySalesQuotation.sqd_sales_unit_total,
-					sqd_sqd_oid: bodySalesQuotation.sqd_sqd_oid,
-					sodas_sq_oid: bodySalesQuotation.sodas_sq_oid,
+					sqd_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
+					sqd_payment: 0,
+					sqd_dp: 0,
+					sqd_sales_unit: 0,
 					sqd_qty_booking: bodySalesQuotation.sqd_qty_booking,
 					sqd_qty_outs: bodySalesQuotation.sqd_qty_outs,
-					sq_dropshipper: bodySalesQuotation.sq_dropshipper,
-					sqd_invc_qty: bodySalesQuotation.sqd_invc_qty,
+					sqd_invc_qty: (bodySalesQuotation.sqd_invc_qty) ? bodySalesQuotation.sqd_invc_qty : null,
 				})
 			}
+
+			await transaction.commit();
 
 			res.status(200)
 				.json({
@@ -238,6 +262,8 @@ const SalesQuotationController = {
 					data: headerSalesQuotation
 				})
 		} catch (error) {
+			await transaction.rollback();
+
 			res.status(400)
 				.json({
 					status: 'gagal',
@@ -333,6 +359,121 @@ const SalesQuotationController = {
 				.json({
 					status: 'gagal',
 					message: 'gagal mengambil data list harga',
+					error: error.message
+				})
+		}
+	},
+	getDebtCustomer: (req, res) => {
+		ArMstr.findAll({
+			where: {
+				ar_bill_to: req.params.ptnrId
+			},
+			order: [['ar_date', 'desc']],
+			attributes: ['ar_date', 'ar_amount', 'ar_pay_amount']
+		})
+		.then(result => {
+			for (const detailResult of result) {
+				if (detailResult.ar_amount - detailResult.ar_pay_amount == 0) {
+					detailResult.dataValues.ar_status = 'Lunas'
+				} else {
+					detailResult.dataValues.ar_status = 'Belum Lunas'
+				}
+			}
+
+			return result
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data hutang',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data hutang',
+					error: err.message
+				})
+		})
+	},
+	sumDebtCustomer: (req, res) => {
+		ArMstr.findAll({
+			where: {
+				[Op.and]: {
+					ar_bill_to: req.params.ptnrId,
+					ar_amount: {
+						[Op.gt]: Sequelize.col('ar_pay_amount')
+					}
+				}
+			},
+			attributes: [[Sequelize.fn('sum', Sequelize.literal('ar_amount - ar_pay_amount')), 'debt_total']]
+		})
+		.then(result => {
+			result[0].dataValues.debt_total = (result[0].dataValues.debt_total == null) ? 0 : result[0].dataValues.debt_total
+
+			return result
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil jumlah hutang',
+					data: result,
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil jumlah hutang',
+					error: err.message
+				})
+		})
+	},
+	getLimitCreditCustomer: async (req, res) => {
+		try {
+			var limitCredit
+			
+			limitCredit = await PtnrMstr.findOne({
+				where: {
+					ptnr_id: req.params.ptnrId
+				},
+				attributes: [
+					['ptnr_limit_credit', 'limit_credit'],
+					['ptnr_ptnrg_id', 'ptnrg_id']
+				]
+			})
+
+			if (limitCredit.dataValues.limit_credit == 0 || limitCredit.dataValues.limit_credit == null) {
+				limitCredit = await PtnrgGrp.findOne({
+					where: {
+						ptnrg_id: limitCredit.dataValues.ptnrg_id
+					},
+					attributes: [
+						['ptnrg_limit_credit', 'limit_credit']
+					]
+				})
+			}
+
+			let dataLimitCredit = {
+				limit_credit: (limitCredit.dataValues.limit_credit == null) ? 0 : limitCredit.dataValues.limit_credit,
+				status: (limitCredit.dataValues.limit_credit == null || limitCredit.dataValues.limit_credit == 0) ? 'UNLIMITED' : 'LIMITED'
+			}
+
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data batas kredit pengguna',
+					data: dataLimitCredit
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data batas kredit barang pengguna',
 					error: error.message
 				})
 		}
