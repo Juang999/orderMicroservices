@@ -1,4 +1,4 @@
-const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, AcMstr, PtMstr, PidDet, PiddDet, CodeMstr} = require('../../models')
+const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, AcMstr, PtMstr, PidDet, PiddDet, CodeMstr, InvcMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../helper/helper')
 const {v4: uuidv4} = require('uuid')
@@ -548,6 +548,22 @@ const SalesQuotationController = {
 										attributes: ['code_name']
 									}
 								]
+							}
+						]
+					}, {
+						model: InvcMstr,
+						as: 'Qty',
+						attributes: ['invc_qty_available'],
+						where: {
+							invc_loc_id: {
+								[Op.in]: [10001, 200010, 300018]
+							}
+						},
+						include: [
+							{
+								model: LocMstr,
+								as: 'location',
+								attributes: ['loc_id', 'loc_desc']
 							}
 						]
 					}
