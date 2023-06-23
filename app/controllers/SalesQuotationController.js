@@ -1,4 +1,4 @@
-const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp} = require('../../models')
+const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, AcMstr, PtMstr, PidDet, PiddDet, CodeMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../helper/helper')
 const {v4: uuidv4} = require('uuid')
@@ -474,6 +474,97 @@ const SalesQuotationController = {
 				.json({
 					status: 'gagal',
 					message: 'gagal mengambil data batas kredit barang pengguna',
+					error: error.message
+				})
+		}
+	},
+	getAccount: (req, res) => {
+		AcMstr.findAll({
+			attributes: ['ac_id', 'ac_name']
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data akun',
+					data: result
+				})
+		})
+		.catch(err => {
+			console.log(err)
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data akun',
+					error: err.message
+				})
+		})
+	},
+	getProduct: async (req, res) => {
+		try {
+			let dataCustomer = await PtnrMstr.findOne({
+				where: {
+					ptnr_id: req.params.ptnrId
+				},
+				attributes: ['ptnr_ptnrg_id']
+			}) 
+	
+			let pageProduct = (req.query.page) ? req.query.page : 1
+			let limitProduct = 10
+			let offsetProduct = (pageProduct * limitProduct) - limitProduct
+			
+			let dataProduct = await PtMstr.findAll({
+				attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2'],
+				where: {
+					pt_id: {
+						[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det)`)
+					}
+				},
+				limit: limitProduct,
+				offset: offsetProduct,
+				include: [
+					{
+						model: PidDet,
+						as: 'price',
+						attributes: ['pid_pt_id', 'pid_pi_oid'],
+						where: {
+							pid_pi_oid: {
+								[Op.in]: Sequelize.literal(`(SELECT pi_oid FROM public.pi_mstr WHERE pi_ptnrg_id = ${dataCustomer.dataValues.ptnr_ptnrg_id})`)
+							}
+						},
+						include: [
+							{
+								model: PiMstr,
+								as: 'price_list',
+								attributes: ['pi_oid', 'pi_desc']
+							}, {
+								model: PiddDet,
+								as: 'detail_price',
+								attributes: ['pidd_price', 'pidd_disc'],
+								include: [
+									{
+										model: CodeMstr,
+										as: 'PaymentType',
+										attributes: ['code_name']
+									}
+								]
+							}
+						]
+					}
+				]
+			})
+
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data',
+					data: dataProduct
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data produk',
 					error: error.message
 				})
 		}
