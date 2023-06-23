@@ -514,7 +514,7 @@ const SalesQuotationController = {
 			let offsetProduct = (pageProduct * limitProduct) - limitProduct
 			
 			let dataProduct = await PtMstr.findAll({
-				attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2'],
+				attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
 				where: {
 					pt_id: {
 						[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det)`)
@@ -522,6 +522,7 @@ const SalesQuotationController = {
 				},
 				limit: limitProduct,
 				offset: offsetProduct,
+				order: [['pt_clothes_id', 'asc']],
 				include: [
 					{
 						model: PidDet,
