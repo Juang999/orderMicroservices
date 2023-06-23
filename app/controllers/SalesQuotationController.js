@@ -502,6 +502,14 @@ const SalesQuotationController = {
 	},
 	getProduct: async (req, res) => {
 		try {
+			let where = {
+				pt_id: {
+					[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det)`)
+				}
+			}
+
+			if (req.query.query != 'undefined') {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
+
 			let dataCustomer = await PtnrMstr.findOne({
 				where: {
 					ptnr_id: req.params.ptnrId
@@ -515,11 +523,7 @@ const SalesQuotationController = {
 			
 			let dataProduct = await PtMstr.findAll({
 				attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-				where: {
-					pt_id: {
-						[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det)`)
-					}
-				},
+				where: where,
 				limit: limitProduct,
 				offset: offsetProduct,
 				order: [['pt_clothes_id', 'asc']],
