@@ -23,7 +23,10 @@ module.exports = (sequelize, DataTypes) => {
     ac_add_date: DataTypes.DATE,
     ac_upd_by: DataTypes.STRING,
     ac_upd_date: DataTypes.DATE,
-    ac_id: DataTypes.INTEGER,
+    ac_id: {
+      type: DataTypes.INTEGER,
+      unique: true
+    },
     ac_code: DataTypes.STRING,
     ac_name: DataTypes.INTEGER,
     ac_desc: DataTypes.INTEGER,
