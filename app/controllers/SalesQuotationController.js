@@ -232,14 +232,14 @@ const SalesQuotationController = {
 					sqd_pt_id: bodySalesQuotation.sqd_pt_id,
 					sqd_rmks: (bodySalesQuotation.sqd_rmks) ? bodySalesQuotation.sqd_rmks : null,
 					sqd_qty: bodySalesQuotation.sqd_qty,
-					sqd_qty_allocated: bodySalesQuotation.sqd_qty_allocated,
+					sqd_qty_booking: bodySalesQuotation.sqd_qty_booking,
+					sqd_loc_id: bodySalesQuotation.sqd_loc_id,
 					sqd_cost: bodySalesQuotation.sqd_cost,
 					sqd_price: bodySalesQuotation.sqd_price,
 					sqd_sales_ac_id: bodySalesQuotation.sqd_sales_ac_id,
-					sqd_sales_sb_id: bodySalesQuotation.sqd_sales_sb_id,
-					sqd_sales_cc_id: bodySalesQuotation.sqd_sales_cc_id,
+					sqd_sales_sb_id: 0,
+					sqd_sales_cc_id: 0,
 					sqd_um_conv: bodySalesQuotation.sqd_um_conv,
-					sqd_qty_real: bodySalesQuotation.sqd_qty_real,
 					sqd_taxable: bodySalesQuotation.sqd_taxable,
 					sqd_tax_inc: bodySalesQuotation.sqd_tax_inc,
 					sqd_tax_class: bodySalesQuotation.sqd_tax_class,
@@ -247,9 +247,6 @@ const SalesQuotationController = {
 					sqd_payment: 0,
 					sqd_dp: 0,
 					sqd_sales_unit: 0,
-					sqd_qty_booking: bodySalesQuotation.sqd_qty_booking,
-					sqd_qty_outs: bodySalesQuotation.sqd_qty_outs,
-					sqd_invc_qty: (bodySalesQuotation.sqd_invc_qty) ? bodySalesQuotation.sqd_invc_qty : null,
 				})
 			}
 
