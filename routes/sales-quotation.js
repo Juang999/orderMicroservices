@@ -13,8 +13,9 @@ const route = [
 	'/get-price-list/partnergroupid/:partnerGroupId', //6
 	'/sum-debt-from-customer/ptnrid/:ptnrId', //7
 	'/get-credit-limit-customer/ptnrid/:ptnrId', //8
-	'/get-account', //9
-	'/get-product/ptnrid/:ptnrId'
+	'/get-product/ptnrid/:ptnrId/pricelist/:pricelist_id/area/:areaId/locationid/:locId', //9
+	'/get-unitmeasure', //10
+	'/get-area' //11
 ]
 
 router.get(route[0], [middleware.authenticate], controller.SalesQuotationController.getSite)
@@ -26,7 +27,8 @@ router.get(route[5], [middleware.authenticate], controller.SalesQuotationControl
 router.get(route[6], [middleware.authenticate], controller.SalesQuotationController.getPriceListGroupCustomer)
 router.get(route[7], [middleware.authenticate], controller.SalesQuotationController.sumDebtCustomer)
 router.get(route[8], [middleware.authenticate], controller.SalesQuotationController.getLimitCreditCustomer)
-router.get(route[9], [middleware.authenticate], controller.SalesQuotationController.getAccount)
-router.get(route[10], [middleware.authenticate], controller.SalesQuotationController.getProduct)
+router.get(route[9], [middleware.authenticate], controller.SalesQuotationController.getProduct)
+router.get(route[10], [middleware.authenticate], controller.SalesQuotationController.getUnitMeasure)
+router.get(route[11], [middleware.authenticate], controller.SalesQuotationController.getArea)
 
 module.exports = router
