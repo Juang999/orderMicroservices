@@ -199,10 +199,10 @@ SalesQuotationController.getProduct = async (req, res) => {
 		let where = {
 			[Op.and]: {
 				pt_id: {
-					[Op.in]: Sequelize.literal('(SELECT pid_pt_id FROM public.pid_det WHERE pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pid_pi_id = $(req.params.pricelist_id) AND pidd_area_id = $(req.params.price_list_id))')
+					[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pid_pi_id = ${req.params.pricelistId} AND pidd_area_id = ${req.params.areaId})`)
 				},
 				pt_id: {
-					[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = 10001)`)
+					[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
 				}
 			}
 		}
@@ -418,6 +418,7 @@ SalesQuotationController.createSalesQuotation = async (req, res) => {
 			},
 			isBooking: req.body.sq_booking
 		}
+		console.log(dataBody.sqOid)
 		await inputProductToDetailSalesQuotation(dataBody)
 
 		// commitTransaction
@@ -446,29 +447,27 @@ SalesQuotationController.getArea = (req, res) => {
 		attributes: ['area_oid', 'area_id', 'area_name', 'area_code']
 		
 	})
-	.then(result => {
-		res.status(200)
-			.json({
-				status: 'berhasil',
-				message: 'berhasil mengambil data area',
-				data: result
-			})
-	})
-	.catch(err => {
-		rea.status(400)
-			.json({
-				status: 'gagal',
-				message: 'gagal mengambil data area',
-				error: err.message
-			})
-	})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data area',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data area',
+					error: err.message
+				})
+		})
 }
 
 SalesQuotationController.getUnitMeasure = (req, res) => {
 	CodeMstr.findAll({
-		where: {
-			code_field: 'unitmeasure'
-		},
+		where: {code_field: 'unitmeasure'},
 		attributes: ['code_id', 'code_name', 'code_field']
 	})
 		.then(result => {
@@ -512,7 +511,6 @@ let checkDebtCustomer = async (dataCheck) => {
 	})
 
 	let total = debt.debt_total + dataCheck.sqTotal
-
 	var limit
 
 	if (dataCheck.ptnrLimitCredit > 0) {
@@ -562,7 +560,8 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_dp: 0,
 		sq_disc_header: 0,
 		sq_total: dataHeader.bodyHeader.sq_total,
-		sq_close_date: moment(dataHeader.bodyHeader.sq_close_date).format('YYYY-MM-DD'),
+		sq_due_date: moment().format('YYYY-MM-DD'),
+		sq_close_date: moment().add(3, 'days').format('YYYY-MM-DD'),
 		sq_trans_id: 'D',
 		sq_trans_rmks: (dataHeader.bodyHeader.sq_trans_rmks) ? dataHeader.bodyHeader.sq_trans_rmks : null,
 		sq_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -581,12 +580,12 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_is_package: 'N',
 		sq_sales_program: '-',
 		sq_booking: dataHeader.bodyHeader.sq_booking,
-		sq_book_start_date: moment().format('YYYY-MM-DD'),
-		sq_book_end_date: moment().format('YYYY-MM-DD'),
+		sq_book_start_date: (dataHeader.bodyHeader.due_date) ? dataHeader.bodyHeader.due_date : moment().format('YYYY-MM-DD HH:mm:ss'),
+		sq_book_end_date: moment(dataHeader.bodyHeader.sq_close_date).format('YYYY-MM-DD'),
 		sq_alocated: dataHeader.bodyHeader.sq_alocated,
 		sq_ptsfr_loc_id: dataHeader.bodyHeader.sq_loc_id,
-		sq_ptsfr_loc_to_id: dataHeader.bodyHeader.sq_loc_to_id,
-		sq_ptsfr_loc_git: dataHeader.bodyHeader.sq_loc_git,
+		sq_ptsfr_loc_to_id: 10001,
+		sq_ptsfr_loc_git: 10004,
 		sq_en_to_id: dataHeader.partnerCustomer.ptnr_en_id,
 		sq_dropshipper: dataHeader.bodyHeader.sq_is_dropshipper,
 		sq_ship_to: (dataHeader.bodyHeader.sq_is_dropshipper == 'Y' ) ? dataHeader.bodyHeader.sq_ship_to : null
@@ -602,24 +601,16 @@ let inputProductToDetailSalesQuotation = async (data) => {
 	let convertToJson = JSON.parse(data.bodySQ)
 
 	for (const bodySalesQuotation of convertToJson) {
-		let countDetailProductSalesQuotation = await SqdDet.count({
-			where: {
-				sqd_sq_oid: data.sqOid
-			}
-		})
-
+		let countDetailProductSalesQuotation = await countDetailSalesQuotation(data.sqOid)
+		let costProductSalesQuotation = await getInvctTable(bodySalesQuotation.sqd_pt_id)
 		let sequenceDetailProductSalesQuotation = (countDetailProductSalesQuotation) ? countDetailProductSalesQuotation + 1 : 1
 
-		let costProduct = await InvctTable.findOne({
-			where: {
-				invct_pt_id: bodySalesQuotation.sqd_pt_id
-			},
-			attributes: ['invct_cost']
-		})
-
-		if (data.isBooking == 'Y') {
-			await updateStockProduct(bodySalesQuotation.sqd_pt_id, bodySalesQuotation.sqd_loc_id, bodySalesQuotation.sqd_qty_booking)
+		let dataUpdateQtyProduct = {
+			sqdPtId: bodySalesQuotation.sqd_pt_id,
+			sqdLocId: bodySalesQuotation.sqd_loc_id,
+			sqdQtyBooking: bodySalesQuotation.sqd_qty_booking
 		}
+		if (data.isBooking == 'Y') {await updateStockProduct(dataUpdateQtyProduct)}
 
 		await SqdDet.create({
 			sqd_oid: uuidv4(),
@@ -636,7 +627,7 @@ let inputProductToDetailSalesQuotation = async (data) => {
 			sqd_qty: bodySalesQuotation.sqd_qty,
 			sqd_qty_booking: bodySalesQuotation.sqd_qty_booking,
 			sqd_loc_id: bodySalesQuotation.sqd_loc_id,
-			sqd_cost: costProduct.invct_cost,
+			sqd_cost: costProductSalesQuotation.invct_cost,
 			sqd_price: bodySalesQuotation.sqd_price,
 			sqd_sales_ac_id: 13,
 			sqd_sales_sb_id: 0,
@@ -654,19 +645,40 @@ let inputProductToDetailSalesQuotation = async (data) => {
 	}
 }
 
-let updateStockProduct = async (ptId, locId, totalProduct) => {
+let updateStockProduct = async (dataUpdateQty) => {
+	let where = {
+		invc_pt_id: dataUpdateQty.sqdPtId,
+		invc_loc_id: dataUpdateQty.sqdLocId
+	}
+
 	let qtyProduct = await InvcMstr.findOne({
-		where: {
-			invc_pt_id: ptId,
-			invc_loc_id: locId
-		},
+		where: where,
 		attributes: ['invc_qty_available', 'invc_qty_booked']
 	})
 
 	await InvcMstr.update({
-		invc_qty_available: qtyProduct.invc_qty_available - totalProduct,
-		invc_qty_booked: qtyProduct.invc_qty_booked + totalProduct
+		invc_qty_available: qtyProduct.invc_qty_available - dataUpdateQty.sqdQtyBooking,
+		invc_qty_booked: qtyProduct.invc_qty_booked + dataUpdateQty.sqdQtyBooking
+	}, {
+		where: where
 	})
+}
+
+let getInvctTable = async (pt_id) => {
+	let costProduct = await InvctTable.findOne({
+		where: {invct_pt_id: pt_id},
+		attributes: ['invct_cost']
+	})
+
+	return costProduct
+}
+
+let countDetailSalesQuotation = async (sqOid) => {
+	let countData = await SqdDet.count({
+		where: {sqd_sq_oid: sqOid}
+	})
+
+	return countData
 }
 
 module.exports = SalesQuotationController

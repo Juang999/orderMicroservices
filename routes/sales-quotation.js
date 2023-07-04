@@ -13,7 +13,7 @@ const route = [
 	'/get-price-list/partnergroupid/:partnerGroupId', //6
 	'/sum-debt-from-customer/ptnrid/:ptnrId', //7
 	'/get-credit-limit-customer/ptnrid/:ptnrId', //8
-	'/get-product/ptnrid/:ptnrId/pricelist/:pricelist_id/area/:areaId', //9
+	'/get-product/ptnrid/:ptnrId/pricelist/:pricelist_id/area/:areaId/locationid/:locId', //9
 	'/get-unitmeasure', //10
 	'/get-area' //11
 ]
