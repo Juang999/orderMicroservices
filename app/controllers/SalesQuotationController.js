@@ -232,6 +232,9 @@ SalesQuotationController.getProduct = async (req, res) => {
 					where: {
 						pid_pi_oid: {
 							[Op.in]: Sequelize.literal(`(SELECT pi_oid FROM public.pi_mstr WHERE pi_ptnrg_id = ${dataCustomer.dataValues.ptnr_ptnrg_id})`)
+						},
+						pid_oid: {
+							[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
 						}
 					},
 					include: [
@@ -257,9 +260,7 @@ SalesQuotationController.getProduct = async (req, res) => {
 					as: 'Qty',
 					attributes: ['invc_qty_available'],
 					where: {
-						invc_loc_id: {
-							[Op.in]: [10001, 200010, 300018]
-						}
+						invc_loc_id: req.params.locId
 					},
 					include: [
 						{
