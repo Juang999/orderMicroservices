@@ -195,91 +195,95 @@ SalesQuotationController.getPriceListGroupCustomer = async (req, res) => {
 }
 
 SalesQuotationController.getProduct = async (req, res) => {
-	try {
-		let where = {
-			[Op.and]: {
-				pt_id: {
-					[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pid_pi_id = ${req.params.pricelistId} AND pidd_area_id = ${req.params.areaId})`)
-				},
-				pt_id: {
-					[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
-				}
-			}
-		}
+	let where = {
+		[Op.and]: [
+			Sequelize.where(Sequelize.col('pt_id'), {
+				[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
+			}),
+			Sequelize.where(Sequelize.col('pt_id'), {
+				[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
+			})
+		]
+	}
 
-		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
+	if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
 
-		let {limit, offset} = helper.page(req.query.page, 10)
+	let pageQuery = (req.query.page) ? req.query.page : 1
+	let {limit, offset} = helper.page(pageQuery, 10)
 
-		let dataProduct = await PtMstr.findAll({
-			attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-			where: where,
-			limit: limit,
-			offset: offset,
-			order: [['pt_clothes_id', 'asc']],
-			include: [
-				{
-					model: PidDet,
-					as: 'price',
-					attributes: ['pid_pt_id', 'pid_pi_oid'],
-					where: {
-						pid_pi_oid: {
-							[Op.in]: Sequelize.literal(`(SELECT pi_oid FROM public.pi_mstr WHERE pi_ptnrg_id = (SELECT ptnr_ptnrg_id FROM public.ptnr_mstr WHERE ptnr_id = ${req.params.ptnrId})`)
-						},
-						pid_oid: {
+	PtMstr.findAll({
+		attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+		where: where,
+		offset: offset,
+		limit: limit,
+		order: [['pt_clothes_id', 'asc']],
+		include: [
+			{
+				model: PidDet,
+				as: 'price',
+				attributes: ['pid_pt_id', 'pid_pi_oid'],
+				where: {
+					[Op.and]: [
+						Sequelize.where(Sequelize.col('pid_pi_oid'), {
+							[Op.eq]: req.params.pricelistOid
+						}),
+						Sequelize.where(Sequelize.col('pid_oid'), {
 							[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
-						}
-					},
-					include: [
-						{
-							model: PiMstr,
-							as: 'price_list',
-							attributes: ['pi_oid', 'pi_desc']
-						}, {
-							model: PiddDet,
-							as: 'detail_price',
-							attributes: ['pidd_price', 'pidd_disc'],
-							include: [
-								{
-									model: CodeMstr,
-									as: 'PaymentType',
-									attributes: ['code_name']
-								}
-							]
-						}
+						})
 					]
-				}, {
-					model: InvcMstr,
-					as: 'Qty',
-					attributes: ['invc_qty_available'],
-					where: {
-						invc_loc_id: req.params.locId
-					},
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_id', 'loc_desc']
-						}
-					]
-				}
-			]
-		})
-	
+				},
+				include: [
+					{
+						model: PiMstr,
+						as: 'price_list',
+						attributes: ['pi_oid', 'pi_desc']
+					}, {
+						model: PiddDet,
+						as: 'detail_price',
+						attributes: ['pidd_price', 'pidd_disc'],
+						include: [
+							{
+								model: CodeMstr,
+								as: 'PaymentType',
+								attributes: ['code_name']
+							}
+						]
+					}
+				]
+			}, 
+			{
+				model: InvcMstr,
+				as: 'Qty',
+				attributes: ['invc_qty_available'],
+				where: {
+					invc_loc_id: req.params.locId
+				},
+				include: [
+					{
+						model: LocMstr,
+						as: 'location',
+						attributes: ['loc_id', 'loc_desc']
+					}
+				]
+			}
+		]
+	})
+	.then(result => {
 		res.status(200)
 			.json({
 				status: 'berhasil',
 				message: 'berhasil mengambil data',
-				data: dataProduct
+				data: result
 			})
-	} catch (error) {
+	})
+	.catch(err => {
 		res.status(400)
 			.json({
 				status: 'gagal',
 				message: 'gagal mengambil data produk',
-				error: error.message
+				error: err.message
 			})
-	}
+	})
 }
 
 SalesQuotationController.getLimitCreditCustomer = async (req, res) => {
