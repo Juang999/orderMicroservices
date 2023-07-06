@@ -209,13 +209,6 @@ SalesQuotationController.getProduct = async (req, res) => {
 
 		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
 
-		let dataCustomer = await PtnrMstr.findOne({
-			where: {
-				ptnr_id: req.params.ptnrId
-			},
-			attributes: ['ptnr_ptnrg_id']
-		}) 
-
 		let {limit, offset} = helper.page(req.query.page, 10)
 
 		let dataProduct = await PtMstr.findAll({
@@ -231,7 +224,7 @@ SalesQuotationController.getProduct = async (req, res) => {
 					attributes: ['pid_pt_id', 'pid_pi_oid'],
 					where: {
 						pid_pi_oid: {
-							[Op.in]: Sequelize.literal(`(SELECT pi_oid FROM public.pi_mstr WHERE pi_ptnrg_id = ${dataCustomer.dataValues.ptnr_ptnrg_id})`)
+							[Op.in]: Sequelize.literal(`(SELECT pi_oid FROM public.pi_mstr WHERE pi_ptnrg_id = (SELECT ptnr_ptnrg_id FROM public.ptnr_mstr WHERE ptnr_id = ${req.params.ptnrId})`)
 						},
 						pid_oid: {
 							[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
@@ -637,7 +630,7 @@ let inputProductToDetailSalesQuotation = async (data) => {
 			sqd_um_conv: 1,
 			sqd_taxable: bodySalesQuotation.sqd_taxable,
 			sqd_tax_inc: bodySalesQuotation.sqd_tax_inc,
-			sqd_tax_class: bodySalesQuotation.sqd_tax_class,
+			sqd_tax_class: 9949,
 			sqd_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
 			sqd_payment: 0,
 			sqd_dp: 0,
