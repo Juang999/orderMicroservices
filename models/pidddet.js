@@ -43,7 +43,8 @@ module.exports = (sequelize, DataTypes) => {
     pidd_min_qty: DataTypes.INTEGER,
     pidd_sales_unit: DataTypes.INTEGER,
     pidd_dt: DataTypes.DATE,
-    pidd_commision: DataTypes.INTEGER
+    pidd_commision: DataTypes.INTEGER,
+    pidd_area_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',
