@@ -42,6 +42,16 @@ const VisitController = {
 				where: where,
 				attributes: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
 			})
+
+			for (const detailVisit of visitDate) {
+				let countTotalPeopleToVisit = await VisitedDet.count({
+					where: {
+						visited_visit_code: detailVisit.dataValues.visit_code
+					}
+				})
+
+				detailVisit.dataValues.total_to_visit = countTotalPeopleToVisit
+			}
     
 			res.status(200)
 				.json({

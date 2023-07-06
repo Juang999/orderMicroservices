@@ -47,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
       PtMstr.belongsTo(models.PtsCatCat, {
         as: 'sub_category',
         targetKey: 'ptscat_id',
-        foreignKey: 'pt_ptscat_id'
+        foreignKey: 'pt_scat_id'
       })
 
       PtMstr.belongsTo(models.CodeMstr, {
@@ -121,7 +121,7 @@ module.exports = (sequelize, DataTypes) => {
     pt_clothes_id: DataTypes.INTEGER,
     pt_size_id: DataTypes.INTEGER,
     pt_code_color_id: DataTypes.INTEGER,
-    pt_ptscat_id: DataTypes.INTEGER,
+    pt_scat_id: DataTypes.INTEGER,
     pt_cat_id: DataTypes.INTEGER
   }, {
     sequelize,

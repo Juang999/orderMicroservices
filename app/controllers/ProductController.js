@@ -22,7 +22,7 @@ const ProductController = {
 			if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
 			if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
 			if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
-			if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
+			if (req.query.subcategory) where.pt_scat_id = {[Op.eq]: req.query.subcategory}
 
 			let {count, rows} = await PtMstr.findAndCountAll({
 				limit: limit,
@@ -549,7 +549,7 @@ const ProductController = {
 
 		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
 		if (req.query.category) {where.pt_cat_id = {[Op.eq]: req.query.category}}
-		if (req.query.subcategory) {where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}}
+		if (req.query.subcategory) {where.pt_scat_id = {[Op.eq]: req.query.subcategory}}
 		if (req.query.entity) {where.pt_en_id = {[Op.eq]: req.query.entity}}
 
 		PtMstr.findAndCountAll({
