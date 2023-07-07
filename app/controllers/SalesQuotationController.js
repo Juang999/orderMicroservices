@@ -159,39 +159,40 @@ SalesQuotationController.getSalesQuotation = async (req, res) => {
 }
 
 SalesQuotationController.getPriceListGroupCustomer = async (req, res) => {
-	var dataPriceListGroupCustomer
-	
-	try {
-		dataPriceListGroupCustomer = await PiMstr.findAll({
-			where: {
-				pi_ptnrg_id: req.params.partnerGroupId
+	PiMstr.findAll({
+		where: {
+			pi_ptnrg_id: req.params.partnerGroupId
 			},
-			attributes: ['pi_id', 'pi_desc']
+			attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
 		})
-	
-		if (dataPriceListGroupCustomer.length == 0) {
-			dataPriceListGroupCustomer = await PiMstr.findAll({
-				where: {
-					pi_ptnrg_id: 101
-				},
-				attributes: ['pi_id', 'pi_desc']
-			})
-		}
-	
-		res.status(200)
-			.json({
-				status: 'berhasil',
-				message: 'berhasil mengambil data list harga',
-				data: dataPriceListGroupCustomer
-			})
-	} catch (error) {
-		res.status(400)
-			.json({
-				status: 'gagal',
-				message: 'gagal mengambil data list harga',
-				error: error.message
-			})
-	}
+		.then(async result => {
+			if (result.length == 0) {
+				result = await PiMstr.findAll({
+					where: {
+						pi_ptnrg_id: 101
+					},
+					attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
+				})
+			}
+
+			return result
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data list harga',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data list harga',
+					error: err.message
+				})
+		})
 }
 
 SalesQuotationController.getProduct = async (req, res) => {
