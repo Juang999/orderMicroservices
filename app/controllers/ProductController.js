@@ -146,7 +146,7 @@ const ProductController = {
 				}
 			})
 
-			result.dataValues.status = (qtyProduct == null) ? 'PRE-ORDER' : 'DIJUAL'
+			result.dataValues.status = (qtyProduct == 0) ? 'PRE-ORDER' : 'DIJUAL'
 			result.dataValues.Qty = qtyProduct
 
 			return result
