@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       SizeMstr.hasMany(models.PtMstr, {
         as: 'size',
         sourceKey: 'size_id',
-        foreignKey: 'pt_size_id'
+        foreignKey: 'pt_size_code_id'
       })
     }
   }

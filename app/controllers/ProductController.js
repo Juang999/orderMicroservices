@@ -90,7 +90,7 @@ const ProductController = {
 					},
 				}
 			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
 			include: [
 				{
 					model: EnMstr,
@@ -130,34 +130,27 @@ const ProductController = {
 					as: 'sub_category',
 					attributes: ['ptscat_desc']
 				}, {
-					model: CodeMstr,
-					as: 'color',
-					attributes: ['code_desc']
-				}, {
 					model: SizeMstr,
 					as: 'size',
 					attributes: ['size_desc']
-				}, {
-					model: InvcMstr,
-					as: 'Qty',
-					where: {
-						invc_loc_id: {
-							[Op.in]: [10001, 200010, 30008]
-						}
-					},
-					attributes: ['invc_qty_available'],
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_id', 'loc_desc']
-						}
-					]
 				}
 			]
-		}).then( result => {
-			result.dataValues.status = (result.Qty.length != 0) ? 'DIJUAL' : 'PRE-ORDER'
+		}).then( async result => {
+			let qtyProduct = await InvcMstr.findAll({
+				attributes: ['invc_qty_available'],
+				where: {
+					invc_pt_id: result.dataValues.pt_id,
+					invc_loc_id: {
+						[Op.in]: [10001, 200010, 30008]
+					}
+				}
+			})
 
+			result.dataValues.status = (qtyProduct == null) ? 'PRE-ORDER' : 'DIJUAL'
+			result.dataValues.Qty = qtyProduct
+
+			return result
+		}).then( result => {
 			res.status(200)
 				.json({
 					status: 'berhasil',
@@ -188,7 +181,7 @@ const ProductController = {
 					},
 				}
 			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
 			include: [
 				{
 					model: EnMstr,
@@ -238,10 +231,6 @@ const ProductController = {
 					model: PtsCatCat,
 					as: 'sub_category',
 					attributes: ['ptscat_desc']
-				}, {
-					model: CodeMstr,
-					as: 'color',
-					attributes: ['code_desc']
 				}, {
 					model: SizeMstr,
 					as: 'size',
