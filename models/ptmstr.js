@@ -59,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
       PtMstr.belongsTo(models.SizeMstr, {
         as: 'size',
         targetKey: 'size_id',
-        foreignKey: 'pt_size_id'
+        foreignKey: 'pt_size_code_id'
       })
     }
   }
@@ -118,11 +118,12 @@ module.exports = (sequelize, DataTypes) => {
     pt_qty: DataTypes.INTEGER,
     pt_additional: DataTypes.INTEGER,
     pt_year: DataTypes.DATE,
-    pt_clothes_id: DataTypes.INTEGER,
-    pt_size_id: DataTypes.INTEGER,
-    pt_code_color_id: DataTypes.INTEGER,
+    pt_size_code_id: DataTypes.INTEGER,
+    pt_psplan_id: DataTypes.INTEGER,
+    pt_cat_id: DataTypes.INTEGER,
     pt_scat_id: DataTypes.INTEGER,
-    pt_cat_id: DataTypes.INTEGER
+    pt_color_tag: DataTypes.INTEGER,
+    pt_clothes_id: DataTypes.INTEGER,
   }, {
     sequelize,
     schema: 'public',
