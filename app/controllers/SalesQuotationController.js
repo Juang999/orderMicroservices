@@ -162,9 +162,9 @@ SalesQuotationController.getPriceListGroupCustomer = async (req, res) => {
 	PiMstr.findAll({
 		where: {
 			pi_ptnrg_id: req.params.partnerGroupId
-			},
-			attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
-		})
+		},
+		attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
+	})
 		.then(async result => {
 			if (result.length == 0) {
 				result = await PiMstr.findAll({
@@ -269,22 +269,22 @@ SalesQuotationController.getProduct = async (req, res) => {
 			}
 		]
 	})
-	.then(result => {
-		res.status(200)
-			.json({
-				status: 'berhasil',
-				message: 'berhasil mengambil data',
-				data: result
-			})
-	})
-	.catch(err => {
-		res.status(400)
-			.json({
-				status: 'gagal',
-				message: 'gagal mengambil data produk',
-				error: err.message
-			})
-	})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data produk',
+					error: err.message
+				})
+		})
 }
 
 SalesQuotationController.getLimitCreditCustomer = async (req, res) => {
@@ -417,7 +417,7 @@ SalesQuotationController.createSalesQuotation = async (req, res) => {
 			},
 			isBooking: req.body.sq_booking
 		}
-		console.log(dataBody.sqOid)
+
 		await inputProductToDetailSalesQuotation(dataBody)
 
 		// commitTransaction
@@ -622,9 +622,9 @@ let inputProductToDetailSalesQuotation = async (data) => {
 			sqd_is_additional_charge: 'N',
 			sqd_si_id: 992,
 			sqd_pt_id: bodySalesQuotation.sqd_pt_id,
-			sqd_rmks: (bodySalesQuotation.sqd_rmks) ? bodySalesQuotation.sqd_rmks : null,
+			sqd_rmks: '',
 			sqd_qty: bodySalesQuotation.sqd_qty,
-			sqd_qty_booking: bodySalesQuotation.sqd_qty_booking,
+			sqd_qty_booking: (data.isBooking) ? bodySalesQuotation.sqd_qty : 0,
 			sqd_loc_id: bodySalesQuotation.sqd_loc_id,
 			sqd_cost: costProductSalesQuotation.invct_cost,
 			sqd_price: bodySalesQuotation.sqd_price,
@@ -633,8 +633,8 @@ let inputProductToDetailSalesQuotation = async (data) => {
 			sqd_sales_cc_id: 0,
 			sqd_um: bodySalesQuotation.sqd_um,
 			sqd_um_conv: 1,
-			sqd_taxable: bodySalesQuotation.sqd_taxable,
-			sqd_tax_inc: bodySalesQuotation.sqd_tax_inc,
+			sqd_taxable: 'N',
+			sqd_tax_inc: 'N',
 			sqd_tax_class: 9949,
 			sqd_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
 			sqd_payment: 0,
