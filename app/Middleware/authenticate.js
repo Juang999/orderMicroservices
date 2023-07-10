@@ -12,7 +12,9 @@ let testMiddleware = async (req, res, next) => {
     if (!token) {
         res.status(400)
             .json({
-                message: "unauthorize"
+                status: 'failed',
+                message: "unauthorize",
+                error: "unauthorize"
             })
 
         return
