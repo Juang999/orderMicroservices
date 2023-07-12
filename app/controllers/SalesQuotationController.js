@@ -554,7 +554,7 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_type: 'R',
 		sq_sales_person: dataHeader.authUser.user_ptnr_id,
 		sq_pi_id: dataHeader.bodyHeader.sq_pi_id,
-		sq_pay_type: dataHeader.bodyHeader.sq_pay_type,
+		sq_pay_type: 9942,
 		sq_pay_method: dataHeader.bodyHeader.sq_pay_method,
 		sq_dp: 0,
 		sq_disc_header: 0,
@@ -575,6 +575,7 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_interval: 0,
 		sq_ar_ac_id: 13,
 		sq_ar_sb_id: 0,
+		sq_ar_cc_id: 0,
 		sq_need_date: moment(dataHeader.bodyHeader.sq_need_date).format('YYYY-MM-DD'),
 		sq_is_package: 'N',
 		sq_sales_program: '-',
@@ -603,6 +604,7 @@ let inputProductToDetailSalesQuotation = async (data) => {
 		let countDetailProductSalesQuotation = await countDetailSalesQuotation(data.sqOid)
 		let costProductSalesQuotation = await getInvctTable(bodySalesQuotation.sqd_pt_id)
 		let sequenceDetailProductSalesQuotation = (countDetailProductSalesQuotation) ? countDetailProductSalesQuotation + 1 : 1
+		let unitMeasureProduct = await getUnitMeasureProduct(bodySalesQuotation.sqd_pt_id)
 
 		let dataUpdateQtyProduct = {
 			sqdPtId: bodySalesQuotation.sqd_pt_id,
@@ -631,7 +633,7 @@ let inputProductToDetailSalesQuotation = async (data) => {
 			sqd_sales_ac_id: 13,
 			sqd_sales_sb_id: 0,
 			sqd_sales_cc_id: 0,
-			sqd_um: bodySalesQuotation.sqd_um,
+			sqd_um: unitMeasureProduct.pt_um,
 			sqd_um_conv: 1,
 			sqd_taxable: 'N',
 			sqd_tax_inc: 'N',
@@ -678,6 +680,16 @@ let countDetailSalesQuotation = async (sqOid) => {
 	})
 
 	return countData
+}
+
+let getUnitMeasureProduct = async (ptId) => {
+	let unitMeasureProduct = await PtMstr.findOne({
+		where: {pt_id: ptId},
+		attributes: ['pt_um']
+	})
+
+
+	return unitMeasureProduct
 }
 
 module.exports = SalesQuotationController
