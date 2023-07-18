@@ -1,5 +1,5 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp} = require('../../../models')
 const {Admin} = require('../../../routes/route')
 const helper = require('../../../helper/helper')
 
@@ -120,12 +120,44 @@ SalesQuotationController.detailInvitation = async (req, res) => {
             where: {
                 visited_oid: req.params.visited_oid
             },
+            attributes: [
+                "visited_oid", 
+                "visited_visit_code", 
+                "visited_type", 
+                "visited_ptnr_id", 
+                "visited_cus_name", 
+                "visited_cus_address",
+                "visited_cus_phone", 
+                "visited_lat_gps_check_in", 
+                "visited_long_gps_check_in", 
+                "visited_address_gps_check_in", 
+                "visited_result", 
+                "visited_status", 
+                "visited_date", 
+                "visited_foto", 
+                "visited_check_in", 
+                "visited_check_out", 
+                "visited_lat_gps_check_out", 
+                "visited_long_gps_check_out", 
+                "visited_address_gps_check_out"
+            ],
             include: [
                 {
+                    model: PtnrMstr,
+                    as: 'visited_partner',
+                    attributes: ['ptnr_id', 'ptnr_name'],
+                    include: [
+                        {
+                            model: PtnrgGrp,
+                            as: 'ptnr_group',
+                            attributes: ['ptnrg_id', 'ptnrg_name']
+                        }
+                    ]
+                }, {
                     model: CodeMstr,
                     as: 'objective',
                     attributes: ['code_name']
-                },{
+                }, {
                     model: CodeMstr,
                     as: 'output',
                     attributes: ['code_name']
