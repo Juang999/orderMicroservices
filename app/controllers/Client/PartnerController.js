@@ -1,7 +1,7 @@
 const {Op} = require('sequelize')
-const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr} = require('../../models')
+const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr} = require('../../../models')
 const {v4: uuidv4} = require('uuid')
-const helper = require('../../helper/helper')
+const helper = require('../../../helper/helper')
 const moment = require('moment')
 let date = moment().tz('Asia/Jakarta').format('YYYY-MM-DD') +' '+ moment().tz('Asia/Jakarta').format('HH:mm:ss.SSS')
 

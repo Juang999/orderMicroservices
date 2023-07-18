@@ -1,6 +1,6 @@
-const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, CodeMstr} = require('../../models')
+const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, CodeMstr, sequelize} = require('../../../models')
 const {Sequelize, Op} = require('sequelize')
-const helper = require('../../helper/helper')
+const helper = require('../../../helper/helper')
 const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
 const express = require('express')
@@ -137,6 +137,7 @@ const VisitController = {
 		})
 	},
 	createSchedule: async (req, res) => {
+		let transaction = await sequelize.transaction()
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -159,6 +160,8 @@ const VisitController = {
 				visit_status: 'N'
 			})
 
+			await transaction.commit()
+
 			res.status(200)
 				.json({
 					status: 'berhasil',
@@ -166,7 +169,7 @@ const VisitController = {
 					data: visit_mstr
 				})
 		} catch (error) {
-			console.log(error)
+			await transaction.rollback()
 			res.status(400)
 				.json({
 					status: 'gagal',
