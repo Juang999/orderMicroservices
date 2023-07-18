@@ -6,8 +6,9 @@ const route = {
         feature: {
             visitation: {
                 index: '/visitation',
-                visitation: '/visitation/:ptnr_id/visitation',
-                visitation_schedule: '/visitation/:visit_code/visitation-schedule'
+                visitation: '/visitation/:ptnr_id/sales',
+                visitation_schedule: '/visitation/:visit_code/schedule',
+                visitation_detail: '/visitation/:visited_oid/detail'
             }
         }
     },
