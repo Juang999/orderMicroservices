@@ -18,6 +18,12 @@ module.exports = (sequelize, DataTypes) => {
         },
         targetKey: "ptnr_id"
       })
+
+      PlansdDet.belongsTo(models.PlansMstr, {
+        as: 'list_customer',
+        targetKey: 'plans_oid',
+        foreignKey: 'plansd_plans_oid'
+      })
     }
   }
   PlansdDet.init({

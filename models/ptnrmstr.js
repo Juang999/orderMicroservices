@@ -82,6 +82,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sq_ptnr_id_sold',
         sourceKey: 'ptnr_id'
       })
+
+      PtnrMstr.hasOne(models.LastCheckIn, {
+        as: 'last_check_in',
+        foreignKey: 'check_ptnr_id',
+        sourceKey: 'ptnr_id'
+      })
     }
   }
   PtnrMstr.init({
