@@ -55,8 +55,7 @@ const MasterController = {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 
-				[Sequelize.literal('year(periode_start_date)'), 'periode_year'],
-				[Sequelize.literal('to_char(periode_start_date, \'Month\')'), 'periode_month']
+				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
 			]
 		}).then(result => {
 			res.status(200)

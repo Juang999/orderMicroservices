@@ -16,6 +16,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'periode_code',
         foreignKey: 'plans_periode'
       })
+
+      PlansMstr.hasMany(models.PlansdDet, {
+        as: 'list_customer',
+        sourceKey: 'plans_oid',
+        foreignKey: 'plansd_plans_oid'
+      })
     }
   }
   PlansMstr.init({
