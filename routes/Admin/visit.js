@@ -7,5 +7,6 @@ const middleware = require('../../app/kernel')
 router.get(Admin.feature.visitation.index, [middleware.authenticate], controller.Admin.SalesQuotationController.index)
 router.get(Admin.feature.visitation.visitation, [middleware.authenticate], controller.Admin.SalesQuotationController.visitation)
 router.get(Admin.feature.visitation.visitation_schedule, [middleware.authenticate], controller.Admin.SalesQuotationController.visitation_schedule)
+router.get(Admin.feature.visitation.visitation_detail, [middleware.authenticate], controller.Admin.SalesQuotationController.detailInvitation)
 
 module.exports = router
