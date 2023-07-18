@@ -22,6 +22,18 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "ptnr_id",
         foreignKey: "visited_ptnr_id"
       })
+
+      VisitedDet.belongsTo(models.CodeMstr, {
+        as: 'objective',
+        targetKey: 'code_id',
+        foreignKey: 'visited_objective'
+      })
+
+      VisitedDet.belongsTo(models.CodeMstr, {
+        as: 'output',
+        targetKey: 'code_id',
+        foreignKey: 'visited_output'
+      })
     }
   }
   VisitedDet.init({
@@ -51,6 +63,7 @@ module.exports = (sequelize, DataTypes) => {
     visited_lat_gps_check_out: DataTypes.INTEGER,
     visited_long_gps_check_out: DataTypes.INTEGER,
     visited_address_gps_check_out: DataTypes.STRING,
+
     visited_objective: DataTypes.INTEGER,
     visited_output: DataTypes.INTEGER
   }, {
