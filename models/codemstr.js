@@ -56,6 +56,18 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'code_id',
         foreignKey: 'pt_code_color_id'
       })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'objective',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_objective'
+      })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'output',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_output'
+      })
     }
   }
   CodeMstr.init({

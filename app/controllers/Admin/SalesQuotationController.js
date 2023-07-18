@@ -1,5 +1,5 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp} = require('../../../models')
 const {Admin} = require('../../../routes/route')
 const helper = require('../../../helper/helper')
 
@@ -51,7 +51,8 @@ SalesQuotationController.visitation = async (req, res) => {
         let visit = await VisitMstr.findAll({
             where: {
                 visit_sales_id: req.params.ptnr_id
-            }
+            },
+            attributes: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
         })
 
         res.status(200)
@@ -71,23 +72,113 @@ SalesQuotationController.visitation = async (req, res) => {
 }
 
 SalesQuotationController.visitation_schedule = async (req, res) => {
-    VisitMstr.findOne({
-        attributes: [
-            'visit_code',
-            [Sequelize.literal('to_char(visit_startdate, \'Day Month yyyy\')'), 'visit_start_date'],
-            [Sequelize.literal('to_char(visit_enddate, \'Day Month yyyy\')'), 'visit_enddate'],
-        ],
-        where: {
-            visit_code: req.params.visit_code
-        },
-        include: [
-            {
-                model: VisitedDet,
-                as: 'visit_detail',
-                attributes: ['visited_oid', 'visited_check_in']
-            }
-        ]
-    })
+    try {
+        let page = (req.query.page) ? req.query.page : 1
+        
+        let {limit, offset} = helper.page(page, 10)
+
+        let dataVisitation = await VisitMstr.findOne({
+            attributes: [
+                'visit_code',
+                [Sequelize.literal('concat(replace(to_char(visit_startdate, \'dd\'), \' \', \'\'), \', \',replace(to_char(visit_startdate, \'Day\'), \' \', \'\'), \' \',replace(to_char(visit_startdate, \'Month\'), \' \', \'\'), \' \', replace(to_char(visit_startdate, \'yyyy\'), \' \', \'\'))'), 'visit_start_date'],
+                [Sequelize.literal('concat(replace(to_char(visit_enddate, \'dd\'), \' \', \'\'), \', \',replace(to_char(visit_enddate, \'Day\'), \' \', \'\'), \' \', replace(to_char(visit_enddate, \'Month\'), \' \', \'\'), \' \', replace(to_char(visit_startdate, \'yyyy\'), \' \', \'\'))'), 'visit_end_date'],
+            ],
+            where: {
+                visit_code: req.params.visit_code
+            },
+            include: [
+                {
+                    model: VisitedDet,
+                    as: 'visit_detail',
+                    attributes: ['visited_oid', 'visited_check_in', 'visited_check_out'],
+                    order: [['visited_check_in', 'desc']],
+                    limit: limit,
+                    offset: offset,
+                }
+            ]
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: dataVisitation,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.detailInvitation = async (req, res) => {
+    try {
+        let detailVisitation = await VisitedDet.findOne({
+            where: {
+                visited_oid: req.params.visited_oid
+            },
+            attributes: [
+                "visited_oid", 
+                "visited_visit_code", 
+                "visited_type", 
+                "visited_ptnr_id", 
+                "visited_cus_name", 
+                "visited_cus_address",
+                "visited_cus_phone", 
+                "visited_lat_gps_check_in", 
+                "visited_long_gps_check_in", 
+                "visited_address_gps_check_in", 
+                "visited_result", 
+                "visited_status", 
+                "visited_date", 
+                "visited_foto", 
+                "visited_check_in", 
+                "visited_check_out", 
+                "visited_lat_gps_check_out", 
+                "visited_long_gps_check_out", 
+                "visited_address_gps_check_out"
+            ],
+            include: [
+                {
+                    model: PtnrMstr,
+                    as: 'visited_partner',
+                    attributes: ['ptnr_id', 'ptnr_name'],
+                    include: [
+                        {
+                            model: PtnrgGrp,
+                            as: 'ptnr_group',
+                            attributes: ['ptnrg_id', 'ptnrg_name']
+                        }
+                    ]
+                }, {
+                    model: CodeMstr,
+                    as: 'objective',
+                    attributes: ['code_name']
+                }, {
+                    model: CodeMstr,
+                    as: 'output',
+                    attributes: ['code_name']
+                }
+            ]
+        })
+
+        res.status(200)
+            .json({
+                status: 'success',
+                data: detailVisitation,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
 }
 
 module.exports = SalesQuotationController
