@@ -4,19 +4,24 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var upload = require('express-fileupload')
+var upload = require('express-fileupload');
+var route = require('./routes/route')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var productRouter = require('./routes/product-knowledge');
-var priceRouter = require('./routes/price');
+var productRouter = require('./routes/Client/product-knowledge');
+var priceRouter = require('./routes/Client/price');
 var masterRouter = require('./routes/master');
-var partnerRouter = require('./routes/partner');
-var planRouter = require('./routes/plans');
-var partnerAddressRouter = require('./routes/partner-address');
-var partnerContactRouter = require('./routes/partner-contact-address');
-var visitRouter = require('./routes/visit');
-var salesQuotationRouter = require('./routes/sales-quotation')
+var partnerRouter = require('./routes/Client/partner');
+var planRouter = require('./routes/Client/plans');
+var partnerAddressRouter = require('./routes/Client/partner-address');
+var partnerContactRouter = require('./routes/Client/partner-contact-address');
+var visitRouter = require('./routes/Client/visit');
+var salesQuotationRouter = require('./routes/Client/sales-quotation')
+
+var adminRoutes = {
+  visitationRouter: require('./routes/Admin/visit')
+}
 
 var app = express();
 
@@ -46,6 +51,8 @@ app.use('/partner-contact-address', partnerContactRouter)
 app.use('/visit', visitRouter)
 app.use('/sales-quotation', salesQuotationRouter)
 
+app.use(`${route.route_service}${route.Admin.route_admin}`, adminRoutes.visitationRouter)
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
@@ -64,7 +71,7 @@ app.use(function(err, req, res, next) {
 
 // running server
 app.listen(process.env.PORT, () => {
-  console.log(`site: ${process.env.HOST}:${process.env.PORT}`)
+  console.log(`system started on ${process.env.HOST}:${process.env.PORT}`)
 })
 
 module.exports = app;
