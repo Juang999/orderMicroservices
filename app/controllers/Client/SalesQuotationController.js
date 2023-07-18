@@ -1,6 +1,6 @@
-const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, PtMstr, PidDet, PiddDet, CodeMstr, InvcMstr, InvctTable, AreaMstr} = require('../../models')
+const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, PtMstr, PidDet, PiddDet, CodeMstr, InvcMstr, InvctTable, AreaMstr} = require('../../../models')
 const {Op, Sequelize} = require('sequelize')
-const helper = require('../../helper/helper')
+const helper = require('../../../helper/helper')
 const {v4: uuidv4} = require('uuid')
 const moment = require('moment')
 

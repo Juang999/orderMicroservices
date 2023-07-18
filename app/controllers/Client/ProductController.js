@@ -1,4 +1,4 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 

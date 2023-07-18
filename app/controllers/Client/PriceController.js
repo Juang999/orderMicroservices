@@ -1,4 +1,4 @@
-const {PiMstr} = require('../../models')
+const {PiMstr} = require('../../../models')
 
 const PriceController = {
 	getPriceType: (req, res) => {
