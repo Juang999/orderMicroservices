@@ -123,19 +123,25 @@ SalesQuotationController.getSalesQuotation = async (req, res) => {
 				},{
 					model: SoMstr,
 					as: 'sales_order',
-					attributes: ['so_date'],
+					attributes: ['so_date', ['so_code', 'so_number']],
 					include: [
 						{
 							model: SoShipMstr,
 							as: 'shipment',
 							attributes: [
-								[Sequelize.literal('to_char(soship_dt, \'YYYY-MM-DD\')'), 'soship_date'],
-								'soship_code'
+								[Sequelize.literal('to_char(soship_dt, \'YYYY-MM-DD\')'), 'shipment_date'],
+								['soship_code', 'shipment_number']
 							]
 						},{
 							model: ArMstr,
 							as: 'account_receivable',
-							attributes: [['ar_code', 'ar_number'], 'ar_eff_date']
+							attributes: [
+								['ar_date', 'dr/cr_memo_date'],
+								['ar_amount', 'dr/cr_memo_number'],
+								['ar_due_date', 'dr/cr_due_date'],
+								['ar_code', 'ar_number'], 
+								['ar_eff_date', 'ar_payment']
+							]
 						}
 					]
 				}
