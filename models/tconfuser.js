@@ -47,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     userphone: DataTypes.STRING,
     user_ptnr_id: DataTypes.INTEGER,
     user_imei: DataTypes.STRING,
+    ptnr_nik_id: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'TConfUser',
