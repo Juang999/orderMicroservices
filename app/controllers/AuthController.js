@@ -192,6 +192,57 @@ const AuthController = {
 					error: error.message
 				})
 		}
+	},
+	loginAdmin: async (req, res) => {
+		try {
+			let admin = await TConfUser.findOne({
+				attributes: ['userid', 'usernama', 'password', 'user_ptnr_id'],
+				where: {
+					[Op.and]: [
+						Sequelize.where(Sequelize.col('usernama'), {
+							[Op.eq]: req.body.username
+						}),
+						Sequelize.where(Sequelize.col('password'), {
+							[Op.eq]: req.body.password
+						}),
+						Sequelize.where(Sequelize.col('user_ptnr_id'), {
+							[Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')`)
+						}),
+						Sequelize.where(Sequelize.col('groupid'), {
+							[Op.in]: Sequelize.literal(`(SELECT groupid FROM public.tconfgroup WHERE groupnama = 'ADMIN')`)
+						})
+					]
+				}
+			})
+
+			if (admin == null) {
+				res.status(403)
+					.json({
+						status: 'failed',
+						token: null,
+						error: 'error to login'
+					})
+
+				return
+			}
+
+			let token = await jwt.sign(admin.dataValues, process.env.ACCESS_TOKEN_SECRET)
+
+			res.status(200)
+				.json({
+					status: 'success!',
+					token: token,
+					error: null
+				})
+
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: error.message,
+					token: null,
+					error: error.stack
+				})
+		}
 	}
 }
 
