@@ -8,5 +8,6 @@ router.get(Admin.feature.visitation.index, [middleware.authenticate], controller
 router.get(Admin.feature.visitation.visitation, [middleware.authenticate], controller.Admin.SalesQuotationController.visitation)
 router.get(Admin.feature.visitation.visitation_schedule, [middleware.authenticate], controller.Admin.SalesQuotationController.visitation_schedule)
 router.get(Admin.feature.visitation.visitation_detail, [middleware.authenticate], controller.Admin.SalesQuotationController.detailInvitation)
+router.post(Admin.feature.visitation.visitation_create_periode, [middleware.authenticate], controller.Admin.SalesQuotationController.createPeriode)
 
 module.exports = router

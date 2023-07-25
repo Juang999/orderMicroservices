@@ -1,7 +1,7 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp} = require('../../../models')
-const {Admin} = require('../../../routes/route')
+const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr} = require('../../../models')
 const helper = require('../../../helper/helper')
+const moment = require('moment')
 
 const SalesQuotationController = {}
 
@@ -10,25 +10,91 @@ SalesQuotationController.index = async (req, res) => {
         let pageNumber = (req.query.page) ? req.query.page : 1
         let {limit, offset} = helper.page(pageNumber, 10)
 
+        let dateLastCheckIn = (req.query.total_day) ?
+                                moment().subtract(req.query.total_day, 'days').format('YYYY-MM-DD') : 
+                                moment().format('YYYY-MM-DD')
+
         let where = {
-            ptnr_is_emp: 'Y',
+            [Op.and]: [
+                Sequelize.where(Sequelize.col('user_ptnr_id'), {
+                    [Op.in]: Sequelize.literal("(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')")
+                }),
+                Sequelize.where(Sequelize.col('user_ptnr_id'), {
+                    [Op.in]: Sequelize.literal(`(select visit_sales_id from public.visit_mstr where visit_code in (select visited_visit_code from public.visited_det where to_char(visited_check_in, 'YYYY-MM-DD') = '${dateLastCheckIn}'))`)
+                })
+            ]
         }
 
-        if (req.query.search != null) {where.ptnr_name = {[Op.like]: `%${req.query.search}%`}}
+        if (req.query.search != null) {where.usernama = {[Op.like]: `%${req.query.search}%`}}
 
-        let partners = await PtnrMstr.findAll({
-            attributes: ['ptnr_oid', 'ptnr_id', 'ptnr_name'],
-            where: where,
-            include: [
-                {
-                    model: LastCheckIn,
-                    as: 'last_check_in',
-                    attributes: [['check_check_in_latitude', 'lat'], ['check_check_in_longitude', 'lng'], ['check_check_in_date', 'check_in_date']]
-                }
+        let partners = await TConfUser.findAll({
+            attributes: [
+                ['user_ptnr_id', 'ptnr_id'],
+                ['usernama', 'ptnr_name'],
+                ['nik_id', 'ptnr_nik_id']
             ],
+            where: where,
             limit: limit,
             offset: offset
         })
+
+        for (const partner of partners) {
+            let salesLastCheckIn = await VisitedDet.findOne({
+                attributes: [
+                    'visited_check_in',
+                    'visited_lat_gps_check_in',
+                    'visited_long_gps_check_in',
+                    'visited_check_out',
+                    'visited_lat_gps_check_out',
+                    'visited_long_gps_check_out',
+                ],
+                where: {
+                    [Op.and]: [
+                        Sequelize.where(Sequelize.literal('to_char(visited_check_in, \'YYYY-MM-DD\')'), {
+                            [Op.eq]: dateLastCheckIn
+                        }),
+                        {visited_visit_code: {
+                            [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${partner.dataValues.ptnr_id})`)
+                        }}
+                    ]
+                },
+                include: [
+                    {
+                        model: CodeMstr,
+                        as: 'objective',
+                        attributes: [
+                            ['code_field', 'field'], 
+                            ['code_name', 'objective']
+                        ]
+                    }, {
+                        model: CodeMstr,
+                        as: 'output',
+                        attributes: [
+                            ['code_field', 'field'], 
+                            ['code_name', 'output']
+                        ]
+                    }
+                ],
+                order: [['visited_check_in', 'desc']]
+            })
+
+            partner.dataValues.last_check_in = (salesLastCheckIn != null && ('visited_check_in' in salesLastCheckIn)) ? {
+                lat: salesLastCheckIn.dataValues.visited_lat_gps_check_in,
+                long: salesLastCheckIn.dataValues.visited_long_gps_check_in,
+                check_in_date: salesLastCheckIn.dataValues.visited_check_in
+            } : null
+
+            partner.dataValues.last_check_out = (salesLastCheckIn != null && ('visited_check_out' in salesLastCheckIn)) ? {
+                lat: salesLastCheckIn.dataValues.visited_lat_gps_check_out,
+                long: salesLastCheckIn.dataValues.visited_long_gps_check_out,
+                check_out_date: salesLastCheckIn.dataValues.visited_check_out
+            } : null
+
+            partner.dataValues.last_activity = {
+                objective: (salesLastCheckIn != null && ('objective' in salesLastCheckIn) && salesLastCheckIn.objective != null) ? salesLastCheckIn.objective.dataValues.objective : null,
+                output: (salesLastCheckIn != null && ('output' in salesLastCheckIn) && salesLastCheckIn.output != null) ? salesLastCheckIn.output.output : null
+            }
+        }
 
         res.status(200)
             .json({
@@ -48,17 +114,26 @@ SalesQuotationController.index = async (req, res) => {
 
 SalesQuotationController.visitation = async (req, res) => {
     try {
-        let visit = await VisitMstr.findAll({
+        let sales = await TConfUser.findOne({
             where: {
-                visit_sales_id: req.params.ptnr_id
+                user_ptnr_id: req.params.ptnr_id
             },
-            attributes: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
+            attributes: ['ptnr_nik_id']
+        })
+
+        let activity = await VisitedDet.findAll({
+            where: {
+                visited_visit_code: {
+                    [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.ptnr_id})`)
+                }
+            },
+            attribues: ['']
         })
 
         res.status(200)
             .json({
                 status: 'success!',
-                data: visit,
+                data: sales,
                 error: null
             })
     } catch (error) {
@@ -172,6 +247,52 @@ SalesQuotationController.detailInvitation = async (req, res) => {
                 error: null
             })
     } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.createPeriode = async (req, res) => {
+    try {
+        let authUser = await helper.auth(req.get('authorization'))
+
+        let periodeStartDate = moment(req.body.periode_start_date).format('YYYYMM')
+        let periodeEndDate = moment(req.body.periode_end_date).format('YYYYMM')
+
+        let periodeCode = periodeStartDate + periodeEndDate
+
+        let beforeSequence = await PsPeriodeMstr.findOne({
+            attribues: ['periode_id'],
+            order: [['periode_id', 'desc']]
+        })
+
+        let sequence = (beforeSequence.periode_id) ? beforeSequence.periode_id + 1 : 1
+
+        let created_at = moment().format('YYYY-MM-DD HH:mm:ss')
+
+        let periode = await PsPeriodeMstr.create({
+            periode_oid: req.body.periode_oid,
+            periode_code: periodeCode,
+            periode_start_date: moment(req.body.periode_start_date).format('YYYY-MM-DD'),
+            periode_end_date: moment(req.body.periode_end_date).format('YYYY-MM-DD'),
+            periode_active: 'Y',
+            periode_add_by: authUser.usernama,
+            periode_add_date: created_at,
+            periode_id: sequence
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: periode,
+                error: null
+            })
+    } catch (error) {
+        console.log(error.message)
         res.status(400)
             .json({
                 status: error.message,

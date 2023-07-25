@@ -8,7 +8,8 @@ const route = {
                 index: '/visitation',
                 visitation: '/visitation/:ptnr_id/sales',
                 visitation_schedule: '/visitation/:visit_code/schedule',
-                visitation_detail: '/visitation/:visited_oid/detail'
+                visitation_detail: '/visitation/:visited_oid/detail',
+                visitation_create_periode: '/visitation/periode'
             }
         }
     },
