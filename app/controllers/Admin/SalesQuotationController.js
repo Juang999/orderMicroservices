@@ -128,14 +128,9 @@ SalesQuotationController.visitation = async (req, res) => {
             ]
         })
 
-        // let activity = await VisitedDet.findAll({
-        //     where: {
-        //         visited_visit_code: {
-        //             [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.ptnr_id})`)
-        //         }
-        //     },
-        //     attribues: ['']
-        // })
+        let totalActivity = await VisitedDet.count({
+
+        })
 
         res.status(200)
             .json({
@@ -302,6 +297,43 @@ SalesQuotationController.createPeriode = async (req, res) => {
             })
     } catch (error) {
         console.log(error.message)
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.getSales = async (req, res) => {
+    try {
+        let page = (req.query.page) ? req.query.page : 1
+
+        let {limit, offset} = helper.page(page, 10)
+
+        let where = {
+            user_ptnr_id: {
+                [Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')`)
+            }
+        }
+
+        if (req.query.search) {where.usernama = {[Op.like]: `%${req.query.search}%`}}
+
+        let sales = await TConfUser.findAll({
+            attributes: ['usernama', 'user_ptnr_id'],
+            where: where,
+            limit: limit,
+            offset: offset
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: sales,
+                error: null
+            })
+    } catch (error) {
         res.status(400)
             .json({
                 status: error.message,
