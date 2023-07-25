@@ -1,5 +1,5 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr} = require('../../../models')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
 
@@ -115,20 +115,27 @@ SalesQuotationController.index = async (req, res) => {
 SalesQuotationController.visitation = async (req, res) => {
     try {
         let sales = await TConfUser.findOne({
+            attributes: ['nik_id'],
             where: {
                 user_ptnr_id: req.params.ptnr_id
             },
-            attributes: ['ptnr_nik_id']
+            include: [
+                {
+                    model: EnMstr,
+                    as: 'entity',
+                    attributes: ['en_desc']
+                }
+            ]
         })
 
-        let activity = await VisitedDet.findAll({
-            where: {
-                visited_visit_code: {
-                    [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.ptnr_id})`)
-                }
-            },
-            attribues: ['']
-        })
+        // let activity = await VisitedDet.findAll({
+        //     where: {
+        //         visited_visit_code: {
+        //             [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.ptnr_id})`)
+        //         }
+        //     },
+        //     attribues: ['']
+        // })
 
         res.status(200)
             .json({
@@ -137,6 +144,8 @@ SalesQuotationController.visitation = async (req, res) => {
                 error: null
             })
     } catch (error) {
+        console.log(error.message)
+
         res.status(400)
             .json({
                 status: error.message,
