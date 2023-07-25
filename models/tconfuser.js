@@ -24,6 +24,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_ptnr_id',
         targetKey: 'ptnr_id'
       })
+
+      TConfUser.belongsTo(models.EnMstr, {
+        as: 'entity',
+        targetKey: 'en_id',
+        foreignKey: 'en_id'
+      })
     }
   }
   TConfUser.init({
@@ -47,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
     userphone: DataTypes.STRING,
     user_ptnr_id: DataTypes.INTEGER,
     user_imei: DataTypes.STRING,
-    ptnr_nik_id: DataTypes.STRING,
+    nik_id: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'TConfUser',
