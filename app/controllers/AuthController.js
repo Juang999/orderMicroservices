@@ -36,7 +36,7 @@ const AuthController = {
 				security_word: await crypter.encrypt(result.password),
 			}
 
-			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET)
+			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 
             res.status(200)
                 .json({
@@ -226,7 +226,7 @@ const AuthController = {
 				return
 			}
 
-			let token = await jwt.sign(admin.dataValues, process.env.ACCESS_TOKEN_SECRET)
+			let token = await jwt.sign(admin.dataValues, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 
 			res.status(200)
 				.json({

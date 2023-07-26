@@ -27,6 +27,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'ar_remarks',
         sourceKey: 'so_code'
       })
+
+      SoMstr.belongsTo(models.PtnrMstr, {
+        as: 'customer',
+        targetKey: 'ptnr_id',
+        foreignKey: 'so_ptnr_id_sold'
+      })
+
+      SoMstr.belongsTo(models.CodeMstr, {
+        as: 'payment_type',
+        targetKey: 'code_id',
+        foreignKey: 'so_pay_type'
+      })
     }
   }
   SoMstr.init({
