@@ -1,5 +1,5 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, LastCheckIn, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr, SoMstr} = require('../../../models')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
 
@@ -115,7 +115,7 @@ SalesQuotationController.index = async (req, res) => {
 SalesQuotationController.visitation = async (req, res) => {
     try {
         let sales = await TConfUser.findOne({
-            attributes: ['nik_id'],
+            attributes: ['nik_id', 'user_ptnr_id'],
             where: {
                 user_ptnr_id: req.params.ptnr_id
             },
@@ -128,9 +128,8 @@ SalesQuotationController.visitation = async (req, res) => {
             ]
         })
 
-        let totalActivity = await VisitedDet.count({
-
-        })
+        sales.dataValues.totalCheckIn = await getTotalCheckin(sales.user_ptnr_id)
+        sales.dataValues.outputVisitation = await resultVisitation(sales.user_ptnr_id)
 
         res.status(200)
             .json({
@@ -341,6 +340,246 @@ SalesQuotationController.getSales = async (req, res) => {
                 error: error.stack
             })
     }
+}
+
+SalesQuotationController.getCheckinData = async (req, res) => {
+    try {
+        let startdate = (req.query.startdate) ? req.query.startdate : moment().format('YYYY-MM-DD')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+
+        let data = await VisitedDet.findAll({
+            attributes: [
+                [Sequelize.literal(`to_char(visited_check_in, 'YYYY-MM-DD')`), 'date'],
+                ['visited_address_gps_check_in', 'checkin_location'],
+                ['visited_address_gps_check_out', 'checkout_location'],
+            ],
+            include: [
+                {
+                    model: CodeMstr,
+                    as: 'objective',
+                    attributes: [['code_name', 'name']]
+                },{
+                    model: CodeMstr,
+                    as: 'output',
+                    attributes: [['code_name', 'name']]
+                },{
+                    model: PtnrMstr,
+                    as: 'visited_partner',
+                    attributes: [['ptnr_name', 'name']]
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('visited_visit_code'), {
+                        [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.user_ptnr_id})`)
+                    }),
+                    Sequelize.where(Sequelize.literal(`to_char(visited_check_in, 'YYYY-MM-DD')`), {
+                        [Op.between]: [enddate, startdate]
+                    })
+                ]
+            },
+            order: [['visited_check_in', 'desc']]
+        })
+
+        res.status(200)
+            .json({
+                status: 'success',
+                data: data,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.getDataSOforSQ = async (req, res) => {
+    try {
+        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+
+        let data = await SoMstr.findAll({
+            attributes: [
+                'so_date',
+                'so_code',
+                ['so_shipping_address', 'location']
+            ],
+            include: [
+                {
+                    model: CodeMstr,
+                    as: 'payment_type',
+                    attributes: [['code_name', 'type']]
+                },
+                {
+                    model: PtnrMstr,
+                    as: 'customer',
+                    attributes: [['ptnr_name', 'customer']]
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('so_sales_person'), {
+                        [Op.eq]: req.params.user_ptnr_id
+                    }),
+                    Sequelize.where(Sequelize.col('so_date'), {
+                        [Op.between]: [enddate, startdate]
+                    })
+                ]
+            },
+            order: [['so_date', 'desc']]
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: data,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.getDataOutput = async (req, res) => {
+    try {
+        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+
+        if (req.params.code_id == 991381) {
+            res.status(200)
+                .json({
+                    status: 'success!',
+                    data: [],
+                    error: null
+                })
+
+            return
+        }
+
+        let data = await VisitedDet.findAll({
+            attributes: [
+                [Sequelize.literal('to_char(visited_check_in, \'YYYY-MM-DD\')'), 'date'],
+                ['visited_address_gps_check_in', 'address']
+            ],
+            include: [
+                {
+                    model: PtnrMstr,
+                    as: 'visited_partner',
+                    attributes: [['ptnr_name', 'name']]
+                },
+                {
+                    model: CodeMstr,
+                    as: 'output',
+                    attributes: [['code_name', 'type']]
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('visited_visit_code'), {
+                        [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.user_ptnr_id})`)
+                    }),
+                    Sequelize.where(Sequelize.literal('to_char(visited_check_in, \'YYYY-MM-DD\')'), {
+                        [Op.between]: [enddate, startdate]
+                    }),
+                    Sequelize.where(Sequelize.col('visited_output'), {
+                        [Op.eq]: req.query.code_id
+                    })
+                ]
+                
+            },
+            order: [['visited_check_in', 'desc']]
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: data,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+let getTotalCheckin = async (ptnr_id) => {
+    try {
+        let totalCheckIn = await VisitedDet.count({
+            where: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('visited_visit_code'), {
+                        [Op.eq]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${ptnr_id} ORDER BY visit_startdate DESC LIMIT 1)`)
+                    }),
+                    Sequelize.where(Sequelize.col('visited_check_in'), {
+                        [Op.not]: null
+                    })
+                ]
+            }
+        })
+
+        let totalData = await VisitedDet.count({
+            where: {
+                visited_visit_code: {
+                    [Op.eq]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${ptnr_id} ORDER BY visit_startdate DESC LIMIT 1)`)
+                }
+            }
+        })
+    
+        let data = {
+            total_check_in: totalCheckIn,
+            total_data: totalData
+        }
+
+        return data
+    } catch (error) {
+        return error.message
+    }
+}
+
+let resultVisitation = async (ptnr_id) => {
+    let rawData = await CodeMstr.findAll({
+        attributes: [
+            'code_name',
+            'code_id',
+            [Sequelize.fn('COUNT', Sequelize.col('total_output.visited_output')), 'total_data'],
+        ],
+        where: {
+            code_id: {
+                [Op.in]: [991382, 991381, 991383, 991384]
+            }
+        },
+        include: [
+            {
+                model: VisitedDet,
+                as: 'total_output',
+                attributes: ['visited_output'],
+                
+                required: false,
+                where: {
+                    visited_visit_code: {
+                        [Op.eq]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${ptnr_id} ORDER BY visit_startdate DESC limit 1)`)
+                    }
+                }
+            }
+        ],
+        group: ['CodeMstr.code_name', 'CodeMstr.code_id', 'total_output.visited_output'],
+        raw: true
+    })
+
+    return rawData
 }
 
 module.exports = SalesQuotationController
