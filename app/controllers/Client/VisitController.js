@@ -17,6 +17,7 @@ const VisitController = {
 	getVisitingSchedule: async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
+			let status = (req.query.status == 1) ? 'Y' : 'N' 
     
 			let where = {
 				visit_sales_id: authUser.user_ptnr_id
@@ -39,8 +40,13 @@ const VisitController = {
 
     
 			let visitDate = await VisitMstr.findAll({
+				attributes: [
+					'visit_code', 
+					'visit_startdate',
+					'visit_enddate', 
+					'visit_status'
+				],
 				where: where,
-				attributes: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
 			})
 
 			for (const detailVisit of visitDate) {
@@ -224,7 +230,7 @@ const VisitController = {
 			})
 
 			const file = JSON.parse(req.body.file)
-			const fileName = path.join(__dirname, `../../public/images/checkin/${file.name}`)
+			const fileName = path.join(__dirname, `../../../public/images/checkin/${file.name}`)
 
 			const buffer = Buffer.from(file.data.data, 'base64')
 
@@ -248,7 +254,7 @@ const VisitController = {
 				}
 			})
 
-			VisitedDet.update({
+			await VisitedDet.update({
 				visited_lat_gps_check_in: req.body.checkin_lat,
 				visited_long_gps_check_in: req.body.checkin_long,
 				visited_address_gps_check_in: req.body.checkin_address,
@@ -264,10 +270,9 @@ const VisitController = {
 			res.status(200)
 				.json({
 					status: 'berhasil',
-					message: 'berhasil upload gambar'
+					message: 'berhasil checkin'
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'gagal',
