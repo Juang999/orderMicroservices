@@ -226,7 +226,14 @@ const AuthController = {
 				return
 			}
 
-			let token = await jwt.sign(admin.dataValues, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
+			let data = {
+				userid: admin.userid,
+				name: admin.usernama,
+				ptnrid: admin.user_ptnr_id,
+				security_word: await crypter.encrypt(admin.password),
+			}
+
+			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 
 			res.status(200)
 				.json({
