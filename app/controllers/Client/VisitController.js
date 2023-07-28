@@ -44,7 +44,7 @@ const VisitController = {
 				attributes: [
 					'visit_code', 
 					'visit_startdate',
-					'visit_enddate', 
+					'visit_enddate',
 					'visit_status',
 					[Sequelize.fn('COUNT', 'visit_detail.visited_visit_code'), 'total_customer']
 				],
@@ -100,13 +100,32 @@ const VisitController = {
 						'visited_cus_address', 
 						'visited_type',
 						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_in'), 'YYYY-MM-DD, HH:mm:ss'), 'check_in'],
-						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_out'), 'YYYY-MM-DD, HH:mm:ss'), 'check_out']
-
+						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_out'), 'YYYY-MM-DD, HH:mm:ss'), 'check_out'],
+						'visited_lat_gps_check_in',
+						'visited_long_gps_check_in',
+						'visited_lat_gps_check_out',
+						'visited_long_gps_check_out'
 					],
 					where: {
 						visited_visit_code: req.params.visit_code
 					},
-					order: [['visited_check_in', 'desc']]
+					include: [
+						{
+							model: CodeMstr,
+							as: 'objective',
+							attributes: [
+								['code_name', 'name']
+							]
+						},
+						{
+							model: CodeMstr,
+							as: 'output',
+							attributes: [
+								['code_name', 'name']
+							]
+						}
+					],
+					order: [['visit_check_in', 'DESC']]
 				}
 			]
 		}).then(result => {
@@ -270,6 +289,8 @@ const VisitController = {
 					visited_oid: req.params.visited_oid
 				}
 			})
+
+			await updateStatusSchedule(req.params.visited_oid)
 
 			res.status(200)
 				.json({
@@ -467,6 +488,37 @@ const VisitController = {
 					error: error.stack
 				})
 		}
+	}
+}
+
+let updateStatusSchedule = async (visited_oid) => {
+	let allCustomer = await VisitedDet.count({
+		where: {
+			visited_visit_code: {
+				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+			}
+		}
+	})
+
+	let visitedToCustomer = await VisitedDet.count({
+		where: {
+			visited_visit_code: {
+				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+			},
+			visited_check_in: {
+				[Op.not]: null
+			}
+		}
+	})
+
+	if (allCustomer - visitedToCustomer == 0) {
+		await VisitMstr.update({
+			visit_status: 'Y'
+		}, {
+			where: {
+				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+			}
+		})
 	}
 }
 
