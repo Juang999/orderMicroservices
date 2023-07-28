@@ -115,7 +115,7 @@ SalesQuotationController.index = async (req, res) => {
 SalesQuotationController.visitation = async (req, res) => {
     try {
         let sales = await TConfUser.findOne({
-            attributes: ['nik_id', 'user_ptnr_id'],
+            attributes: ['nik_id', 'user_ptnr_id', 'usernama'],
             where: {
                 user_ptnr_id: req.params.ptnr_id
             },

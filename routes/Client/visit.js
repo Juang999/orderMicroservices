@@ -16,5 +16,6 @@ router.delete(Client.feature.visitation.visitation_delete_customer, [middleware.
 router.delete(Client.feature.visitation.visitation_delete_schedule, [middleware.authenticate], controller.Client.VisitController.deleteSchedule)
 router.get(Client.feature.visitation.visitation_type, [middleware.authenticate], controller.Client.VisitController.getVisitType)
 router.get(Client.feature.visitation.visitation_output, [middleware.authenticate], controller.Client.VisitController.getOutputVisitType)
+router.get(Client.feature.visitation.visitation_sales_periode, [middleware.authenticate], controller.Client.VisitController.getSalesPerPeriode)
 
 module.exports = router

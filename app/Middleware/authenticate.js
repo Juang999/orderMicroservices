@@ -22,14 +22,23 @@ let testMiddleware = async (req, res, next) => {
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if (err) {
-            console.log(err)
-            res.status(400)
-                .json({
-                    status: "failed",
-                    message: "failed login"
-                })
-
+            if (err.message == 'jwt expired') {
+                res.status(400)
+                    .json({
+                        status: err.message,
+                        error: err.message
+                    })
+                
                 return
+            } else {
+                res.status(400)
+                    .json({
+                        status: "failed",
+                        message: "failed login"
+                    })
+    
+                    return
+            }
         }
 
         let authUser = await TConfUser.findOne({
