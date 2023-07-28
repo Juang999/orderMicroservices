@@ -50,7 +50,8 @@ const route = {
                 visitation_delete_schedule: '/visitation/:visit_code/delete',
                 visitation_type: '/visitation/type',
                 visitation_output: '/visitation/output',
-                visitation_customer: '/visitation/customer/per-periode'
+                visitation_customer: '/visitation/customer/per-periode',
+                visitation_sales_periode: '/visitation/:periode/sales'
             },
             productKnowledge: {
                 // nothing

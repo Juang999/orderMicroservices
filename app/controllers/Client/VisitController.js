@@ -17,11 +17,12 @@ const VisitController = {
 	getVisitingSchedule: async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
-			let status = (req.query.status == 1) ? 'Y' : 'N' 
-    
+
 			let where = {
 				visit_sales_id: authUser.user_ptnr_id
 			}
+
+			where.visit_status = (req.query.status == 1) ? 'Y' : 'N'
 
 			if (req.query.periode) {
 				let periode = await PsPeriodeMstr.findOne({
@@ -38,27 +39,28 @@ const VisitController = {
 				where.visit_startdate = {[Op.between]: [startDate, endDate]}
 			}
 
-    
+
 			let visitDate = await VisitMstr.findAll({
 				attributes: [
 					'visit_code', 
 					'visit_startdate',
 					'visit_enddate', 
-					'visit_status'
+					'visit_status',
+					[Sequelize.fn('COUNT', 'visit_detail.visited_visit_code'), 'total_customer']
+				],
+				include: [
+					{
+						model: VisitedDet,
+						as: 'visit_detail',
+						required: false,
+						attributes: []
+					}
 				],
 				where: where,
+				order: [['visit_startdate', 'desc']],
+				group: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
 			})
 
-			for (const detailVisit of visitDate) {
-				let countTotalPeopleToVisit = await VisitedDet.count({
-					where: {
-						visited_visit_code: detailVisit.dataValues.visit_code
-					}
-				})
-
-				detailVisit.dataValues.total_to_visit = countTotalPeopleToVisit
-			}
-    
 			res.status(200)
 				.json({
 					status: 'berhasil',
@@ -77,34 +79,36 @@ const VisitController = {
 	},
 	getDetailVisitSchedule: (req, res) => {
 		VisitMstr.findOne({
-			where: {
-				visit_code: req.params.visit_code
-			},
 			attributes: [
 				'visit_code', 
 				[Sequelize.literal('concat(replace(to_char(visit_startdate, \'Day\'), \' \', \'\'), \', \', to_char(visit_startdate, \'YYYY\'), \' \', replace(to_char(visit_startdate, \'Month\'), \' \', \'\'), \' \', to_char(visit_startdate, \'DD\'))'), 'visit_startdate'], 
 				[Sequelize.literal('concat(replace(to_char(visit_enddate, \'Day\'), \' \', \'\'), \', \', to_char(visit_enddate, \'YYYY\'), \' \', replace(to_char(visit_enddate, \'Month\'), \' \', \'\'), \' \', to_char(visit_enddate, \'DD\'))'), 'visit_enddate'], 
-				'visit_status'
+				'visit_status',
+				[Sequelize.literal(`(SELECT COUNT(*) FROM public.visited_det WHERE visited_det.visited_visit_code = '${req.params.visit_code}')`), 'total_customer']
+			],
+			where: {
+				visit_code: req.params.visit_code
+			},
+			include: [
+				{
+					model: VisitedDet,
+					as: 'visit_detail',
+					attributes: [
+						'visited_oid', 
+						'visited_cus_name', 
+						'visited_cus_phone', 
+						'visited_cus_address', 
+						'visited_type',
+						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_in'), 'YYYY-MM-DD, HH:mm:ss'), 'check_in'],
+						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_out'), 'YYYY-MM-DD, HH:mm:ss'), 'check_out']
+
+					],
+					where: {
+						visited_visit_code: req.params.visit_code
+					},
+					order: [['visited_check_in', 'desc']]
+				}
 			]
-		}).then( async result => {
-			if (!result) {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'data tidak ada',
-					})
-			}
-
-			let visited_detail = await VisitedDet.findAndCountAll({
-				where: {
-					visited_visit_code: result.visit_code
-				},
-				attributes: ['visited_oid', 'visited_cus_name', 'visited_cus_phone', 'visited_cus_address', 'visited_type'],
-			})
-
-			result.dataValues.visited_detail = (visited_detail.length == 0) ? {count: 0, rows: []} : visited_detail
-
-			return result
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -259,7 +263,7 @@ const VisitController = {
 				visited_long_gps_check_in: req.body.checkin_long,
 				visited_address_gps_check_in: req.body.checkin_address,
 				visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
-				visited_foto: `images/${file.name}`,
+				visited_foto: `images/checkin/${file.name}`,
 				visited_objective: req.body.objective
 			}, {
 				where: {
@@ -428,6 +432,41 @@ const VisitController = {
 					error: err.message
 				})
 		})
+	},
+	getSalesPerPeriode: async (req, res) => {
+		try {
+			let authUser = await helper.auth(req.get('authorization'))
+
+			let where = {
+				ptnr_id: {
+					[Op.in]: Sequelize.literal(`(SELECT plansd_ptnr_id FROM public.plansd_det WHERE plansd_plans_oid = (SELECT plans_oid FROM public.plans_mstr WHERE plans_sales_id = ${authUser.user_ptnr_id} AND plans_periode = '${req.params.periode}'))`)
+				}
+			}
+
+			if (req.query.search) {where.ptnr_name = {[Op.like]: `%${req.query.search}%`}}
+
+			let dataSales = await PtnrMstr.findAll({
+				attributes: [
+					['ptnr_id', 'id'],
+					['ptnr_name', 'name']
+				],
+				where: where
+			})
+
+			res.status(200)
+				.json({
+					status: 'success!',
+					data: dataSales,
+					error: null
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: error.message,
+					data: null,
+					error: error.stack
+				})
+		}
 	}
 }
 
