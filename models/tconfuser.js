@@ -30,6 +30,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'en_id',
         foreignKey: 'en_id'
       })
+
+      TConfUser.hasMany(models.VisitMstr, {
+        as: 'detail_visitation',
+        sourceKey: 'userid',
+        foreignKey: 'visit_sales_id'
+      })
     }
   }
   TConfUser.init({

@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
         as: "visit_detail",
         foreignKey: "visited_visit_code"
       })
+
+      VisitMstr.belongsTo(models.TConfUser, {
+        as: 'detail_visitation',
+        targetKey: 'userid',
+        foreignKey: 'visit_sales_id'
+      })
     }
   }
   VisitMstr.init({
