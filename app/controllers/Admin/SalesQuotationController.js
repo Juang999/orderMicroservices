@@ -407,8 +407,8 @@ SalesQuotationController.getCheckinData = async (req, res) => {
 
 SalesQuotationController.getDataSOforSQ = async (req, res) => {
     try {
-        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
-        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
 
         let data = await SoMstr.findAll({
             attributes: [
@@ -434,7 +434,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
                         [Op.eq]: Sequelize.literal(`(SELECT user_ptnr_id FROM public.tconfuser WHERE userid = ${req.params.user_ptnr_id})`)
                     }),
                     Sequelize.where(Sequelize.col('so_date'), {
-                        [Op.between]: [enddate, startdate]
+                        [Op.between]: [startdate, enddate]
                     })
                 ]
             },
@@ -459,8 +459,8 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
 
 SalesQuotationController.getDataOutput = async (req, res) => {
     try {
-        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
-        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
 
         if (req.params.code_id == 991381) {
             res.status(200)
@@ -496,7 +496,7 @@ SalesQuotationController.getDataOutput = async (req, res) => {
                         [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.user_ptnr_id})`)
                     }),
                     Sequelize.where(Sequelize.literal('to_char(visited_check_in, \'YYYY-MM-DD\')'), {
-                        [Op.between]: [enddate, startdate]
+                        [Op.between]: [startdate, enddate]
                     }),
                     Sequelize.where(Sequelize.col('visited_output'), {
                         [Op.eq]: req.query.code_id
