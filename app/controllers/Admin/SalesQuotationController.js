@@ -19,7 +19,7 @@ SalesQuotationController.index = async (req, res) => {
                 Sequelize.where(Sequelize.col('user_ptnr_id'), {
                     [Op.in]: Sequelize.literal("(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = 'Y')")
                 }),
-                Sequelize.where(Sequelize.col('user_ptnr_id'), {
+                Sequelize.where(Sequelize.col('userid'), {
                     [Op.in]: Sequelize.literal(`(select visit_sales_id from public.visit_mstr where visit_code in (select visited_visit_code from public.visited_det where to_char(visited_check_in, 'YYYY-MM-DD') = '${dateLastCheckIn}'))`)
                 })
             ]
@@ -29,7 +29,7 @@ SalesQuotationController.index = async (req, res) => {
 
         let partners = await TConfUser.findAll({
             attributes: [
-                ['user_ptnr_id', 'ptnr_id'],
+                ['userid', 'ptnr_id'],
                 ['usernama', 'ptnr_name'],
                 ['nik_id', 'ptnr_nik_id']
             ],
@@ -115,9 +115,9 @@ SalesQuotationController.index = async (req, res) => {
 SalesQuotationController.visitation = async (req, res) => {
     try {
         let sales = await TConfUser.findOne({
-            attributes: ['nik_id', 'user_ptnr_id', 'usernama'],
+            attributes: ['nik_id', 'usernama', ['userid', 'user_ptnr_id']],
             where: {
-                user_ptnr_id: req.params.ptnr_id
+                userid: req.params.ptnr_id
             },
             include: [
                 {
@@ -320,16 +320,22 @@ SalesQuotationController.getSales = async (req, res) => {
         if (req.query.search) {where.usernama = {[Op.like]: `%${req.query.search}%`}}
 
         let sales = await TConfUser.findAll({
-            attributes: ['usernama', 'user_ptnr_id'],
+            attributes: ['usernama', ['userid', 'user_ptnr_id']],
             where: where,
             limit: limit,
             offset: offset
+        })
+
+        let totalData = await TConfUser.count({
+            where: where
         })
 
         res.status(200)
             .json({
                 status: 'success!',
                 data: sales,
+                current_page: page,
+                total_page: Math.ceil(totalData / limit),
                 error: null
             })
     } catch (error) {
@@ -337,6 +343,8 @@ SalesQuotationController.getSales = async (req, res) => {
             .json({
                 status: error.message,
                 data: null,
+                current_page: page,
+                total_page: null,
                 error: error.stack
             })
     }
