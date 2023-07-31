@@ -431,7 +431,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
             where: {
                 [Op.and]: [
                     Sequelize.where(Sequelize.col('so_sales_person'), {
-                        [Op.eq]: req.params.user_ptnr_id
+                        [Op.eq]: Sequelize.literal(`(SELECT user_ptnr_id FROM public.tconfuser WHERE userid = ${req.params.user_ptnr_id})`)
                     }),
                     Sequelize.where(Sequelize.col('so_date'), {
                         [Op.between]: [enddate, startdate]
