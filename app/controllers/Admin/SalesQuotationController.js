@@ -459,8 +459,8 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
 
 SalesQuotationController.getDataOutput = async (req, res) => {
     try {
-        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-DD')
-        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD')
+        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-26')
+        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-25')
 
         if (req.params.code_id == 991381) {
             res.status(200)
