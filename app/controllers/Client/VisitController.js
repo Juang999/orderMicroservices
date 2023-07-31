@@ -208,6 +208,8 @@ const VisitController = {
 		}
 	},
 	createListCustomerToVisit: async (req, res) => {
+		let authUser = await helper.auth(req.get('authorization'))
+
 		VisitedDet.create({
 			visited_oid: uuidv4(),
 			visited_visit_code: req.body.visit_code,
