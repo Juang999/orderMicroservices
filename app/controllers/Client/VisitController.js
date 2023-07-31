@@ -19,7 +19,7 @@ const VisitController = {
 			let authUser = await helper.auth(req.get('authorization'))
 
 			let where = {
-				visit_sales_id: authUser.user_ptnr_id
+				visit_sales_id: authUser.userid
 			}
 
 			where.visit_status = (req.query.status == 1) ? 'Y' : 'N'
@@ -183,7 +183,7 @@ const VisitController = {
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
 				visit_en_id: authUser.en_id,
-				visit_sales_id: authUser.user_ptnr_id,
+				visit_sales_id: authUser.userid,
 				visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visit_add_by: authUser.usernama,
 				visit_status: 'N'
@@ -216,7 +216,7 @@ const VisitController = {
 			visited_cus_name: req.body.cus_name,
 			visited_cus_address: req.body.cus_address,
 			visited_cus_phone: req.body.cus_phone,
-			visited_add_by: req.body.usernama,
+			visited_add_by: authUser.usernama,
 			visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
 		}).then(result => {
 			res.status(200)
@@ -235,7 +235,9 @@ const VisitController = {
 		})
 	},
 	checkIn: async (req, res) => {
-		try {              
+		try {
+			let authUser = helper.auth(req.get('authorization'))
+
 			let checkLastData = await VisitedDet.findOne({
 				where: {
 					[Op.and]: {
@@ -283,7 +285,9 @@ const VisitController = {
 				visited_address_gps_check_in: req.body.checkin_address,
 				visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visited_foto: `images/checkin/${file.name}`,
-				visited_objective: req.body.objective
+				visited_objective: req.body.objective,
+				visited_upd_by: authUser.usernama,
+				visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 			}, {
 				where: {
 					visited_oid: req.params.visited_oid
