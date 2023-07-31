@@ -265,7 +265,7 @@ const VisitController = {
 				res.status(500)
 					.json({
 						status: 'gagal',
-						data: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`,
+						message: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`,
 						visited_oid: checkLastData.visited_oid
 					})
                 
@@ -296,7 +296,7 @@ const VisitController = {
 				}
 			})
 
-			await updateStatusSchedule(req.params.visited_oid)
+			await updateStatusSchedule(req.body.visit_code)
 
 			res.status(200)
 				.json({
@@ -308,7 +308,7 @@ const VisitController = {
 				.json({
 					status: 'gagal',
 					message: 'gagal upload data',
-					errorr: error.message
+					error: error.message
 				})
 		}
 	},
@@ -497,11 +497,11 @@ const VisitController = {
 	}
 }
 
-let updateStatusSchedule = async (visited_oid) => {
+let updateStatusSchedule = async (visit_code) => {
 	let allCustomer = await VisitedDet.count({
 		where: {
 			visited_visit_code: {
-				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+				[Op.eq]: visit_code
 			}
 		}
 	})
@@ -509,7 +509,7 @@ let updateStatusSchedule = async (visited_oid) => {
 	let visitedToCustomer = await VisitedDet.count({
 		where: {
 			visited_visit_code: {
-				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+				[Op.eq]: visit_code
 			},
 			visited_check_in: {
 				[Op.not]: null
@@ -522,9 +522,15 @@ let updateStatusSchedule = async (visited_oid) => {
 			visit_status: 'Y'
 		}, {
 			where: {
-				[Op.eq]: Sequelize.literal(`(SELECT visited_visit_code FROM public.visited_det WHERE visited_oid = ${visited_oid})`)
+				visit_code: {
+					[Op.eq]: visit_code
+				}
 			}
 		})
+
+		return
+	} else {
+		return
 	}
 }
 
