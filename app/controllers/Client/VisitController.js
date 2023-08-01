@@ -46,7 +46,7 @@ const VisitController = {
 					'visit_startdate',
 					'visit_enddate',
 					'visit_status',
-					[Sequelize.fn('COUNT', 'visit_detail.visited_visit_code'), 'total_customer']
+					[Sequelize.fn('COUNT', Sequelize.col('visit_detail.visited_visit_code')), 'total_customer']
 				],
 				include: [
 					{
