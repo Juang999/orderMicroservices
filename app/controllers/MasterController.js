@@ -165,7 +165,7 @@ const MasterController = {
 				.json({
 					status: 'failed',
 					message: 'gagal mengambil data',
-					error: err
+					error: err.message
 				})
 		})
 	},

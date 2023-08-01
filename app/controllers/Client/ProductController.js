@@ -347,7 +347,6 @@ const ProductController = {
 		})
 	},
 	getSubCategory: (req, res) => {
-		console.log(req.params.cat_id)
 		PtsCatCat.findAll({
 			attributes: ['ptscat_id', 'ptscat_desc'],
 			where: {
@@ -436,7 +435,6 @@ const ProductController = {
 		let offset = (limit * page) - limit
 
 		let where = {pt_pl_id: 1, pt_desc1: {[Op.not]: null}}
-		console.log(where)
     
 		if (req.query.entity > 0) where.pt_en_id = req.query.entity
 		if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`}
@@ -594,7 +592,6 @@ const ProductController = {
 					data: theResult
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'gagal',

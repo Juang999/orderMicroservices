@@ -68,7 +68,6 @@ const VisitController = {
 					data: visitDate
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -336,7 +335,6 @@ const VisitController = {
 					data: result
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'gagal',
@@ -405,7 +403,6 @@ const VisitController = {
 					data: customer
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'gagal',

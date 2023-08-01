@@ -183,7 +183,6 @@ const AuthController = {
 					data: data
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'gagal',
