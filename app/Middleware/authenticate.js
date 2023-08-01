@@ -25,6 +25,7 @@ let testMiddleware = async (req, res, next) => {
             if (err.message == 'jwt expired') {
                 res.status(400)
                     .json({
+                        code: 400,
                         status: err.message,
                         error: err.message
                     })
@@ -33,6 +34,7 @@ let testMiddleware = async (req, res, next) => {
             } else {
                 res.status(400)
                     .json({
+                        code: 400,
                         status: "failed",
                         message: "failed login"
                     })
@@ -51,6 +53,7 @@ let testMiddleware = async (req, res, next) => {
         if (!authUser) {
             res.status(403)
                 .json({
+                    code: 403,
                     message: "unauthorize"
                 })
 
@@ -61,6 +64,7 @@ let testMiddleware = async (req, res, next) => {
         if (verifyPassword != authUser.password) {
             res.status(403)
                 .json({
+                    code: 403,
                     result: false
                 })
         
