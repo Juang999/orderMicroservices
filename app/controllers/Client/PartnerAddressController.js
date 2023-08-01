@@ -100,8 +100,6 @@ const PartnerAddressController = {
 			attributes: ['ptnra_active']
 		})
 
-		console.log(date)
-
 		PtnraAddr.update({
 			ptnra_active: (dataAddress.ptnra_active == 'Y') ? 'N' : 'Y',
 			ptnra_upd_date: date,

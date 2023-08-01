@@ -33,7 +33,6 @@ const PlanController = {
 					data: result
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -45,7 +44,6 @@ const PlanController = {
 	createPlan: async (req, res) => {
 		try {
 			let user = await helper.auth(req.get('authorization'))
-			console.log(req.body)
 
 			let getPlanMaster = await PlansMstr.findOne({
 				where: {
@@ -80,7 +78,6 @@ const PlanController = {
 					data: data
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -126,7 +123,6 @@ const PlanController = {
 					data: planningSales
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',

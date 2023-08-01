@@ -138,8 +138,6 @@ SalesQuotationController.visitation = async (req, res) => {
                 error: null
             })
     } catch (error) {
-        console.log(error.message)
-
         res.status(400)
             .json({
                 status: error.message,
@@ -295,7 +293,6 @@ SalesQuotationController.createPeriode = async (req, res) => {
                 error: null
             })
     } catch (error) {
-        console.log(error.message)
         res.status(400)
             .json({
                 status: error.message,
