@@ -2,6 +2,8 @@ require('dotenv').config()
 
 const jwt = require('jsonwebtoken')
 const {TConfUser} = require('../../models')
+const cryptr = require('cryptr')
+const crypter = new cryptr('thisIsSecretPassword')
 
 let adminAuthenticate = (req, res, next) => {
     let authHeader = req.headers["authorization"]
@@ -10,6 +12,7 @@ let adminAuthenticate = (req, res, next) => {
     if (!token) {
         res.status(400)
             .json({
+                code: 400,
                 status: 'failed',
                 message: "unauthorize",
                 error: "unauthorize"
@@ -23,6 +26,7 @@ let adminAuthenticate = (req, res, next) => {
             if (err.message == 'jwt expired') {
                 res.status(400)
                     .json({
+                        code: 400,
                         status: err.message,
                         error: err.message
                     })
@@ -31,8 +35,8 @@ let adminAuthenticate = (req, res, next) => {
             } else {
                 res.status(400)
                     .json({
+                        code: 400,
                         status: "failed",
-                        message: "failed login",
                         error: "failed login"
                     })
     
@@ -44,23 +48,27 @@ let adminAuthenticate = (req, res, next) => {
             where: {
                 usernama: user.name
             },
-            attributes: ['usernama', 'password']
+            attributes: ['usernama', 'password', 'groupid']
         })
 
         if (!authUser) {
             res.status(403)
                 .json({
-                    message: "unauthorize",
+                    code: 403,
+                    status: "unauthorize",
                     error: "unauthorize"
                 })
 
             return
         }
 
+        console.log(authUser.groupid)
+
         if (authUser.groupid != 1) {
             res.status(403)
                 .json({
-                    message: "unauthorize",
+                    code: 403,
+                    status: "unauthorize",
                     error: "unauthorize"
                 })
 
@@ -71,7 +79,9 @@ let adminAuthenticate = (req, res, next) => {
         if (verifyPassword != authUser.password) {
             res.status(403)
                 .json({
-                    result: false
+                    code: 403,
+                    status: 'failed login',
+                    error: 'wrong username or password',
                 })
         
                 return

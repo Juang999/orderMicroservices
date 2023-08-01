@@ -98,6 +98,7 @@ SalesQuotationController.index = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success',
                 data: partners,
                 errors: null
@@ -105,6 +106,7 @@ SalesQuotationController.index = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 errors: error.stack
@@ -133,6 +135,7 @@ SalesQuotationController.visitation = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: sales,
                 error: null
@@ -140,6 +143,7 @@ SalesQuotationController.visitation = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -176,6 +180,7 @@ SalesQuotationController.visitation_schedule = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: dataVisitation,
                 error: null
@@ -183,6 +188,7 @@ SalesQuotationController.visitation_schedule = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -243,6 +249,7 @@ SalesQuotationController.detailInvitation = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success',
                 data: detailVisitation,
                 error: null
@@ -250,6 +257,7 @@ SalesQuotationController.detailInvitation = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -288,6 +296,7 @@ SalesQuotationController.createPeriode = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: periode,
                 error: null
@@ -295,6 +304,7 @@ SalesQuotationController.createPeriode = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -329,6 +339,7 @@ SalesQuotationController.getSales = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: sales,
                 current_page: page,
@@ -338,6 +349,7 @@ SalesQuotationController.getSales = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 current_page: page,
@@ -388,6 +400,7 @@ SalesQuotationController.getCheckinData = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success',
                 data: data,
                 error: null
@@ -395,6 +408,7 @@ SalesQuotationController.getCheckinData = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -440,6 +454,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: data,
                 error: null
@@ -447,6 +462,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
@@ -462,6 +478,7 @@ SalesQuotationController.getDataOutput = async (req, res) => {
         if (req.params.code_id == 991381) {
             res.status(200)
                 .json({
+                    code: 200,
                     status: 'success!',
                     data: [],
                     error: null
@@ -506,6 +523,7 @@ SalesQuotationController.getDataOutput = async (req, res) => {
 
         res.status(200)
             .json({
+                code: 200,
                 status: 'success!',
                 data: data,
                 error: null
@@ -513,6 +531,7 @@ SalesQuotationController.getDataOutput = async (req, res) => {
     } catch (error) {
         res.status(400)
             .json({
+                code: 400,
                 status: error.message,
                 data: null,
                 error: error.stack
