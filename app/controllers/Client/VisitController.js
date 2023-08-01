@@ -22,7 +22,7 @@ const VisitController = {
 				visit_sales_id: authUser.userid
 			}
 
-			where.visit_status = (req.query.status == 1) ? 'Y' : 'N'
+			where.visit_status = (req.query.status == 'Y') ? 'Y' : 'N'
 
 			if (req.query.periode) {
 				let periode = await PsPeriodeMstr.findOne({
