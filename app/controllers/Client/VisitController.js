@@ -104,7 +104,7 @@ const VisitController = {
 						'visited_long_gps_check_in',
 						'visited_lat_gps_check_out',
 						'visited_long_gps_check_out',
-						'visit_ptnr_id'
+						'visited_ptnr_id'
 					],
 					where: {
 						visited_visit_code: req.params.visit_code
