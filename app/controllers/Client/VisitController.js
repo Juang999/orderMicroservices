@@ -123,6 +123,11 @@ const VisitController = {
 							attributes: [
 								['code_name', 'name']
 							]
+						},
+						{
+							model: PtnrMstr,
+							as: 'visited_partner',
+							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name']
 						}
 					],
 					order: [['visit_check_in', 'DESC']]
