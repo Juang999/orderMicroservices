@@ -539,6 +539,33 @@ SalesQuotationController.getDataOutput = async (req, res) => {
     }
 }
 
+SalesQuotationController.getPeriode = async (req, res) => {
+    try {
+        let periode = await PsPeriodeMstr.findAll({
+            attributes: [
+                'periode_code',
+                [Sequelize.fn('CONCAT', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'Month'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'YYYY'), ' ', '')), 'periode']
+            ]
+        })
+
+        res.status(200)
+            .json({
+                code: 200,
+                status: 'success!',
+                data: periode,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                code: 400,
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
 let getTotalCheckin = async (ptnr_id) => {
     try {
         let totalCheckIn = await VisitedDet.count({

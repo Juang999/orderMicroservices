@@ -13,7 +13,14 @@ const route = {
                 visitation_sales: '/visitation/sales',
                 visitation_sales_quotation: '/visitation/:user_ptnr_id/sales-quotation',
                 visitation_checkin: '/visitation/:user_ptnr_id/checkin',
-                visitation_output: '/visitation/:user_ptnr_id/output'
+                visitation_output: '/visitation/:user_ptnr_id/output',
+                visitation_periode: '/visitation/periode'
+            },
+            auth: {
+                login: '/login',
+                profile: '/profile',
+                admin_login: '/admin-login',
+                authenticate: '/authenticate'
             }
         }
     },
