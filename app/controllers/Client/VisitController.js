@@ -92,6 +92,7 @@ const VisitController = {
 				{
 					model: VisitedDet,
 					as: 'visit_detail',
+					required: false,
 					attributes: [
 						'visited_oid', 
 						'visited_cus_name', 
