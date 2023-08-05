@@ -578,6 +578,7 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_tax_inc: null,
 		sq_cons: dataHeader.bodyHeader.sq_cons,
 		sq_terbilang: dataHeader.bodyHeader.sq_terbilang,
+		sq_credit_term: dataHeader.bodyHeader.sq_credit_term,
 		sq_interval: 0,
 		sq_ar_ac_id: 13,
 		sq_ar_sb_id: 0,
