@@ -13,5 +13,6 @@ router.get(Admin.feature.visitation.visitation_sales, [middleware.adminAuthentic
 router.get(Admin.feature.visitation.visitation_checkin, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getCheckinData)
 router.get(Admin.feature.visitation.visitation_sales_quotation, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getDataSOforSQ)
 router.get(Admin.feature.visitation.visitation_output, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getDataOutput)
+router.get(Admin.feature.visitation.visitation_periode, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getPeriode)
 
 module.exports = router
