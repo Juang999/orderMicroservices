@@ -14,13 +14,13 @@ const route = {
                 visitation_sales_quotation: '/visitation/:user_ptnr_id/sales-quotation',
                 visitation_checkin: '/visitation/:user_ptnr_id/checkin',
                 visitation_output: '/visitation/:user_ptnr_id/output',
-                visitation_periode: '/visitation/periode'
+                visitation_periode: '/visitation/periode',
+                visitation_goal: '/visitation/:userid/goal'
             },
             auth: {
-                login: '/login',
-                profile: '/profile',
                 admin_login: '/admin-login',
-                authenticate: '/authenticate'
+                authenticate: '/authenticate',
+                profile_admin: '/admin-profile'
             }
         }
     },
@@ -62,6 +62,10 @@ const route = {
             },
             productKnowledge: {
                 // nothing
+            },
+            auth: {
+                login: '/login',
+                profile: '/profile',
             }
         }
     }
