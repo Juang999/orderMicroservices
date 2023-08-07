@@ -538,4 +538,19 @@ let updateStatusSchedule = async (visit_code) => {
 	}
 }
 
+let checkCheckinClient = async (visited_oid) => {
+	let dataCheckIn = await VisitedDet.findOne({
+		where: {
+			visited_oid: visited_oid
+		}, 
+		attributes: ['vissited_oid', 'visited_check_in']
+	})
+
+	if (dataCheckIn) {
+		return true
+	} else {
+		return false
+	}
+}
+
 module.exports = VisitController
