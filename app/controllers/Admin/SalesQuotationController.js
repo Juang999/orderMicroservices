@@ -1,5 +1,5 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr, SoMstr} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr, SoMstr, PlansMstr, SoShipMstr} = require('../../../models')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
 
@@ -425,7 +425,8 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
             attributes: [
                 'so_date',
                 'so_code',
-                ['so_shipping_address', 'location']
+                ['so_shipping_address', 'location'],
+                'so_total'
             ],
             include: [
                 {
@@ -544,7 +545,8 @@ SalesQuotationController.getPeriode = async (req, res) => {
         let periode = await PsPeriodeMstr.findAll({
             attributes: [
                 'periode_code',
-                [Sequelize.fn('CONCAT', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'Month'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'YYYY'), ' ', '')), 'periode']
+                [Sequelize.fn('CONCAT', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'DD'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'Month'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'YYYY'), ' ', '')), 'start_periode'],
+                [Sequelize.fn('CONCAT', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_end_date'), 'DD'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_end_date'), 'Month'), ' ', ''), ' ', Sequelize.fn('REPLACE', Sequelize.fn('TO_CHAR', Sequelize.col('periode_end_date'), 'YYYY'), ' ', '')), 'end_periode']
             ]
         })
 
@@ -553,6 +555,59 @@ SalesQuotationController.getPeriode = async (req, res) => {
                 code: 200,
                 status: 'success!',
                 data: periode,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                code: 400,
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.getGoal = async (req, res) => {
+    try {
+        let current_periode = currentPeriode(req.query.periode_code)
+        let data_sales = getSales(req.params.userid)
+
+        let required_data = await Promise.all([current_periode, data_sales])
+
+        let dataGoal = SoMstr.sum('so_total', {
+            where: {
+                so_ref_sq_oid: {
+                    [Op.in]: Sequelize.literal(`(SELECT sq_oid FROM public.sq_mstr WHERE sq_sales_person = ${required_data[1].user_ptnr_id} AND sq_date BETWEEN '${required_data[0].periode_start_date}' AND '${required_data[0].periode_end_date}')`)
+                },
+                so_oid: {
+                    [Op.in]: Sequelize.literal(`(SELECT soship_so_oid FROM public.soship_mstr)`)
+                }
+            }
+        })
+
+        let dataTarget = PlansMstr.findOne({
+            attributes: [
+                ['plans_amount_total', 'total_target']
+            ],
+            where: {
+                plans_sales_id: required_data[1].userid,
+                plans_periode: required_data[0].periode_code
+            }
+        })
+
+        let allData = await Promise.all([dataGoal, dataTarget])
+
+        let data = {
+            target: (allData[1] == null) ? 0 : allData[1].dataValues.total_target,
+            goal: (allData[0] == null) ? 0 : allData[0]
+        }
+
+        res.status(200)
+            .json({
+                code: 200,
+                status: 'success!',
+                data: data,
                 error: null
             })
     } catch (error) {
@@ -631,6 +686,34 @@ let resultVisitation = async (ptnr_id) => {
     })
 
     return rawData
+}
+
+let currentPeriode = async (periode) => {
+    let periodeSearch = (periode) ? periode : moment().format('YYYYMM')
+
+    let currentPeriode = await PsPeriodeMstr.findOne({
+                                attributes: ['periode_code', 'periode_start_date', 'periode_end_date'],
+                                where: {
+                                    [Op.and]: [
+                                        Sequelize.where(Sequelize.col('periode_code'), {
+                                            [Op.eq]: periodeSearch
+                                        })
+                                    ]
+                                }
+    })
+
+    return currentPeriode
+}
+
+let getSales = async userid => {
+    let dataSales = await TConfUser.findOne({
+        attributes: ['userid', 'user_ptnr_id'],
+        where: {
+            userid: userid
+        }
+    })
+
+    return dataSales
 }
 
 module.exports = SalesQuotationController
