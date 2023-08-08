@@ -130,8 +130,10 @@ SalesQuotationController.visitation = async (req, res) => {
             ]
         })
 
-        sales.dataValues.totalCheckIn = await getTotalCheckin(sales.user_ptnr_id)
-        sales.dataValues.outputVisitation = await resultVisitation(sales.user_ptnr_id)
+        let data = await Promise.all([getTotalCheckin(sales.user_ptnr_id), resultVisitation(sales.user_ptnr_id)])
+
+        sales.dataValues.totalCheckIn = data[0]
+        sales.dataValues.outputVisitation = data[1]
 
         res.status(200)
             .json({
@@ -600,7 +602,7 @@ SalesQuotationController.getGoal = async (req, res) => {
 
         let data = {
             target: (allData[1] == null) ? 0 : allData[1].dataValues.total_target,
-            goal: (allData[0] == null) ? 0 : allData[0]
+            tercapai: (allData[0] == null) ? 0 : allData[0]
         }
 
         res.status(200)
