@@ -130,8 +130,10 @@ SalesQuotationController.visitation = async (req, res) => {
             ]
         })
 
-        sales.dataValues.totalCheckIn = await getTotalCheckin(sales.user_ptnr_id)
-        sales.dataValues.outputVisitation = await resultVisitation(sales.user_ptnr_id)
+        let data = await Promise.all([getTotalCheckin(sales.user_ptnr_id), resultVisitation(sales.user_ptnr_id)])
+
+        sales.dataValues.totalCheckIn = data[0]
+        sales.dataValues.outputVisitation = data[1]
 
         res.status(200)
             .json({
