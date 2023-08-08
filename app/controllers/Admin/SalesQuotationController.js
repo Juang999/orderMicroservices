@@ -420,8 +420,7 @@ SalesQuotationController.getCheckinData = async (req, res) => {
 
 SalesQuotationController.getDataSOforSQ = async (req, res) => {
     try {
-        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-26')
-        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-25')
+        let {periode_start_date, periode_end_date} = await currentPeriode(req.query.periode_code)
 
         let data = await SoMstr.findAll({
             attributes: [
@@ -448,7 +447,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
                         [Op.eq]: Sequelize.literal(`(SELECT user_ptnr_id FROM public.tconfuser WHERE userid = ${req.params.user_ptnr_id})`)
                     }),
                     Sequelize.where(Sequelize.col('so_date'), {
-                        [Op.between]: [startdate, enddate]
+                        [Op.between]: [periode_start_date, periode_end_date]
                     })
                 ]
             },
@@ -475,8 +474,7 @@ SalesQuotationController.getDataSOforSQ = async (req, res) => {
 
 SalesQuotationController.getDataOutput = async (req, res) => {
     try {
-        let startdate = (req.query.startdate) ? moment(req.query.startdate).format('YYYY-MM-DD') : moment().subtract(3, 'months').format('YYYY-MM-26')
-        let enddate = (req.query.enddate) ? moment(req.query.enddate).format('YYYY-MM-DD') : moment().format('YYYY-MM-25')
+        let {periode_start_date, periode_end_date} = await currentPeriode(req.query.periode_code)
 
         if (req.params.code_id == 991381) {
             res.status(200)
@@ -513,7 +511,7 @@ SalesQuotationController.getDataOutput = async (req, res) => {
                         [Op.in]: Sequelize.literal(`(SELECT visit_code FROM public.visit_mstr WHERE visit_sales_id = ${req.params.user_ptnr_id})`)
                     }),
                     Sequelize.where(Sequelize.literal('to_char(visited_check_in, \'YYYY-MM-DD\')'), {
-                        [Op.between]: [startdate, enddate]
+                        [Op.between]: [periode_start_date, periode_end_date]
                     }),
                     Sequelize.where(Sequelize.col('visited_output'), {
                         [Op.eq]: req.query.code_id
