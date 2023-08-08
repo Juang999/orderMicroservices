@@ -602,7 +602,7 @@ SalesQuotationController.getGoal = async (req, res) => {
 
         let data = {
             target: (allData[1] == null) ? 0 : allData[1].dataValues.total_target,
-            goal: (allData[0] == null) ? 0 : allData[0]
+            tercapai: (allData[0] == null) ? 0 : allData[0]
         }
 
         res.status(200)
