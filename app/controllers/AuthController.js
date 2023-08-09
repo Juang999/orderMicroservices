@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({path: 'root/microservice_dev/orderMicroservice/.env'})
 const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, ArMstr} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
@@ -38,28 +38,29 @@ const AuthController = {
 
 			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					data: token
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: err.message
-				})
-		})
-	},
-	authenticate: async (req, res) => {
-		try {
-			if (!req.body) {
-				res.status(300)
-					.json({
-						result: 'forbidden',
-						message: 'forbidden',
-						errorType: 1
-					})
+            res.status(200)
+                .json({
+                    status: "berhasil",
+                    data: token
+                })
+        }).catch(err => {
+            console.log(err)
+            res.status(400)
+                .json({
+                    status: "gagal",
+                    message: err.message
+                })
+        })
+    },
+    authenticate: async (req, res) => {
+        try {
+            if (!req.body) {
+                res.status(300)
+                    .json({
+                        result: "forbidden",
+                        message: "forbidden",
+                        errorType: 1
+                    })
                 
 				return
 			}

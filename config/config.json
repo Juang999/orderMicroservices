@@ -2,7 +2,7 @@
   "development": {
     "username": "mutifserver",
     "password": "Mut1fS3rv3r123@#",
-    "database": "exapro_mutif_development",
+    "database": "exapro_mutif_31062023_produksi",
     "host": "203.175.10.171",
     "dialect": "postgres",
     "port": "5433",

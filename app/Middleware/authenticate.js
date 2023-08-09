@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({path: '/root/microservice_dev/orderMicroservice/.env'})
 
 const jwt = require('jsonwebtoken')
 const {TConfUser} = require('../../models')
