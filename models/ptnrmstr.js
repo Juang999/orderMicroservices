@@ -88,6 +88,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'ptnr_id',
         foreignKey: 'so_ptnr_id_sold'
       })
+
+      PtnrMstr.hasMany(models.ArMstr, {
+        as: 'account_receivable',
+        sourceKey: 'ptnr_id',
+        foreignKey: 'ar_bill_to'
+      })
     }
   }
   PtnrMstr.init({
