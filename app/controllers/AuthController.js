@@ -1,5 +1,5 @@
 require('dotenv').config()
-const {TConfUser, TConfGroup, PlansMstr, VisitMstr} = require('../../models')
+const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, ArMstr} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 const jwt = require('jsonwebtoken')
@@ -114,73 +114,58 @@ const AuthController = {
 	},
 	profile: async (req, res) => {
 		try {
-			let user = await helper.auth(req.get('authorization'))
+			let auth = await helper.auth(req.get('authorization'))
 
-			let dataGroup = await TConfGroup.findOne({
-				where: {
-					groupid: user.groupid
-				},
-				attributes: ['groupnama']
-			})
-
-			let countPlanning = await PlansMstr.count({
-				where: {
-					[Op.and]: {
-						plans_sales_id: {
-							[Op.eq]: user.user_ptnr_id
-						},
-						plans_periode: {
-							[Op.in]: Sequelize.literal(`(SELECT periode_code FROM public.psperiode_mstr WHERE YEAR(periode_start_date) = '${moment().format('YYYY')}')`)
-						}
+			let user = await TConfUser.findOne({
+				attributes: [
+					'userid',
+					'usernama',
+					'password',
+					'nik_id',
+					[Sequelize.col('detail_user.ptnr_code'), 'ptnr_code'],
+					[Sequelize.col('entity.en_desc'), 'en_desc'],
+					[
+						Sequelize.fn('CONCAT', 
+							Sequelize.col('detail_user->address_partner.ptnra_line_1'), 
+							' ', 
+							Sequelize.col('detail_user->address_partner.ptnra_line_2'), 
+							' ', 
+							Sequelize.col('detail_user->address_partner.ptnra_line_3')), 
+						'ptnra_address'
+					],
+					[Sequelize.col('detail_user->address_partner.ptnra_phone_1'), 'phone_1'],
+					[Sequelize.col('detail_user->address_partner.ptnra_phone_2'), 'phone_2'],
+					[Sequelize.literal(`(SELECT CASE WHEN count(ar_amount) > 0 THEN SUM (ar_amount - ar_pay_amount) ELSE 0 END AS ar_total FROM public.ar_mstr WHERE ar_bill_to = ${auth.user_ptnr_id})`), 'ar_amount']
+				],
+				include: [
+					{
+						model: EnMstr,
+						as: 'entity',
+						attributes: []
+					}, {
+						model: PtnrMstr,
+						as: 'detail_user',
+						attributes: [],
+						include: [
+							{
+								model: PtnraAddr,
+								as: 'address_partner',
+								required: false,
+								attributes: []
+							}
+						]
 					}
-				}
-			})
-
-			let countScheduleVisiting = await VisitMstr.count({
+				],
 				where: {
-					[Op.and]: {
-						visit_sales_id: {
-							[Op.eq]: user.user_ptnr_id
-						},
-						visit_startdate: {
-							[Op.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
-						}
-					}
+					userid: auth.userid
 				}
 			})
 
-			let countHasVisited = await VisitMstr.count({
-				where: {
-					[Op.and]: {
-						visit_sales_id: {
-							[Op.eq]: user.user_ptnr_id
-						},
-						visit_startdate: {
-							[Op.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
-						},
-						visit_status: {
-							[Op.eq]: 'Y'
-						}
-					}
-				}
-			})
-
-			let data = {
-				usernama: user.usernama,
-				group: dataGroup.groupnama,
-				userphone: user.userphone,
-				countPlanning: countPlanning,
-				visit: {
-					visited: countHasVisited,
-					totalVisit: countScheduleVisiting
-				}
-			}
-    
 			res.status(200)
 				.json({
 					status: 'success',
 					message: 'berhasil mengambil data profile',
-					data: data
+					data: user
 				})
 		} catch (error) {
 			res.status(400)

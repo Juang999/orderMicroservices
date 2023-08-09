@@ -16,6 +16,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'ar_remarks',
         targetKey: 'so_code'
       })
+
+      ArMstr.belongsTo(models.PtnrMstr, {
+        as: 'ar_partner',
+        targetKey: 'ptnr_id',
+        foreignKey: 'ar_bill_to'
+      })
     }
   }
   ArMstr.init({
