@@ -15,7 +15,11 @@ const route = {
                 visitation_checkin: '/visitation/:user_ptnr_id/checkin',
                 visitation_output: '/visitation/:user_ptnr_id/output',
                 visitation_periode: '/visitation/periode',
-                visitation_goal: '/visitation/:userid/goal'
+                visitation_goal: '/visitation/:userid/goal',
+                visitation_customer: '/visitation/customer',
+                visitation_code: '/visitation/:userid/code',
+                visitation_visit_customer: '/visitation/visit',
+                visitation_type: '/visitation/type'
             },
             auth: {
                 admin_login: '/admin-login',
