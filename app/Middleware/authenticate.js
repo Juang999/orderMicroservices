@@ -26,7 +26,7 @@ let testMiddleware = async (req, res, next) => {
                 res.status(400)
                     .json({
                         code: 400,
-                        status: err.message,
+                        status: 401,
                         error: err.message
                     })
                 
