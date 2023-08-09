@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const {TConfUser, TConfGroup, PtnrMstr} = require('../models')
+const {TConfUser, TConfGroup, PtnrMstr, EnMstr} = require('../models')
 const jwt = require('jsonwebtoken')
 const {Op} = require("sequelize")
 const cryptr = require('cryptr')
@@ -28,6 +28,10 @@ const auth = async (token) => {
             },
             include: [
                 {
+                    model: EnMstr,
+                    as: 'entity',
+                    attributes: ['en_desc']
+                },{
                     model: TConfGroup,
                     as: "group",
                     attributes: ["groupnama"]
