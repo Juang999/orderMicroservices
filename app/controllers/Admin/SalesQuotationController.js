@@ -1,7 +1,8 @@
 const {Sequelize, Op} = require('sequelize')
-const {PtnrMstr, VisitMstr, VisitedDet, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr, SoMstr, PlansMstr, SoShipMstr} = require('../../../models')
+const {PtnrMstr, VisitMstr, VisitedDet, CodeMstr, PtnrgGrp, TConfUser, PsPeriodeMstr, EnMstr, SoMstr, PlansMstr, PtnraAddr} = require('../../../models')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
+const {v4: uuidv4} = require('uuid')
 
 const SalesQuotationController = {}
 
@@ -619,6 +620,137 @@ SalesQuotationController.getGoal = async (req, res) => {
                 error: error.stack
             })
     }
+}
+
+SalesQuotationController.getVisitationCodeSales = (req, res) => {
+    VisitMstr.findAll({
+        attributes: [
+            'visit_code', 
+            ['visit_startdate', 'start_date'],
+            ['visit_enddate', 'end_date']
+        ],
+        where: {
+            visit_sales_id: req.params.userid
+        }
+    })
+    .then(result => {
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: result,
+                error: null
+            })
+    })
+    .catch(err => {
+        res.status(400)
+            .json({
+                status: err.message,
+                data: null,
+                error: err.stack
+            })
+    })
+}
+
+SalesQuotationController.getCustomer = (req, res) => {
+    let where = {ptnr_is_emp: 'N'}
+    if (req.query.search) {where.ptnr_name = {[Op.like]: `%${req.query.search}%`}}
+
+    PtnrMstr.findAll({
+        attributes: ['ptnr_id', 'ptnr_name'],
+        where: where,
+        include: [
+            {
+                model: PtnraAddr,
+                as: 'address_partner',
+                attributes: [
+                    [Sequelize.fn('CONCAT', Sequelize.col('ptnra_line_1'), ' ', Sequelize.col('ptnra_line_2'), ' ', Sequelize.col('ptnra_line_3')), 'ptnra_addr'],
+                    'ptnra_phone_1', 
+                    'ptnra_phone_2'
+                ]
+            }
+        ]
+    })
+    .then(result => {
+        res.status(200)
+            .json({
+                code: 200,
+                status: 'success!',
+                data: result,
+                error: null
+            })
+    })
+    .catch(err => {
+        res.status(200)
+            .json({
+                code: 400,
+                status: err.message,
+                data: null,
+                error: err.stack
+            })
+    })
+}
+
+SalesQuotationController.addNewCustomerToVisit = async (req, res) => {
+    try {
+        let user = await helper.auth(req.get('authorization'))
+        let data = await VisitedDet.create({
+                        visited_oid: uuidv4(),
+                        visited_visit_code: req.body.visit_code,
+                        visited_type: req.body.type,
+                        visited_ptnr_id: req.body.ptnr_id,
+                        visited_cus_name: req.body.cus_name,
+                        visited_cus_address: req.body.cus_address,
+                        visited_cus_phone: req.body.cus_phone,
+                        visited_add_by: user.usernama,
+                        visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
+                    })
+
+        res.status(200)
+            .json({
+                code: 200,
+                status: 'success!',
+                data: data,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                code: 400,
+                status: error.message,
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+SalesQuotationController.getTypeVisitation = (req, res) => {
+    CodeMstr.findAll({
+        attributes: [
+            ['code_id', 'id'], 
+            ['code_name', 'type']
+        ],
+        where: {
+            code_field: 'visiting'
+        }
+    })
+    .then(result => {
+        res.status(200)
+            .json({
+                code: 200,
+                status: 'success!',
+                data: result,
+                error: null
+            })
+    })
+    .catch(err => {
+        res.status(400)
+            .json({
+                code: 400,
+                status: err.message,
+                data: null,
+                error: err.stack
+            })
+    })
 }
 
 let getTotalCheckin = async (ptnr_id) => {

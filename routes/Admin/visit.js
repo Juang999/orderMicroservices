@@ -15,5 +15,9 @@ router.get(Admin.feature.visitation.visitation_sales_quotation, [middleware.admi
 router.get(Admin.feature.visitation.visitation_output, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getDataOutput)
 router.get(Admin.feature.visitation.visitation_periode, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getPeriode)
 router.get(Admin.feature.visitation.visitation_goal, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getGoal)
+router.get(Admin.feature.visitation.visitation_customer, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getCustomer)
+router.get(Admin.feature.visitation.visitation_code, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getVisitationCodeSales)
+router.post(Admin.feature.visitation.visitation_visit_customer, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.addNewCustomerToVisit)
+router.get(Admin.feature.visitation.visitation_type, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getTypeVisitation)
 
 module.exports = router
