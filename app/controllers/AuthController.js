@@ -122,6 +122,7 @@ const AuthController = {
 					'usernama',
 					'password',
 					'nik_id',
+					[Sequelize.col('group.groupnama'), 'groupnama'],
 					[Sequelize.col('detail_user.ptnr_code'), 'ptnr_code'],
 					[Sequelize.col('entity.en_desc'), 'en_desc'],
 					[
@@ -154,6 +155,10 @@ const AuthController = {
 								attributes: []
 							}
 						]
+					}, {
+						model: TConfGroup,
+						as: 'group',
+						attributes: []
 					}
 				],
 				where: {
