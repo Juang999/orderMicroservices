@@ -1,12 +1,13 @@
 require('dotenv').config({path: '/root/microservice_dev/orderMicroservice/.env'})
 
 const jwt = require('jsonwebtoken')
-const {TConfUser} = require('../../models')
+const {TConfUser, TokenStorage} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 
 let testMiddleware = async (req, res, next) => {    
     let authHeader = req.headers["authorization"]
+
     let token = authHeader && authHeader.split(" ")[1]
 
     if (!token) {
@@ -15,6 +16,19 @@ let testMiddleware = async (req, res, next) => {
                 status: 'failed',
                 message: "unauthorize",
                 error: "unauthorize"
+            })
+
+        return
+    }
+
+    let checkTokenExtitence = await TokenStorage.findOne({where: {token_token: token}})
+
+    if (checkTokenExtitence == null) {
+        res.status(300)
+            .json({
+                code: 300,
+                status: "failed",
+                error: "failed login"
             })
 
         return
@@ -36,7 +50,7 @@ let testMiddleware = async (req, res, next) => {
                     .json({
                         code: 400,
                         status: "failed",
-                        message: "failed login"
+                        error: "failed login"
                     })
     
                     return

@@ -1,12 +1,13 @@
 require('dotenv').config()
 
 const jwt = require('jsonwebtoken')
-const {TConfUser} = require('../../models')
+const {TConfUser, TokenStorage} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 
-let adminAuthenticate = (req, res, next) => {
+let adminAuthenticate = async (req, res, next) => {
     let authHeader = req.headers["authorization"]
+
     let token = authHeader && authHeader.split(" ")[1]
 
     if (!token) {
@@ -16,6 +17,19 @@ let adminAuthenticate = (req, res, next) => {
                 status: 'failed',
                 message: "unauthorize",
                 error: "unauthorize"
+            })
+
+        return
+    }
+
+    let checkTokenExtitence = await TokenStorage.findOne({where: {token_token: token}})
+
+    if (checkTokenExtitence == null) {
+        res.status(300)
+            .json({
+                code: 300,
+                status: "failed",
+                message: "failed login"
             })
 
         return
