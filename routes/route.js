@@ -1,6 +1,7 @@
 const route = {
     route_service: '/order-service',
     route_default: null,
+    logout: '/logout',
     Admin: {
         route_admin: '/admin',
         feature: {

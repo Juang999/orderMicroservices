@@ -1,11 +1,12 @@
 require('dotenv').config({path: 'root/microservice_dev/orderMicroservice/.env'})
-const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, ArMstr} = require('../../models')
+const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, ArMstr, TokenStorage} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 const jwt = require('jsonwebtoken')
 const helper = require('../../helper/helper')
 const {Sequelize, Op} = require('sequelize')
 const moment = require('moment/moment')
+const { v4:uuidv4 } = require('uuid')
 
 const AuthController = {
 	login: (req, res) => {
@@ -37,6 +38,8 @@ const AuthController = {
 			}
 
 			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
+
+			await saveToken(result.userid, token)
 
             res.status(200)
                 .json({
@@ -215,15 +218,18 @@ const AuthController = {
 				return
 			}
 
+			
 			let data = {
 				userid: admin.userid,
 				name: admin.usernama,
 				ptnrid: admin.user_ptnr_id,
 				security_word: await crypter.encrypt(admin.password),
 			}
-
+			
 			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
-
+			
+			await saveToken(admin.userid, token)
+			
 			res.status(200)
 				.json({
 					status: 'success!',
@@ -345,7 +351,57 @@ const AuthController = {
 						error: err.stack
 					})
 			})
+	},
+	logout: (req, res) => {
+		let authHeader = req.headers["authorization"]
+		let token = authHeader && authHeader.split(" ")[1]
+
+		TokenStorage.destroy({
+			where: {
+				token_token: token
+			}
+		})
+	.then(result => {
+			res.status(200)
+				.json({
+					code: 200,
+					status: 'success!',
+					logout: true,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					code: 400,
+					status: err.message,
+					logout: false,
+					error: err.stack
+				})
+		})
 	}
+}
+
+let saveToken = async (userid, token) => {
+	let countTokenPerUserId = await TokenStorage.count({
+		where: {
+			token_user_id: userid
+		}
+	})
+
+	if (countTokenPerUserId >= 0) {
+		await TokenStorage.destroy({
+			where: {
+				token_user_id: userid
+			}
+		})
+	}
+
+	await TokenStorage.create({
+		token_oid: uuidv4(),
+		token_user_id: userid,
+		token_token: token
+	})
 }
 
 module.exports = AuthController
