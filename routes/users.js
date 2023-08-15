@@ -10,6 +10,6 @@ router.get(Client.feature.auth.profile, [middleware.authenticate], Controller.De
 router.post(Admin.feature.auth.admin_login, Controller.Default.AuthController.loginAdmin)
 router.post(Admin.feature.auth.authenticate, [middleware.adminAuthenticate], Controller.Default.AuthController.AuthenticateAdmin)
 router.get(Admin.feature.auth.profile_admin, [middleware.adminAuthenticate], Controller.Default.AuthController.getProfileAdmin)
-router.delete(logout, [middleware.authenticate], Controller.Default.AuthController.logout)
+router.post(logout, [middleware.authenticate], Controller.Default.AuthController.logout)
 
 module.exports = router
