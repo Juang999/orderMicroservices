@@ -2,7 +2,7 @@
   "development": {
     "username": "mutifserver",
     "password": "Mut1fS3rv3r123@#",
-    "database": "exapro_mutif_31062023_produksi",
+    "database": "exapro_mutif_development",
     "host": "203.175.10.171",
     "dialect": "postgres",
     "port": "5433",
@@ -10,19 +10,5 @@
       "useUTC": false
     },
     "timezone": "+07:00"
-  },
-  "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-  },
-  "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
   }
 }
