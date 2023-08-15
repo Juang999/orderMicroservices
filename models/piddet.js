@@ -11,6 +11,23 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PidDet.belongsTo(models.PtMstr, {
+        as: 'price',
+        targetKey: 'pt_id',
+        foreignKey: 'pid_pt_id'
+      })
+
+      PidDet.belongsTo(models.PiMstr, {
+        as: 'price_list',
+        targetKey: 'pi_oid',
+        foreignKey: 'pid_pi_oid'
+      })
+
+      PidDet.hasMany(models.PiddDet, {
+        as: 'detail_price',
+        sourceKey: 'pid_oid',
+        foreignKey: 'pidd_pid_oid'
+      })
     }
   }
   PidDet.init({

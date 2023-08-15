@@ -16,6 +16,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "pidd_payment_type",
         targetKey: "code_id"
       })
+
+      PiddDet.belongsTo(models.PidDet, {
+        as: 'detail_price',
+        targetKey: 'pid_oid',
+        foreignKey: 'pidd_pid_oid'
+      })
     }
   }
   PiddDet.init({
@@ -37,7 +43,8 @@ module.exports = (sequelize, DataTypes) => {
     pidd_min_qty: DataTypes.INTEGER,
     pidd_sales_unit: DataTypes.INTEGER,
     pidd_dt: DataTypes.DATE,
-    pidd_commision: DataTypes.INTEGER
+    pidd_commision: DataTypes.INTEGER,
+    pidd_area_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

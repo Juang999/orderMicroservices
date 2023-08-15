@@ -19,10 +19,9 @@ module.exports = (sequelize, DataTypes) => {
 
       PtMstr.hasMany(models.InvcMstr, {
         as: "Qty",
-        foreignKey: {
-          name: "invc_pt_id",
-          keyType: DataTypes.INTEGER
-        }
+        foreignKeyConstraint: true,
+        foreignKey: 'invc_pt_id',
+        sourceKey: 'pt_id',
       })
 
       PtMstr.belongsTo(models.CodeMstr, {
@@ -31,6 +30,36 @@ module.exports = (sequelize, DataTypes) => {
           name: "pt_group"
         },
         targetKey: "code_id"
+      })
+
+      PtMstr.belongsTo(models.PtCatMstr, {
+        as: 'category_product',
+        targetKey: 'ptcat_id',
+        foreignKey: 'pt_cat_id'
+      })
+
+      PtMstr.hasMany(models.PidDet, {
+        as: 'price',
+        sourceKey: 'pt_id',
+        foreignKey: 'pid_pt_id'
+      })
+
+      PtMstr.belongsTo(models.PtsCatCat, {
+        as: 'sub_category',
+        targetKey: 'ptscat_id',
+        foreignKey: 'pt_scat_id'
+      })
+
+      PtMstr.belongsTo(models.CodeMstr, {
+        as: 'color',
+        targetKey: 'code_id',
+        foreignKey: 'pt_code_color_id'
+      })
+
+      PtMstr.belongsTo(models.SizeMstr, {
+        as: 'size',
+        targetKey: 'size_id',
+        foreignKey: 'pt_size_code_id'
       })
     }
   }
@@ -47,7 +76,10 @@ module.exports = (sequelize, DataTypes) => {
     pt_add_date: DataTypes.DATE,
     pt_upd_by: DataTypes.STRING,
     pt_upd_date: DataTypes.DATE,
-    pt_id: DataTypes.INTEGER,
+    pt_id: {
+      type: DataTypes.INTEGER,
+      unique: true
+    },
     pt_code: DataTypes.STRING,
     pt_desc1: DataTypes.STRING,
     pt_desc2: DataTypes.STRING,
@@ -86,7 +118,12 @@ module.exports = (sequelize, DataTypes) => {
     pt_qty: DataTypes.INTEGER,
     pt_additional: DataTypes.INTEGER,
     pt_year: DataTypes.DATE,
-    pt_clothes_id: DataTypes.INTEGER
+    pt_size_code_id: DataTypes.INTEGER,
+    pt_psplan_id: DataTypes.INTEGER,
+    pt_cat_id: DataTypes.INTEGER,
+    pt_scat_id: DataTypes.INTEGER,
+    pt_color_tag: DataTypes.INTEGER,
+    pt_clothes_id: DataTypes.INTEGER,
   }, {
     sequelize,
     schema: 'public',

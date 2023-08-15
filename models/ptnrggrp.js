@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PtnrgGrp.hasMany(models.PtnrMstr, {
+        as: 'ptnr_group',
+        foreignKey: 'ptnr_ptnrg_id'
+      })
     }
   }
   PtnrgGrp.init({

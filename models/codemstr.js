@@ -25,6 +25,55 @@ module.exports = (sequelize, DataTypes) => {
           name: "pt_group"
         }
       })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_gender',
+        foreignKey: 'ptnr_sex'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_transaction',
+        foreignKey: 'ptnr_transaction_code_id'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_blood_group',
+        foreignKey: 'ptnr_goldarah'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_nation',
+        foreignKey: 'ptnr_negara'
+      })
+
+      CodeMstr.hasMany(models.PtnrMstr, {
+        as: 'ptnr_sales_type',
+        foreignKey: 'ptnr_bp_type'
+      })
+
+      CodeMstr.hasMany(models.PtMstr, {
+        as: 'color',
+        sourceKey: 'code_id',
+        foreignKey: 'pt_code_color_id'
+      })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'objective',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_objective'
+      })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'total_output',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_output'
+      })
+
+      CodeMstr.hasMany(models.SoMstr, {
+        as: 'payment_type',
+        sourceKey: 'code_id',
+        foreignKey: 'so_pay_type'
+      })
     }
   }
   CodeMstr.init({

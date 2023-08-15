@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const {TConfUser, TConfGroup} = require('../models')
+const {TConfUser, TConfGroup, PtnrMstr, EnMstr} = require('../models')
 const jwt = require('jsonwebtoken')
 const {Op} = require("sequelize")
 const cryptr = require('cryptr')
@@ -28,11 +28,21 @@ const auth = async (token) => {
             },
             include: [
                 {
+                    model: EnMstr,
+                    as: 'entity',
+                    attributes: ['en_desc']
+                },{
                     model: TConfGroup,
                     as: "group",
                     attributes: ["groupnama"]
+                },{
+                    model: PtnrMstr,
+                    as: 'detail_user',
+                    attributes: ['ptnr_id', 'ptnr_dom_id', 'ptnr_en_id', 'ptnr_code', 'ptnr_name', 'ptnr_ptnrg_id']
                 }
-            ]
+            ],
+            raw: true,
+            nest: true
         })
 
         return decryptedUser
