@@ -56,6 +56,24 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'code_id',
         foreignKey: 'pt_code_color_id'
       })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'objective',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_objective'
+      })
+
+      CodeMstr.hasMany(models.VisitedDet, {
+        as: 'total_output',
+        sourceKey: 'code_id',
+        foreignKey: 'visited_output'
+      })
+
+      CodeMstr.hasMany(models.SoMstr, {
+        as: 'payment_type',
+        sourceKey: 'code_id',
+        foreignKey: 'so_pay_type'
+      })
     }
   }
   CodeMstr.init({

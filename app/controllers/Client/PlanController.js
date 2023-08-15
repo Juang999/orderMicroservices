@@ -1,5 +1,5 @@
-const {PlansMstr, PlansdDet, PtnrMstr, PsPeriodeMstr} = require('.././../models')
-const helper = require('../../helper/helper')
+const {PlansMstr, PlansdDet, PtnrMstr, PsPeriodeMstr} = require('../../../models')
+const helper = require('../../../helper/helper')
 const {Sequelize, Op} = require('sequelize')
 const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
@@ -33,7 +33,6 @@ const PlanController = {
 					data: result
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -42,10 +41,9 @@ const PlanController = {
 				})
 		})
 	},
-	createUnplan: async (req, res) => {
+	createPlan: async (req, res) => {
 		try {
 			let user = await helper.auth(req.get('authorization'))
-			console.log(req.body)
 
 			let getPlanMaster = await PlansMstr.findOne({
 				where: {
@@ -80,7 +78,6 @@ const PlanController = {
 					data: data
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -91,40 +88,41 @@ const PlanController = {
 	},
 	getCustomerPerPeriode: async (req, res) => {
 		try {
-			let user = await helper.auth(req.get('authorization'))
-
-			let periode = (req.query.periode) ? req.query.periode : moment().format('YYYYMM')
-
-			let string = `(
-                        SELECT plans_oid FROM public.plans_mstr
-                        WHERE plans_sales_id = ${user.user_ptnr_id}
-                        and plans_periode = '${periode}'
-                        )`
-
-			let plansdDet = await PlansdDet.findAll({
+			let planningSales = await PlansMstr.findOne({
+				attributes: ['plans_oid', 'plans_code', 'plans_amount_total'],
 				where: {
-					plansd_plans_oid: {
-						[Op.eq]: Sequelize.literal(string)
-					}
+					plans_oid: req.params.plans_oid
 				},
 				include: [
 					{
-						model: PtnrMstr,
-						as: 'PlansCustomer',
-						attributes: ['ptnr_oid', 'ptnr_name']
+						model: PsPeriodeMstr,
+						as: 'periode',
+						attributes: [
+							'periode_start_date',
+							'periode_end_date'
+						]
+					}, {
+						model: PlansdDet,
+						as: 'list_customer',
+						attributes: ['plansd_amount', 'plansd_ptnr_id'],
+						include: [
+							{
+								model: PtnrMstr,
+								as: 'PlansCustomer',
+								attributes: ['ptnr_id', 'ptnr_name']
+							}
+						]
 					}
-				],
-				attributes: ['plansd_oid', 'plansd_ptnr_id', 'plansd_amount']
+				]
 			})
 
 			res.status(200)
 				.json({
 					status: 'success',
 					message: 'berhasil mengambil data',
-					data: plansdDet
+					data: planningSales
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',

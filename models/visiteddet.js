@@ -22,6 +22,18 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "ptnr_id",
         foreignKey: "visited_ptnr_id"
       })
+
+      VisitedDet.belongsTo(models.CodeMstr, {
+        as: 'objective',
+        targetKey: 'code_id',
+        foreignKey: 'visited_objective'
+      })
+
+      VisitedDet.belongsTo(models.CodeMstr, {
+        as: 'output',
+        targetKey: 'code_id',
+        foreignKey: 'visited_output'
+      })
     }
   }
   VisitedDet.init({

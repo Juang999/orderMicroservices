@@ -1,4 +1,4 @@
-const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../models')
+const {PtMstr, EnMstr, CodeMstr, PidDet, PiddDet, InvcMstr, PtCatMstr, PtsCatCat, SizeMstr, Sequelize, PiMstr, LocMstr} = require('../../../models')
 const {Op} = require('sequelize')
 const sequelize = require('sequelize')
 
@@ -22,7 +22,7 @@ const ProductController = {
 			if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
 			if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
 			if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
-			if (req.query.subcategory) where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}
+			if (req.query.subcategory) where.pt_scat_id = {[Op.eq]: req.query.subcategory}
 
 			let {count, rows} = await PtMstr.findAndCountAll({
 				limit: limit,
@@ -90,7 +90,7 @@ const ProductController = {
 					},
 				}
 			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
 			include: [
 				{
 					model: EnMstr,
@@ -130,34 +130,27 @@ const ProductController = {
 					as: 'sub_category',
 					attributes: ['ptscat_desc']
 				}, {
-					model: CodeMstr,
-					as: 'color',
-					attributes: ['code_desc']
-				}, {
 					model: SizeMstr,
 					as: 'size',
 					attributes: ['size_desc']
-				}, {
-					model: InvcMstr,
-					as: 'Qty',
-					where: {
-						invc_loc_id: {
-							[Op.in]: [10001, 200010, 30008]
-						}
-					},
-					attributes: ['invc_qty_available'],
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_id', 'loc_desc']
-						}
-					]
 				}
 			]
-		}).then( result => {
-			result.dataValues.status = (result.Qty.length != 0) ? 'DIJUAL' : 'PRE-ORDER'
+		}).then( async result => {
+			let qtyProduct = await InvcMstr.findAll({
+				attributes: ['invc_qty_available'],
+				where: {
+					invc_pt_id: result.dataValues.pt_id,
+					invc_loc_id: {
+						[Op.in]: [10001, 200010, 30008]
+					}
+				}
+			})
 
+			result.dataValues.status = (qtyProduct == 0) ? 'PRE-ORDER' : 'DIJUAL'
+			result.dataValues.Qty = qtyProduct
+
+			return result
+		}).then( result => {
 			res.status(200)
 				.json({
 					status: 'berhasil',
@@ -188,7 +181,7 @@ const ProductController = {
 					},
 				}
 			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
+			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
 			include: [
 				{
 					model: EnMstr,
@@ -238,10 +231,6 @@ const ProductController = {
 					model: PtsCatCat,
 					as: 'sub_category',
 					attributes: ['ptscat_desc']
-				}, {
-					model: CodeMstr,
-					as: 'color',
-					attributes: ['code_desc']
 				}, {
 					model: SizeMstr,
 					as: 'size',
@@ -358,7 +347,6 @@ const ProductController = {
 		})
 	},
 	getSubCategory: (req, res) => {
-		console.log(req.params.cat_id)
 		PtsCatCat.findAll({
 			attributes: ['ptscat_id', 'ptscat_desc'],
 			where: {
@@ -447,7 +435,6 @@ const ProductController = {
 		let offset = (limit * page) - limit
 
 		let where = {pt_pl_id: 1, pt_desc1: {[Op.not]: null}}
-		console.log(where)
     
 		if (req.query.entity > 0) where.pt_en_id = req.query.entity
 		if (req.query.query) where.pt_desc2 = {[Op.like]: `%${req.query.query}%`}
@@ -549,7 +536,7 @@ const ProductController = {
 
 		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
 		if (req.query.category) {where.pt_cat_id = {[Op.eq]: req.query.category}}
-		if (req.query.subcategory) {where.pt_ptscat_id = {[Op.eq]: req.query.subcategory}}
+		if (req.query.subcategory) {where.pt_scat_id = {[Op.eq]: req.query.subcategory}}
 		if (req.query.entity) {where.pt_en_id = {[Op.eq]: req.query.entity}}
 
 		PtMstr.findAndCountAll({
@@ -605,7 +592,6 @@ const ProductController = {
 					data: theResult
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'gagal',

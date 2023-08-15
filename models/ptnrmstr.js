@@ -82,6 +82,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sq_ptnr_id_sold',
         sourceKey: 'ptnr_id'
       })
+
+      PtnrMstr.hasMany(models.SoMstr, {
+        as: 'customer',
+        sourceKey: 'ptnr_id',
+        foreignKey: 'so_ptnr_id_sold'
+      })
+
+      PtnrMstr.hasMany(models.ArMstr, {
+        as: 'account_receivable',
+        sourceKey: 'ptnr_id',
+        foreignKey: 'ar_bill_to'
+      })
     }
   }
   PtnrMstr.init({
@@ -145,7 +157,8 @@ module.exports = (sequelize, DataTypes) => {
     ptnr_waris_ktp: DataTypes.STRING,
     ptnr_ktp: DataTypes.STRING,
     ptnr_is_volunteer: DataTypes.STRING,
-    ptnr_is_sbm: DataTypes.STRING
+    ptnr_is_sbm: DataTypes.STRING,
+    ptnr_area_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

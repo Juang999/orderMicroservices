@@ -1,6 +1,6 @@
-const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, CodeMstr} = require('../../models')
+const {VisitMstr, VisitedDet, PsPeriodeMstr, PtnrMstr, CodeMstr, sequelize} = require('../../../models')
 const {Sequelize, Op} = require('sequelize')
-const helper = require('../../helper/helper')
+const helper = require('../../../helper/helper')
 const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
 const express = require('express')
@@ -17,10 +17,12 @@ const VisitController = {
 	getVisitingSchedule: async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
-    
+
 			let where = {
-				visit_sales_id: authUser.user_ptnr_id
+				visit_sales_id: authUser.userid
 			}
+
+			where.visit_status = (req.query.status == 'Y') ? 'Y' : 'N'
 
 			if (req.query.periode) {
 				let periode = await PsPeriodeMstr.findOne({
@@ -37,12 +39,28 @@ const VisitController = {
 				where.visit_startdate = {[Op.between]: [startDate, endDate]}
 			}
 
-    
+
 			let visitDate = await VisitMstr.findAll({
+				attributes: [
+					'visit_code', 
+					'visit_startdate',
+					'visit_enddate',
+					'visit_status',
+					[Sequelize.fn('COUNT', Sequelize.col('visit_detail.visited_visit_code')), 'total_customer']
+				],
+				include: [
+					{
+						model: VisitedDet,
+						as: 'visit_detail',
+						required: false,
+						attributes: []
+					}
+				],
 				where: where,
-				attributes: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
+				order: [['visit_startdate', 'desc']],
+				group: ['visit_code', 'visit_startdate', 'visit_enddate', 'visit_status']
 			})
-    
+
 			res.status(200)
 				.json({
 					status: 'berhasil',
@@ -50,7 +68,6 @@ const VisitController = {
 					data: visitDate
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'failed',
@@ -61,34 +78,62 @@ const VisitController = {
 	},
 	getDetailVisitSchedule: (req, res) => {
 		VisitMstr.findOne({
-			where: {
-				visit_code: req.params.visit_code
-			},
 			attributes: [
 				'visit_code', 
 				[Sequelize.literal('concat(replace(to_char(visit_startdate, \'Day\'), \' \', \'\'), \', \', to_char(visit_startdate, \'YYYY\'), \' \', replace(to_char(visit_startdate, \'Month\'), \' \', \'\'), \' \', to_char(visit_startdate, \'DD\'))'), 'visit_startdate'], 
 				[Sequelize.literal('concat(replace(to_char(visit_enddate, \'Day\'), \' \', \'\'), \', \', to_char(visit_enddate, \'YYYY\'), \' \', replace(to_char(visit_enddate, \'Month\'), \' \', \'\'), \' \', to_char(visit_enddate, \'DD\'))'), 'visit_enddate'], 
-				'visit_status'
+				'visit_status',
+				[Sequelize.literal(`(SELECT COUNT(*) FROM public.visited_det WHERE visited_det.visited_visit_code = '${req.params.visit_code}')`), 'total_customer']
+			],
+			where: {
+				visit_code: req.params.visit_code
+			},
+			include: [
+				{
+					model: VisitedDet,
+					as: 'visit_detail',
+					required: false,
+					attributes: [
+						'visited_oid', 
+						'visited_cus_name', 
+						'visited_cus_phone', 
+						'visited_cus_address', 
+						'visited_type',
+						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_in'), 'YYYY-MM-DD, HH:mm:ss'), 'check_in'],
+						[Sequelize.fn('TO_CHAR', Sequelize.col('visited_check_out'), 'YYYY-MM-DD, HH:mm:ss'), 'check_out'],
+						'visited_lat_gps_check_in',
+						'visited_long_gps_check_in',
+						'visited_lat_gps_check_out',
+						'visited_long_gps_check_out',
+						'visited_ptnr_id'
+					],
+					where: {
+						visited_visit_code: req.params.visit_code
+					},
+					include: [
+						{
+							model: CodeMstr,
+							as: 'objective',
+							attributes: [
+								['code_name', 'name']
+							]
+						},
+						{
+							model: CodeMstr,
+							as: 'output',
+							attributes: [
+								['code_name', 'name']
+							]
+						},
+						{
+							model: PtnrMstr,
+							as: 'visited_partner',
+							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name']
+						}
+					],
+					order: [['visit_check_in', 'DESC']]
+				}
 			]
-		}).then( async result => {
-			if (!result) {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'data tidak ada',
-					})
-			}
-
-			let visited_detail = await VisitedDet.findAndCountAll({
-				where: {
-					visited_visit_code: result.visit_code
-				},
-				attributes: ['visited_oid', 'visited_cus_name', 'visited_cus_phone', 'visited_cus_address', 'visited_type'],
-			})
-
-			result.dataValues.visited_detail = (visited_detail.length == 0) ? {count: 0, rows: []} : visited_detail
-
-			return result
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -127,6 +172,7 @@ const VisitController = {
 		})
 	},
 	createSchedule: async (req, res) => {
+		let transaction = await sequelize.transaction()
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -143,11 +189,13 @@ const VisitController = {
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
 				visit_en_id: authUser.en_id,
-				visit_sales_id: authUser.user_ptnr_id,
+				visit_sales_id: authUser.userid,
 				visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visit_add_by: authUser.usernama,
 				visit_status: 'N'
 			})
+
+			await transaction.commit()
 
 			res.status(200)
 				.json({
@@ -156,7 +204,7 @@ const VisitController = {
 					data: visit_mstr
 				})
 		} catch (error) {
-			console.log(error)
+			await transaction.rollback()
 			res.status(400)
 				.json({
 					status: 'gagal',
@@ -166,6 +214,8 @@ const VisitController = {
 		}
 	},
 	createListCustomerToVisit: async (req, res) => {
+		let authUser = await helper.auth(req.get('authorization'))
+
 		VisitedDet.create({
 			visited_oid: uuidv4(),
 			visited_visit_code: req.body.visit_code,
@@ -174,7 +224,7 @@ const VisitController = {
 			visited_cus_name: req.body.cus_name,
 			visited_cus_address: req.body.cus_address,
 			visited_cus_phone: req.body.cus_phone,
-			visited_add_by: req.body.usernama,
+			visited_add_by: authUser.usernama,
 			visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
 		}).then(result => {
 			res.status(200)
@@ -193,7 +243,9 @@ const VisitController = {
 		})
 	},
 	checkIn: async (req, res) => {
-		try {              
+		try {
+			let authUser = helper.auth(req.get('authorization'))
+
 			let checkLastData = await VisitedDet.findOne({
 				where: {
 					[Op.and]: {
@@ -211,7 +263,7 @@ const VisitController = {
 			})
 
 			const file = JSON.parse(req.body.file)
-			const fileName = path.join(__dirname, `../../public/images/checkin/${file.name}`)
+			const fileName = path.join(__dirname, `../../../public/images/checkin/${file.name}`)
 
 			const buffer = Buffer.from(file.data.data, 'base64')
 
@@ -219,7 +271,7 @@ const VisitController = {
 				res.status(500)
 					.json({
 						status: 'gagal',
-						data: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`,
+						message: `kamu belum checkout untuk checkout untuk kunjugan ${checkLastData.visited_cus_name}`,
 						visited_oid: checkLastData.visited_oid
 					})
                 
@@ -235,31 +287,34 @@ const VisitController = {
 				}
 			})
 
-			VisitedDet.update({
+			await VisitedDet.update({
 				visited_lat_gps_check_in: req.body.checkin_lat,
 				visited_long_gps_check_in: req.body.checkin_long,
 				visited_address_gps_check_in: req.body.checkin_address,
 				visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
-				visited_foto: `images/${file.name}`,
-				visited_objective: req.body.objective
+				visited_foto: `images/checkin/${file.name}`,
+				visited_objective: req.body.objective,
+				visited_upd_by: authUser.usernama,
+				visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 			}, {
 				where: {
 					visited_oid: req.params.visited_oid
 				}
 			})
 
+			await updateStatusSchedule(req.body.visit_code)
+
 			res.status(200)
 				.json({
 					status: 'berhasil',
-					message: 'berhasil upload gambar'
+					message: 'berhasil checkin'
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'gagal',
 					message: 'gagal upload data',
-					errorr: error.message
+					error: error.message
 				})
 		}
 	},
@@ -287,7 +342,6 @@ const VisitController = {
 					data: result
 				})
 		}).catch(err => {
-			console.log(err)
 			res.status(400)
 				.json({
 					status: 'gagal',
@@ -356,7 +410,6 @@ const VisitController = {
 					data: customer
 				})
 		} catch (error) {
-			console.log(error)
 			res.status(400)
 				.json({
 					status: 'gagal',
@@ -410,6 +463,93 @@ const VisitController = {
 					error: err.message
 				})
 		})
+	},
+	getSalesPerPeriode: async (req, res) => {
+		try {
+			let authUser = await helper.auth(req.get('authorization'))
+
+			let where = {
+				ptnr_id: {
+					[Op.in]: Sequelize.literal(`(SELECT plansd_ptnr_id FROM public.plansd_det WHERE plansd_plans_oid = (SELECT plans_oid FROM public.plans_mstr WHERE plans_sales_id = ${authUser.user_ptnr_id} AND plans_periode = '${req.params.periode}'))`)
+				}
+			}
+
+			if (req.query.search) {where.ptnr_name = {[Op.like]: `%${req.query.search}%`}}
+
+			let dataSales = await PtnrMstr.findAll({
+				attributes: [
+					['ptnr_id', 'id'],
+					['ptnr_name', 'name']
+				],
+				where: where
+			})
+
+			res.status(200)
+				.json({
+					status: 'success!',
+					data: dataSales,
+					error: null
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: error.message,
+					data: null,
+					error: error.stack
+				})
+		}
+	}
+}
+
+let updateStatusSchedule = async (visit_code) => {
+	let allCustomer = await VisitedDet.count({
+		where: {
+			visited_visit_code: {
+				[Op.eq]: visit_code
+			}
+		}
+	})
+
+	let visitedToCustomer = await VisitedDet.count({
+		where: {
+			visited_visit_code: {
+				[Op.eq]: visit_code
+			},
+			visited_check_in: {
+				[Op.not]: null
+			}
+		}
+	})
+
+	if (allCustomer - visitedToCustomer == 0) {
+		await VisitMstr.update({
+			visit_status: 'Y'
+		}, {
+			where: {
+				visit_code: {
+					[Op.eq]: visit_code
+				}
+			}
+		})
+
+		return
+	} else {
+		return
+	}
+}
+
+let checkCheckinClient = async (visited_oid) => {
+	let dataCheckIn = await VisitedDet.findOne({
+		where: {
+			visited_oid: visited_oid
+		}, 
+		attributes: ['vissited_oid', 'visited_check_in']
+	})
+
+	if (dataCheckIn) {
+		return true
+	} else {
+		return false
 	}
 }
 

@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   SqdDet.init({
-    sqd_oid: DataTypes.UUID,
+    sqd_oid: {
+      type: DataTypes.UUID,
+      primaryKey: true
+    },
     sqd_dom_id: DataTypes.INTEGER,
     sqd_en_id: DataTypes.INTEGER,
     sqd_add_by: DataTypes.STRING,

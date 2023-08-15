@@ -1,11 +1,11 @@
-require('dotenv').config({path: '/root/microservice_dev/orderMicroservice/.env'})
+require('dotenv').config()
 
 const jwt = require('jsonwebtoken')
 const {TConfUser, TokenStorage} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 
-let testMiddleware = async (req, res, next) => {    
+let adminAuthenticate = async (req, res, next) => {
     let authHeader = req.headers["authorization"]
 
     let token = authHeader && authHeader.split(" ")[1]
@@ -13,6 +13,7 @@ let testMiddleware = async (req, res, next) => {
     if (!token) {
         res.status(400)
             .json({
+                code: 400,
                 status: 'failed',
                 message: "unauthorize",
                 error: "unauthorize"
@@ -28,7 +29,7 @@ let testMiddleware = async (req, res, next) => {
             .json({
                 code: 300,
                 status: "failed",
-                error: "failed login"
+                message: "failed login"
             })
 
         return
@@ -40,7 +41,7 @@ let testMiddleware = async (req, res, next) => {
                 res.status(400)
                     .json({
                         code: 400,
-                        status: 401,
+                        status: err.message,
                         error: err.message
                     })
                 
@@ -61,14 +62,28 @@ let testMiddleware = async (req, res, next) => {
             where: {
                 usernama: user.name
             },
-            attributes: ['usernama', 'password']
+            attributes: ['usernama', 'password', 'groupid']
         })
 
         if (!authUser) {
             res.status(403)
                 .json({
                     code: 403,
-                    message: "unauthorize"
+                    status: "unauthorize",
+                    error: "unauthorize"
+                })
+
+            return
+        }
+
+        console.log(authUser.groupid)
+
+        if (authUser.groupid != 1) {
+            res.status(403)
+                .json({
+                    code: 403,
+                    status: "unauthorize",
+                    error: "unauthorize"
                 })
 
             return
@@ -79,7 +94,8 @@ let testMiddleware = async (req, res, next) => {
             res.status(403)
                 .json({
                     code: 403,
-                    result: false
+                    status: 'failed login',
+                    error: 'wrong username or password',
                 })
         
                 return
@@ -87,7 +103,6 @@ let testMiddleware = async (req, res, next) => {
 
         next()
     })
-
 }
 
-module.exports = testMiddleware
+module.exports = adminAuthenticate

@@ -28,6 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         as: 'ptnra_entity',
         foreignKey: 'ptnra_en_id'
       })
+
+      EnMstr.hasMany(models.TConfUser, {
+        as: 'entity',
+        sourceKey: 'en_id',
+        foreignKey: 'en_id'
+      })
     }
   }
   EnMstr.init({
