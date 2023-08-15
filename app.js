@@ -69,9 +69,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-// running server
-app.listen(process.env.PORT, () => {
-  console.log(`system started on ${process.env.HOST}:${process.env.PORT}`)
-})
-
 module.exports = app;
