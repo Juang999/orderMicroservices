@@ -24,7 +24,7 @@ const PartnerController = {
 			where: whereClause,
 			offset: offset,
 			limit: limit,
-			attributes: ['ptnr_oid', 'ptnr_id', 'ptnr_name', 'ptnr_add_date', 'ptnr_ptnrg_id'],
+			attributes: ['ptnr_oid', 'ptnr_id', 'ptnr_name', 'ptnr_add_date', 'ptnr_ptnrg_id', 'ptnr_area_id'],
 			order: [['ptnr_add_date', 'desc']],
 			include: [
 				{

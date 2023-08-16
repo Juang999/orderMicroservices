@@ -493,6 +493,51 @@ SalesQuotationController.getUnitMeasure = (req, res) => {
 		})
 }
 
+SalesQuotationController.getWarehouseLocation = (req, res) => {
+	let locId
+
+	switch (parseInt(req.params.en_id)) {
+		case 1:
+			locId = 10001
+			break;
+
+		case 2:
+			locId = 200010
+			break;
+
+		case 3:
+			locId = 300018
+			break;
+
+		default:
+			locId = 0
+			break;
+	}
+
+	LocMstr.findOne({
+		attributes: ['loc_id', 'loc_desc'],
+		where: {
+			loc_id: locId
+		}
+	})
+	.then(result => {
+		res.status(200)
+			.json({
+				status: 'success!',
+				data: result,
+				error: null
+			})
+	})
+	.catch(err => {
+		res.status(400)
+			.json({
+				status: 'failed!',
+				data: null,
+				error: err.message
+			})
+	})
+}
+
 /*
 	Function to check is customer has debt or not
 */
@@ -570,7 +615,7 @@ let createHeaderSalesQuotation = async (dataHeader) => {
 		sq_trans_id: 'D',
 		sq_trans_rmks: (dataHeader.bodyHeader.sq_trans_rmks) ? dataHeader.bodyHeader.sq_trans_rmks : null,
 		sq_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
-		sq_cu_id: dataHeader.bodyHeader.sq_cu_id,
+		sq_cu_id: 1,
 		sq_total_ppn: 0,
 		sq_total_pph: 0,
 		sq_payment: 0,

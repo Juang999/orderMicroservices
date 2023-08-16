@@ -16,10 +16,11 @@ const route = [
 	'/get-product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', //9
 	'/get-unitmeasure', //10
 	'/get-area', //11
+	'/location/:en_id' //12
 ]
 
 router.get(route[0], [middleware.authenticate], controller.Client.SalesQuotationController.getSite)
-router.get(route[1], [middleware.authenticate], controller.Client.SalesQuotationController.getLocation)
+// router.get(route[1], [middleware.authenticate], controller.Client.SalesQuotationController.getLocation)
 router.get(route[2], [middleware.authenticate], controller.Client.SalesQuotationController.getLocationTo)
 router.get(route[3], [middleware.authenticate], controller.Client.SalesQuotationController.getLocationGit)
 router.post(route[4], [middleware.authenticate], controller.Client.SalesQuotationController.createSalesQuotation)
@@ -30,5 +31,6 @@ router.get(route[8], [middleware.authenticate], controller.Client.SalesQuotation
 router.get(route[9], [middleware.authenticate], controller.Client.SalesQuotationController.getProduct)
 router.get(route[10], [middleware.authenticate], controller.Client.SalesQuotationController.getUnitMeasure)
 router.get(route[11], [middleware.authenticate], controller.Client.SalesQuotationController.getArea)
+router.get(route[12], [middleware.authenticate], controller.Client.SalesQuotationController.getWarehouseLocation)
 
 module.exports = router
