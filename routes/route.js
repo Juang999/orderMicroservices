@@ -6,7 +6,7 @@ const route = {
         route_admin: '/admin',
         feature: {
             visitation: {
-                index: '/visitation',
+                index_and_create: '/visitation',
                 visitation: '/visitation/:ptnr_id/sales',
                 visitation_schedule: '/visitation/:visit_code/schedule',
                 visitation_detail: '/visitation/:visited_oid/detail',

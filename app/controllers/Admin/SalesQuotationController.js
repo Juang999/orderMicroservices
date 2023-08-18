@@ -753,6 +753,99 @@ SalesQuotationController.getTypeVisitation = (req, res) => {
     })
 }
 
+SalesQuotationController.createSchedule = async (req, res) => {
+    try {
+        // get personal account from users
+        let {usernama} = await helper.auth(req.get('authorization'))
+
+        // start check before create planning schedule
+        let checkBeforeCreatePlanningSchedule = await Promise.all([checkSchedule(req.body.visit_sales_id, req.body.visit_startdate), getPersonalAccountSales(req.body.visit_sales_id)])
+        if (checkBeforeCreatePlanningSchedule[0] == true) {
+            res.status(300)
+                .json({
+                    status: 'gagal',
+                    data: null,
+                    error: 'tanggal tersebut sudah masuk ke jadwal!'
+                })
+
+            return
+        }
+        // end check before planning schedule
+
+        // get entity id from sales
+        let {en_id} = checkBeforeCreatePlanningSchedule[1]
+
+        // generate visit code
+        let visit_code = await generateVisitCode(en_id)
+
+        // create planning schedule
+        let planningSchedule = await VisitMstr.create({
+            visit_code: visit_code,
+            visit_startdate: req.body.visit_startdate,
+            visit_enddate: req.body.visit_enddate,
+            visit_en_id: en_id,
+            visit_sales_id: req.body.visit_sales_id,
+            visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+            visit_add_by: usernama,
+            visit_status: 'N'
+        })
+
+        res.status(200)
+            .json({
+                status: 'success!',
+                data: planningSchedule,
+                error: null
+            })
+    } catch (error) {
+        res.status(400)
+            .json({
+                status: 'failed!',
+                data: null,
+                error: error.stack
+            })
+    }
+}
+
+let checkSchedule = async (sales_id, start_date) => {
+    let scheduleExistence = await VisitMstr.findOne({
+        where: {
+            visit_sales_id: parseInt(sales_id),
+            visit_enddate: {
+                [Op.gte]: moment(start_date).format('YYYY-MM-DD')
+            }
+        },
+        order: [['visit_enddate', 'desc']]
+    })
+
+    if (scheduleExistence) {
+        return true
+    } else {
+        return false
+    }
+}
+
+let getPersonalAccountSales = async (sales_id) => {
+    let result = await TConfUser.findOne({
+        attributes: ['userid', 'groupid', 'usernama', 'en_id', 'user_ptnr_id'],
+        where: {
+            userid: sales_id
+        }
+    })
+
+    return result
+}
+
+
+let generateVisitCode = async (en_id) => {
+    let {visit_code} = await VisitMstr.findOne({
+        order: [['visit_add_date', 'desc']]
+    })
+
+    let totalPlannigSchedule = (visit_code) ? parseInt(visit_code.substring(12)) + 1 : 1
+
+    return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
+}
+
 let getTotalCheckin = async (ptnr_id) => {
     try {
         let totalCheckIn = await VisitedDet.count({

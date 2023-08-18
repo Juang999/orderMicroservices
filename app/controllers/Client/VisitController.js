@@ -128,7 +128,7 @@ const VisitController = {
 						{
 							model: PtnrMstr,
 							as: 'visited_partner',
-							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name']
+							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name', 'ptnr_area_id']
 						}
 					],
 					order: [['visit_check_in', 'DESC']]

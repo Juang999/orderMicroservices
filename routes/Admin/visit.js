@@ -4,7 +4,7 @@ const controller = require('../../app/controllers/Controller')
 const {Admin} = require('../route')
 const middleware = require('../../app/kernel')
 
-router.get(Admin.feature.visitation.index, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.index)
+router.get(Admin.feature.visitation.index_and_create, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.index)
 router.get(Admin.feature.visitation.visitation, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.visitation)
 router.get(Admin.feature.visitation.visitation_schedule, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.visitation_schedule)
 router.get(Admin.feature.visitation.visitation_detail, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.detailInvitation)
@@ -19,5 +19,6 @@ router.get(Admin.feature.visitation.visitation_customer, [middleware.adminAuthen
 router.get(Admin.feature.visitation.visitation_code, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getVisitationCodeSales)
 router.post(Admin.feature.visitation.visitation_visit_customer, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.addNewCustomerToVisit)
 router.get(Admin.feature.visitation.visitation_type, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.getTypeVisitation)
+router.post(Admin.feature.visitation.index_and_create, [middleware.adminAuthenticate], controller.Admin.SalesQuotationController.createSchedule)
 
 module.exports = router
