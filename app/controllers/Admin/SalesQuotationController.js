@@ -760,20 +760,24 @@ SalesQuotationController.createSchedule = async (req, res) => {
 
         // start check before create planning schedule
         let checkBeforeCreatePlanningSchedule = await Promise.all([checkSchedule(req.body.visit_sales_id, req.body.visit_startdate), getPersonalAccountSales(req.body.visit_sales_id)])
-        if (checkBeforeCreatePlanningSchedule[0] == true) {
+
+        // getPromiseData
+        let {status, key} = checkBeforeCreatePlanningSchedule[0]
+        let {en_id} = checkBeforeCreatePlanningSchedule[1]
+
+        if (status == true) {
             res.status(300)
                 .json({
                     status: 'gagal',
-                    data: null,
+                    data: {
+                        key: key
+                    },
                     error: 'tanggal tersebut sudah masuk ke jadwal!'
                 })
 
             return
         }
         // end check before planning schedule
-
-        // get entity id from sales
-        let {en_id} = checkBeforeCreatePlanningSchedule[1]
 
         // generate visit code
         let visit_code = await generateVisitCode(en_id)
@@ -807,7 +811,8 @@ SalesQuotationController.createSchedule = async (req, res) => {
 }
 
 let checkSchedule = async (sales_id, start_date) => {
-    let scheduleExistence = await VisitMstr.findOne({
+    let {visit_code} = await VisitMstr.findOne({
+        attributes: ['visit_code'],
         where: {
             visit_sales_id: parseInt(sales_id),
             visit_enddate: {
@@ -817,10 +822,16 @@ let checkSchedule = async (sales_id, start_date) => {
         order: [['visit_enddate', 'desc']]
     })
 
-    if (scheduleExistence) {
-        return true
+    if (visit_code) {
+        return {
+            status: true,
+            key: visit_code
+        }
     } else {
-        return false
+        return {
+            status: false,
+            key: visit_code
+        }
     }
 }
 

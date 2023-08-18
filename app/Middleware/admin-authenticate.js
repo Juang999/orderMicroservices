@@ -29,7 +29,7 @@ let adminAuthenticate = async (req, res, next) => {
             .json({
                 code: 300,
                 status: "failed",
-                message: "failed login"
+                error: "failed login"
             })
 
         return
