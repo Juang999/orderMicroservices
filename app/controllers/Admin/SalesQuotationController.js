@@ -838,11 +838,11 @@ let getPersonalAccountSales = async (sales_id) => {
 
 
 let generateVisitCode = async (en_id) => {
-    let {visit_code} = await VisitMstr.findOne({
+    let visitCode = await VisitMstr.findOne({
         order: [['visit_add_date', 'desc']]
     })
 
-    let totalPlannigSchedule = (!visit_code) ? 1 : parseInt(visit_code.substring(12)) + 1
+    let totalPlannigSchedule = (!visitCode) ? 1 : parseInt(visitCode.visit_code.substring(12)) + 1
 
     return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
 }
