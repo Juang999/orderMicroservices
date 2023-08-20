@@ -172,12 +172,13 @@ const VisitController = {
 		})
 	},
 	createSchedule: async (req, res) => {
+		let {userid, en_id, usernama} = await helper.auth(req.get('authorization'))
+		let visitCode = await generateVisitCode(en_id)
+
 		let transaction = await sequelize.transaction()
 		try {
-			let {userid, en_id, usernama} = await helper.auth(req.get('authorization'))
-
 			let visit_mstr = await VisitMstr.create({
-				visit_code: await generateVisitCode(en_id),
+				visit_code: visitCode,
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
 				visit_en_id: en_id,
