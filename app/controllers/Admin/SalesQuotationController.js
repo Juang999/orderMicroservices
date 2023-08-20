@@ -811,7 +811,7 @@ SalesQuotationController.createSchedule = async (req, res) => {
 }
 
 let checkSchedule = async (sales_id, start_date) => {
-    let {visit_code} = await VisitMstr.findOne({
+    let visitCode = await VisitMstr.findOne({
         attributes: ['visit_code'],
         where: {
             visit_sales_id: parseInt(sales_id),
@@ -822,17 +822,7 @@ let checkSchedule = async (sales_id, start_date) => {
         order: [['visit_enddate', 'desc']]
     })
 
-    if (visit_code) {
-        return {
-            status: true,
-            key: visit_code
-        }
-    } else {
-        return {
-            status: false,
-            key: visit_code
-        }
-    }
+    return (visitCode) ? {status: true, key: visitCode.visit_code} : {status: false, key: null}
 }
 
 let getPersonalAccountSales = async (sales_id) => {
