@@ -174,24 +174,16 @@ const VisitController = {
 	createSchedule: async (req, res) => {
 		let transaction = await sequelize.transaction()
 		try {
-			let authUser = await helper.auth(req.get('authorization'))
-
-			let lastData = await VisitMstr.findOne({
-				order: [['visit_add_date', 'desc']]
-			})
-
-			let totalData = (lastData.length == 0) ? 1 : parseInt(lastData.visit_code.substring(12)) + 1
-
-			let visit_code = `VST0${authUser.en_id}456${moment().format('MMYY')}${totalData}`
+			let {userid, en_id, usernama} = await helper.auth(req.get('authorization'))
 
 			let visit_mstr = await VisitMstr.create({
-				visit_code: visit_code,
+				visit_code: await generateVisitCode(en_id),
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
-				visit_en_id: authUser.en_id,
-				visit_sales_id: authUser.userid,
+				visit_en_id: en_id,
+				visit_sales_id: userid,
 				visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-				visit_add_by: authUser.usernama,
+				visit_add_by: usernama,
 				visit_status: 'N'
 			})
 
@@ -536,6 +528,16 @@ let updateStatusSchedule = async (visit_code) => {
 	} else {
 		return
 	}
+}
+
+let generateVisitCode = async (en_id) => {
+    let {visit_code} = await VisitMstr.findOne({
+        order: [['visit_add_date', 'desc']]
+    })
+
+    let totalPlannigSchedule = (visit_code) ? parseInt(visit_code.substring(12)) + 1 : 1
+
+    return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
 }
 
 let checkCheckinClient = async (visited_oid) => {
