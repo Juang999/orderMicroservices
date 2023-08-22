@@ -9,7 +9,7 @@ const SalesQuotationController = {}
 SalesQuotationController.index = async (req, res) => {
     try {
         let pageNumber = (req.query.page) ? req.query.page : 1
-        let {limit, offset} = helper.page(pageNumber, 10)
+        let {limit, offset, page} = helper.page(pageNumber, 10)
 
         let dateLastCheckIn = (req.query.total_day) ?
                                 moment().subtract(req.query.total_day, 'days').format('YYYY-MM-DD') : 
@@ -28,7 +28,7 @@ SalesQuotationController.index = async (req, res) => {
 
         if (req.query.search != null) {where.usernama = {[Op.like]: `%${req.query.search}%`}}
 
-        let partners = await TConfUser.findAll({
+        let {count, rows} = await TConfUser.findAndCountAll({
             attributes: [
                 ['userid', 'ptnr_id'],
                 ['usernama', 'ptnr_name'],
@@ -39,7 +39,7 @@ SalesQuotationController.index = async (req, res) => {
             offset: offset
         })
 
-        for (const partner of partners) {
+        for (const partner of rows) {
             let salesLastCheckIn = await VisitedDet.findOne({
                 attributes: [
                     'visited_check_in',
@@ -101,7 +101,11 @@ SalesQuotationController.index = async (req, res) => {
             .json({
                 code: 200,
                 status: 'success',
-                data: partners,
+                data: {
+                    sales: rows,
+                    current_page: page,
+                    total_page: Math.ceil(count/limit)
+                },
                 errors: null
             })
     } catch (error) {
