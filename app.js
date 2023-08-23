@@ -5,7 +5,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var upload = require('express-fileupload');
-var route = require('./routes/route')
+var {route_service, Admin, Client, Default} = require('./routes/route')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -40,18 +40,19 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/product', productRouter);
-app.use('/price', priceRouter);
-app.use('/master', masterRouter);
-app.use('/partner', partnerRouter);
-app.use('/plans', planRouter);
-app.use('/partner-address', partnerAddressRouter);
-app.use('/partner-contact-address', partnerContactRouter)
 app.use('/visit', visitRouter)
+app.use('/users', usersRouter);
+app.use('/price', priceRouter);
+app.use('/plans', planRouter);
+app.use('/product', productRouter);
+app.use('/partner', partnerRouter);
+app.use('/partner-address', partnerAddressRouter);
 app.use('/sales-quotation', salesQuotationRouter)
+app.use('/partner-contact-address', partnerContactRouter)
+app.use(`${route_service}${Default.route_default}/master`, masterRouter);
 
-app.use(`${route.route_service}${route.Admin.route_admin}`, adminRoutes.visitationRouter)
+// adminRoute
+app.use(`${route_service}${Admin.route_admin}`, adminRoutes.visitationRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
