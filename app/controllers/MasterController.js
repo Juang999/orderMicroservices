@@ -1,6 +1,6 @@
 const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr, LocMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
-const helper = require('../../helper/helper')
+const {page} = require('../../helper/helper')
 const moment = require('moment')
 
 const MasterController = {
@@ -23,18 +23,15 @@ const MasterController = {
 				})
 		})
 	},
-	getCustomer: (req, res) => {
-		let where = {
-			ptnr_is_cust: 'Y'
-		}
-
-		if (req.query.query) where.ptnr_name = {[Op.like]: `%${req.query.query}%`}
-
-		PtnrMstr.findAll({
-			where: where,
-			limit: 20,
-			offset: 0,
-			attributes: ['ptnr_id', 'ptnr_name']
+	getDefaultPeriode: async (req, res) => {
+		PsPeriodeMstr.findAll({
+			attributes: [
+				'periode_code', 
+				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
+			],
+			where: {
+				periode_start_date: moment().startOf('months').format('YYYY-MM-DD')
+			}
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -57,35 +54,6 @@ const MasterController = {
 				'periode_code', 
 				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
 			]
-		}).then(result => {
-			res.status(200)
-				.json({
-					status: 'success',
-					message: 'berhasil mengambil data',
-					data: result
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'failed',
-					message: 'gagal mengambil data',
-					error: err.message
-				})
-		})
-	},
-	getPeriodeSales: async (req, res) => {
-		let auth = await helper.auth(req.get('authorization'))
-        
-		PsPeriodeMstr.findAll({
-			attributes: [
-				'periode_code', 
-				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
-			],
-			where: {
-				periode_code: {
-					[Op.in]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
-				}
-			},
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -291,51 +259,6 @@ const MasterController = {
 				.json({
 					status: 'failed',
 					message: 'gagal mengambil data',
-					error: err.message
-				})
-		})
-	},
-	getTimeStamp: (req, res) => {
-		let timestamp = {
-			day: moment().format('dddd'),
-            
-			month: moment().format('MMMM'),
-			year: moment().format('YYYY'),
-			time: moment().format('HH:mm:ss'),
-			timestamp: moment().format('YYYY-MM-DD HH:mm:ss')
-		}
-
-		res.status(200)
-			.json({
-				status: 'berhasil',
-				message: 'berhasil mengambil data timestamp',
-				data: timestamp
-			})
-	},
-	getDefaultPeriode: (req, res) => {
-		PsPeriodeMstr.findOne({
-			where: {
-				periode_start_date: {
-					[Op.eq]: moment().startOf('month').format('YYYY-MM-DD')
-				}
-			},
-			attributes: [
-				'periode_code', 
-				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'DD\'), \' \', \'\'), \' \', replace(to_char(periode_start_date, \'month\'), \' \', \'\'), \' \', replace(to_char(periode_start_date, \'YYYY\'), \' \', \'\'))'), 'start_periode'],
-				[Sequelize.literal('concat(replace(to_char(periode_end_date, \'DD\'), \' \', \'\'), \' \', replace(to_char(periode_end_date, \'month\'), \' \', \'\'), \' \', replace(to_char(periode_end_date, \'YYYY\'), \' \', \'\'))'), 'end_periode']
-			]
-		}).then(result => {
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data periode default',
-					data: result
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data periode default',
 					error: err.message
 				})
 		})
