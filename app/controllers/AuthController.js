@@ -15,11 +15,10 @@ const AuthController = {
 				usernama: req.body.username,
 				password: req.body.password,
 				user_ptnr_id: {
-					[Op.not]: null,
 					[Op.in]: Sequelize.literal('(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = \'Y\')')
 				}
 			},
-			attributes: ['userid', 'usernama', 'password']
+			attributes: ['userid', 'usernama', 'password', 'groupid']
 		}).then(async result => {
 			if (result == null) {
 				res.status(400)
@@ -34,6 +33,7 @@ const AuthController = {
 			let data = {
 				userid: result.userid,
 				name: result.usernama,
+				groupid: result.groupid,
 				security_word: await crypter.encrypt(result.password),
 			}
 
@@ -188,7 +188,7 @@ const AuthController = {
 	loginAdmin: async (req, res) => {
 		try {
 			let admin = await TConfUser.findOne({
-				attributes: ['userid', 'usernama', 'password', 'user_ptnr_id'],
+				attributes: ['userid', 'usernama', 'password', 'user_ptnr_id', 'groupid'],
 				where: {
 					[Op.and]: [
 						Sequelize.where(Sequelize.col('usernama'), {
@@ -223,6 +223,7 @@ const AuthController = {
 				userid: admin.userid,
 				name: admin.usernama,
 				ptnrid: admin.user_ptnr_id,
+				groupid: admin.groupid,
 				security_word: await crypter.encrypt(admin.password),
 			}
 			
