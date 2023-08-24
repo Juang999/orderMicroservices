@@ -70,17 +70,17 @@ class Route {
                     product: {
                         // product
                         product_index: '/',
-                        product_by_location: '/location',
-                        product_by_category: '/category',
-                        product_detail_by_location: '/category/:pt_id/show',
-                        product_detail_by_category: '/location/:pt_id/show',
+                        product_by_location: '/location', //done
+                        product_by_price_list: '/price-list', //done
+                        product_detail_by_location: '/location/:pt_id/show', //done
+                        product_detail_by_price_list: '/price-list/:pt_id/show', //done
                         // category & sub category
-                        product_category: '/category',
-                        product_sub_category: '/category/:cat_id/sub_category',
+                        product_category: '/category', //done
+                        product_sub_category: '/category/:cat_id/sub_category', //done
                        // data support
-                        product_size: '/size', 
-                        product_grade: '/grade',
-                        product_price_list: '/price-list',
+                        product_size: '/size', //done
+                        product_grade: '/grade', //done
+                        product_price_list: '/price', //done
                     },
                     sales_quotation: {
                         // create sq
