@@ -3,8 +3,8 @@ const {Op, Sequelize} = require('sequelize')
 const {page} = require('../../helper/helper')
 const moment = require('moment')
 
-const MasterController = {
-	getGroup: (req, res) => {
+class MasterController {
+	getGroup = (req, res) => {
 		PtnrgGrp.findAll({
 			attributes: ['ptnrg_id', 'ptnrg_name']
 		}).then(result => {
@@ -22,8 +22,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getDefaultPeriode: async (req, res) => {
+	}
+
+	getDefaultPeriode = async (req, res) => {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 
@@ -47,8 +48,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getPeriode: async (req, res) => {
+	}
+
+	getPeriode = async (req, res) => {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 
@@ -69,8 +71,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getTaxInvoice: (req, res) => {
+	}
+
+	getTaxInvoice = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'fakturpajak_transactioncode'
@@ -92,8 +95,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getAddrType: (req, res) => {
+	}
+
+	getAddrType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'addr_type_mstr'
@@ -114,8 +118,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getContactPerson: (req, res) => {
+	}
+
+	getContactPerson = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'ptnrac_function'
@@ -136,8 +141,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getBpType: (req, res) => {
+	}
+
+	getBpType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'bp_type'
@@ -158,8 +164,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getCitizen: (req, res) => {
+	}
+
+	getCitizen = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'WNegara'
@@ -180,8 +187,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getBloodGroup: (req, res) => {
+	}
+
+	getBloodGroup = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'gol_darah'
@@ -202,8 +210,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getGender: (req, res) => {
+	}
+
+	getGender = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'Jenis_Kelamin'
@@ -224,8 +233,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getCurrency: (req, res) => {
+	}
+
+	getCurrency = (req, res) => {
 		CuMstr.findAll({
 			attributes: ['cu_id', 'cu_name']
 		}).then(result => {
@@ -243,8 +253,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getEntity: (req, res) => {
+	}
+
+	getEntity = (req, res) => {
 		EnMstr.findAll({
 			attributes: ['en_id', 'en_code', 'en_desc']
 		}).then(result => {
@@ -262,8 +273,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getLocation: (req, res) => {
+	}
+
+	getLocation = (req, res) => {
 		LocMstr.findAll({
 			where: {
 				loc_id: {
@@ -287,8 +299,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getPaymentType: (req, res) => {
+	}
+
+	getPaymentType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'payment_type'
@@ -311,8 +324,9 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getPaymentMethod: (req, res) => {
+	}
+
+	getPaymentMethod = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'payment_methode'
@@ -335,8 +349,9 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getCreditTermsMstr: (req, res) => {
+	}
+
+	getCreditTermsMstr = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'creditterms_mstr'
@@ -359,31 +374,7 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getLocationGit: (req, res) => {
-		LocMstr.findAll({
-			where: {
-				loc_id: 100025
-			},
-			attributes: ['loc_id', 'loc_desc']
-		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data',
-						error: err.message
-					})
-			})
 	}
 }
 
-module.exports = MasterController
+module.exports = new MasterController()
