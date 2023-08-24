@@ -39,17 +39,17 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+app.use('/', indexRouter)
+app.use('/plans', planRouter)
 app.use('/visit', visitRouter)
-app.use('/users', usersRouter);
-app.use('/price', priceRouter);
-app.use('/plans', planRouter);
-app.use('/product', productRouter);
-app.use('/partner', partnerRouter);
-app.use('/partner-address', partnerAddressRouter);
+app.use('/users', usersRouter)
+app.use('/price', priceRouter)
+app.use(`${route_service}${Client.route_client}/product`, productRouter)
+app.use('/partner', partnerRouter)
+app.use('/partner-address', partnerAddressRouter)
 app.use('/sales-quotation', salesQuotationRouter)
 app.use('/partner-contact-address', partnerContactRouter)
-app.use(`${route_service}${Default.route_default}/master`, masterRouter);
+app.use(`${route_service}${Default.route_default}/master`, masterRouter)
 
 // adminRoute
 app.use(`${route_service}${Admin.route_admin}`, adminRoutes.visitationRouter)
