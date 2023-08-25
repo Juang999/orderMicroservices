@@ -47,9 +47,8 @@ class Route {
                         contact_detail: '/:ptnrac_oid/detail' //done
                     },
                     planning: {
-                        planning_index: '/planning',
-                        planning_create: '/planning',
-                        planning_detail: '/planning/:plans_oid/detail'
+                        planning_index_and_create: '/',
+                        planning_detail: '/:plans_oid/detail'
                     },
                     visitation: {
                         visitation_index: '/visitation',

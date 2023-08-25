@@ -4,8 +4,8 @@ const {Sequelize, Op} = require('sequelize')
 const moment = require('moment')
 const {v4: uuidv4} = require('uuid')
 
-const PlanController = {
-	getPlan: async (req, res) => {
+class PlanController {
+	getPlan = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		PlansMstr.findAll({
@@ -40,8 +40,9 @@ const PlanController = {
 					error: err.message
 				})
 		})
-	},
-	createPlan: async (req, res) => {
+	}
+
+	createPlan = async (req, res) => {
 		try {
 			let user = await helper.auth(req.get('authorization'))
 
@@ -85,8 +86,9 @@ const PlanController = {
 					error: error.message
 				})
 		}
-	},
-	getCustomerPerPeriode: async (req, res) => {
+	}
+
+	getCustomerPerPeriode = async (req, res) => {
 		try {
 			let planningSales = await PlansMstr.findOne({
 				attributes: ['plans_oid', 'plans_code', 'plans_amount_total'],
@@ -133,4 +135,4 @@ const PlanController = {
 	}
 }
 
-module.exports = PlanController
+module.exports = new PlanController()
