@@ -37,68 +37,25 @@ let adminAuthenticate = async (req, res, next) => {
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if (err) {
-            if (err.message == 'jwt expired') {
-                res.status(400)
-                    .json({
-                        code: 400,
-                        status: err.message,
-                        error: err.message
-                    })
-                
-                return
-            } else {
-                res.status(400)
-                    .json({
-                        code: 400,
-                        status: "failed",
-                        error: "failed login"
-                    })
-    
-                    return
-            }
-        }
-
-        let authUser = await TConfUser.findOne({
-            where: {
-                usernama: user.name
-            },
-            attributes: ['usernama', 'password', 'groupid']
-        })
-
-        if (!authUser) {
-            res.status(403)
+            res.status(400)
                 .json({
-                    code: 403,
-                    status: "unauthorize",
-                    error: "unauthorize"
+                    code: 400,
+                    status: 'failed',
+                    error: err.message
                 })
-
+            
             return
         }
 
-        console.log(authUser.groupid)
-
-        if (authUser.groupid != 1) {
-            res.status(403)
+        if (user.groupid != 1) {
+            res.status(400)
                 .json({
-                    code: 403,
-                    status: "unauthorize",
-                    error: "unauthorize"
+                    code: 400,
+                    status: 'failed',
+                    error: 'failed login'
                 })
 
             return
-        }
-
-        let verifyPassword = await crypter.decrypt(user.security_word)
-        if (verifyPassword != authUser.password) {
-            res.status(403)
-                .json({
-                    code: 403,
-                    status: 'failed login',
-                    error: 'wrong username or password',
-                })
-        
-                return
         }
 
         next()
