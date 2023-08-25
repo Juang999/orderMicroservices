@@ -6,7 +6,6 @@ class Controller {
 			},
 			Client: {
 				ProductController: require('./Client/ProductController'),
-				PriceController: require('./Client/PriceController'),
 				PartnerController: require('./Client/PartnerController'),
 				PlanController: require('./Client/PlanController'),
 				PartnerAddressController: require('./Client/PartnerAddressController'),
