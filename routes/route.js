@@ -35,17 +35,16 @@ class Route {
                 route_client: '/client',
                 feature: {
                     partner: {
-                        partner_index: '/partner',
-                        partner_create: '/partner',
-                        partner_detail: '/partner/:ptnr_oid/detail',
+                        partner_index_and_create: '/',
+                        partner_detail: '/:ptnr_oid/detail',
                     },
                     partnerAddress: {
-                        address_create: '/partner-address',
-                        address_detail: '/partner-address/:ptnra_oid/detail',
+                        address_create: '/', //done
+                        address_detail: '/:ptnra_oid/detail', //done
                     },
                     partnerContactAddress: {
-                        contact_create: '/partner-contact',
-                        contact_detail: '/partner-contact/:ptnrac_oid/detail'
+                        contact_create: '/', //done
+                        contact_detail: '/:ptnrac_oid/detail' //done
                     },
                     planning: {
                         planning_index: '/planning',

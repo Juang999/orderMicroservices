@@ -5,9 +5,8 @@ const helper = require('../../../helper/helper')
 const moment = require('moment')
 let date = moment().tz('Asia/Jakarta').format('YYYY-MM-DD') +' '+ moment().tz('Asia/Jakarta').format('HH:mm:ss.SSS')
 
-
-const PartnerAddressController = {
-	create: async (req, res) => {
+class PartnerAddressController {
+	create = async (req, res) => {
 		// getLastIdFromTable ptnra_addr
 		let authUser = await helper.auth(req.get('authorization'))
 
@@ -56,8 +55,9 @@ const PartnerAddressController = {
 					error: err.message
 				})
 		})
-	},
-	show: (req, res) => {
+	}
+
+	show = (req, res) => {
 		PtnraAddr.findAll({
 			where: {
 				ptnra_oid: req.params.ptnra_oid
@@ -89,41 +89,7 @@ const PartnerAddressController = {
 					error: err.message
 				})
 		})
-	},
-	activate: async (req, res) => {
-		let authUser = await helper.auth(req.get('authorization'))
-
-		let dataAddress = await PtnraAddr.findOne({
-			where: {
-				ptnra_oid: req.params.ptnra_oid
-			},
-			attributes: ['ptnra_active']
-		})
-
-		PtnraAddr.update({
-			ptnra_active: (dataAddress.ptnra_active == 'Y') ? 'N' : 'Y',
-			ptnra_upd_date: date,
-			ptnra_upd_by: authUser.usernama
-		},{
-			where: {
-				ptnra_oid: req.params.ptnra_oid
-			}
-		}).then(result => {
-			res.status(200)
-				.json({
-					status: 'success',
-					message: 'berhasil mengubah data',
-					data: result
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'failed',
-					message: 'gagal update data',
-					error: err.message
-				})
-		})
 	}
 }
 
-module.exports = PartnerAddressController
+module.exports = new PartnerAddressController()

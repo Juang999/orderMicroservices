@@ -9,17 +9,26 @@ var {route_service, Admin, Client, Default} = require('./routes/route')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var productRouter = require('./routes/Client/product-knowledge');
-var priceRouter = require('./routes/Client/price');
 var masterRouter = require('./routes/master');
-var partnerRouter = require('./routes/Client/partner');
 var planRouter = require('./routes/Client/plans');
-var partnerAddressRouter = require('./routes/Client/partner-address');
-var partnerContactRouter = require('./routes/Client/partner-contact-address');
 var visitRouter = require('./routes/Client/visit');
-var salesQuotationRouter = require('./routes/Client/sales-quotation')
+var partnerRouter = require('./routes/Client/partner');
+var productRouter = require('./routes/Client/product-knowledge');
+var partnerAddressRouter = require('./routes/Client/partner-address');
+var salesQuotationRouter = require('./routes/Client/sales-quotation');
+var partnerContactRouter = require('./routes/Client/partner-contact-address');
 
-var adminRoutes = {
+let clientRoutes = {
+    planRouter: require('./routes/Client/plans'),
+    visitRouter: require('./routes/Client/visit'),
+    partnerRouter: require('./routes/Client/partner'),
+    productRouter: require('./routes/Client/product-knowledge'),
+    partnerAddressRouter: require('./routes/Client/partner-address'),
+    salesQuotationRouter: require('./routes/Client/sales-quotation'),
+    partnerContactRouter: require('./routes/Client/partner-contact-address'),
+}
+
+let adminRoutes = {
   visitationRouter: require('./routes/Admin/visit')
 }
 
@@ -40,16 +49,15 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter)
-app.use('/plans', planRouter)
 app.use('/visit', visitRouter)
 app.use('/users', usersRouter)
-app.use('/price', priceRouter)
-app.use(`${route_service}${Client.route_client}/product`, productRouter)
-app.use('/partner', partnerRouter)
-app.use('/partner-address', partnerAddressRouter)
 app.use('/sales-quotation', salesQuotationRouter)
-app.use('/partner-contact-address', partnerContactRouter)
+app.use(`${route_service}${Client.route_client}/plans`, planRouter)
 app.use(`${route_service}${Default.route_default}/master`, masterRouter)
+app.use(`${route_service}${Client.route_client}/partner`, clientRoutes.partnerRouter)
+app.use(`${route_service}${Client.route_client}/product`, clientRoutes.productRouter)
+app.use(`${route_service}${Client.route_client}/partner-address`, clientRoutes.partnerAddressRouter)
+app.use(`${route_service}${Client.route_client}/partner-contact-address`, clientRoutes.partnerContactRouter)
 
 // adminRoute
 app.use(`${route_service}${Admin.route_admin}`, adminRoutes.visitationRouter)

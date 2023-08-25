@@ -5,12 +5,12 @@ const helper = require('../../../helper/helper')
 const moment = require('moment')
 let date = moment().tz('Asia/Jakarta').format('YYYY-MM-DD') +' '+ moment().tz('Asia/Jakarta').format('HH:mm:ss.SSS')
 
-const PartnerController = {
-	getPartner: (req, res) => {
+class PartnerController {
+	getPartner = (req, res) => {
 		let whereClause = {
-			ptnr_is_cust: 'Y',
 			ptnr_is_emp: 'N',
-			ptnr_active: 'Y'
+			ptnr_active: 'Y',
+			ptnr_is_cust: 'Y',
 		}
 
 		if (req.query.name) whereClause.ptnr_name = {[Op.like]: `%${req.query.name}%`}
@@ -53,8 +53,9 @@ const PartnerController = {
 					error: err.message
 				})
 		})
-	},
-	createNewPartner: async (req, res) => {
+	}
+
+	createNewPartner = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		// getLastIdFromTable ptnr_mstr
@@ -138,8 +139,9 @@ const PartnerController = {
 					error: err.message
 				})
 		})
-	},
-	getDetailCustomer: async (req, res) => {
+	}
+
+	getDetailCustomer = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		PtnrMstr.findOne({
@@ -154,7 +156,6 @@ const PartnerController = {
 					model: CodeMstr,
 					as: 'ptnr_gender',
 					attributes: ['code_field', 'code_code', 'code_name', 'code_desc']
-
 				},
 				{
 					model: CodeMstr,
@@ -207,7 +208,7 @@ const PartnerController = {
 					error: err.message
 				})
 		})
-	},
+	}
 }
 
-module.exports = PartnerController
+module.exports = new PartnerController()
