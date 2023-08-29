@@ -37,6 +37,7 @@ class Route {
                     partner: {
                         partner_index_and_create: '/',
                         partner_detail: '/:ptnr_oid/detail',
+                        partner_mitra: '/mitra'
                     },
                     partnerAddress: {
                         address_create: '/', //done
@@ -97,6 +98,10 @@ class Route {
                     auth: {
                         login: '/login',
                         profile: '/profile',
+                    },
+                    report: {
+                        report_total_so: '/so',
+                        report_total_sq: '/sq'
                     }
                 }
             },
