@@ -13,8 +13,8 @@ const app = express()
 
 app.use(upload())
 
-const VisitController = {
-	getVisitingSchedule: async (req, res) => {
+class VisitController {
+	getVisitingSchedule = async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -75,8 +75,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	getDetailVisitSchedule: (req, res) => {
+	}
+
+	getDetailVisitSchedule = (req, res) => {
 		VisitMstr.findOne({
 			attributes: [
 				'visit_code', 
@@ -149,8 +150,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getDetailVisiting: (req, res) => {
+	}
+
+	getDetailVisiting = (req, res) => {
 		VisitedDet.findOne({
 			where: {
 				visited_oid: req.params.visited_oid
@@ -170,10 +172,11 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	createSchedule: async (req, res) => {
+	}
+
+	createSchedule = async (req, res) => {
 		let {userid, en_id, usernama} = await helper.auth(req.get('authorization'))
-		let visitCode = await generateVisitCode(en_id)
+		let visitCode = await this.generateVisitCode(en_id)
 
 		let transaction = await sequelize.transaction()
 		try {
@@ -205,8 +208,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	createListCustomerToVisit: async (req, res) => {
+	}
+
+	createListCustomerToVisit = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		VisitedDet.create({
@@ -234,8 +238,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	checkIn: async (req, res) => {
+	}
+
+	checkIn = async (req, res) => {
 		try {
 			let authUser = helper.auth(req.get('authorization'))
 
@@ -295,7 +300,7 @@ const VisitController = {
 				}
 			})
 
-			await updateStatusSchedule(req.body.visit_code)
+			await this.updateStatusSchedule(req.body.visit_code)
 
 			res.status(200)
 				.json({
@@ -310,8 +315,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	checkOut: async (req, res) => {
+	}
+
+	checkOut = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		VisitedDet.update({
@@ -342,8 +348,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	deleteFromListSchedule: (req, res) => {
+	}
+
+	deleteFromListSchedule = (req, res) => {
 		VisitedDet.destroy({
 			where: {
 				visited_oid: req.params.visited_oid
@@ -363,8 +370,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	deleteSchedule: (req, res) => {
+	}
+
+	deleteSchedule = (req, res) => {
 		VisitMstr.destroy({
 			where: {
 				visit_code: req.params.visit_code
@@ -384,8 +392,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getCustomerPerPeriode: async (req, res) => {
+	}
+
+	getCustomerPerPeriode = async (req, res) => {
 		try {
 			let customer = await PtnrMstr.findAll({
 				where: {
@@ -410,8 +419,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	getVisitType: (req, res) => {
+	}
+
+	getVisitType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'visiting'
@@ -433,8 +443,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getOutputVisitType: (req, res) => {
+	}
+
+	getOutputVisitType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'output-visiting'
@@ -456,8 +467,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getSalesPerPeriode: async (req, res) => {
+	}
+
+	getSalesPerPeriode = async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -492,68 +504,53 @@ const VisitController = {
 				})
 		}
 	}
-}
 
-let updateStatusSchedule = async (visit_code) => {
-	let allCustomer = await VisitedDet.count({
-		where: {
-			visited_visit_code: {
-				[Op.eq]: visit_code
-			}
-		}
-	})
-
-	let visitedToCustomer = await VisitedDet.count({
-		where: {
-			visited_visit_code: {
-				[Op.eq]: visit_code
-			},
-			visited_check_in: {
-				[Op.not]: null
-			}
-		}
-	})
-
-	if (allCustomer - visitedToCustomer == 0) {
-		await VisitMstr.update({
-			visit_status: 'Y'
-		}, {
+	updateStatusSchedule = async (visit_code) => {
+		let allCustomer = await VisitedDet.count({
 			where: {
-				visit_code: {
+				visited_visit_code: {
 					[Op.eq]: visit_code
 				}
 			}
 		})
+	
+		let visitedToCustomer = await VisitedDet.count({
+			where: {
+				visited_visit_code: {
+					[Op.eq]: visit_code
+				},
+				visited_check_in: {
+					[Op.not]: null
+				}
+			}
+		})
+	
+		if (allCustomer - visitedToCustomer == 0) {
+			await VisitMstr.update({
+				visit_status: 'Y'
+			}, {
+				where: {
+					visit_code: {
+						[Op.eq]: visit_code
+					}
+				}
+			})
+	
+			return
+		} else {
+			return
+		}
+	}
 
-		return
-	} else {
-		return
+	generateVisitCode = async (en_id) => {
+		let visitCode = await VisitMstr.findOne({
+			order: [['visit_add_date', 'desc']]
+		})
+	
+		let totalPlannigSchedule = (!visitCode) ? 1 : parseInt(visitCode.visit_code.substring(12)) + 1
+	
+		return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
 	}
 }
 
-let generateVisitCode = async (en_id) => {
-    let visitCode = await VisitMstr.findOne({
-        order: [['visit_add_date', 'desc']]
-    })
-
-    let totalPlannigSchedule = (!visitCode) ? 1 : parseInt(visitCode.visit_code.substring(12)) + 1
-
-    return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
-}
-
-let checkCheckinClient = async (visited_oid) => {
-	let dataCheckIn = await VisitedDet.findOne({
-		where: {
-			visited_oid: visited_oid
-		}, 
-		attributes: ['vissited_oid', 'visited_check_in']
-	})
-
-	if (dataCheckIn) {
-		return true
-	} else {
-		return false
-	}
-}
-
-module.exports = VisitController
+module.exports = new VisitController()
