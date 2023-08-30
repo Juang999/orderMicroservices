@@ -21,6 +21,7 @@ var partnerContactRouter = require('./routes/Client/partner-contact-address');
 let clientRoutes = {
     planRouter: require('./routes/Client/plans'),
     visitRouter: require('./routes/Client/visit'),
+    reportRouter: require('./routes/Client/report'),
     partnerRouter: require('./routes/Client/partner'),
     productRouter: require('./routes/Client/product-knowledge'),
     partnerAddressRouter: require('./routes/Client/partner-address'),
@@ -54,6 +55,7 @@ app.use('/users', usersRouter)
 app.use('/sales-quotation', salesQuotationRouter)
 app.use(`${route_service}${Client.route_client}/plans`, planRouter)
 app.use(`${route_service}${Default.route_default}/master`, masterRouter)
+app.use(`${route_service}${Client.route_client}/report`, clientRoutes.reportRouter)
 app.use(`${route_service}${Client.route_client}/partner`, clientRoutes.partnerRouter)
 app.use(`${route_service}${Client.route_client}/product`, clientRoutes.productRouter)
 app.use(`${route_service}${Client.route_client}/partner-address`, clientRoutes.partnerAddressRouter)

@@ -11,7 +11,8 @@ class Controller {
 				PartnerAddressController: require('./Client/PartnerAddressController'),
 				ParnterContactController: require('./Client/PartnerContactController'),
 				VisitController: require('./Client/VisitController'),
-				SalesQuotationController: require('./Client/SalesQuotationController')
+				SalesQuotationController: require('./Client/SalesQuotationController'),
+				ReportController: require('./Client/ReportController')
 			},
 			Default: {
 				AuthController: require('./AuthController'),
