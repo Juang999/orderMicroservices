@@ -59,7 +59,7 @@ class ExportController {
                 'ptnr_name',
                 [Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.fn('SUM', Sequelize.col('sales.so_total')), 0), 0), 'total'],
                 [
-                    Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.literal('(sum(sales.so_total) / (select sum(so_total) from public.so_mstr)) * 100/100'), 2), 0), 'percentage'
+                    Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.literal(`(sum(sales.so_total) / (select sum(so_total) from public.so_mstr where so_add_by between '${startDate}' and '${endDate}')) * 100/100`), 2), 0), 'percentage'
                 ]
             ],
             include: [
@@ -67,7 +67,7 @@ class ExportController {
                     model: SoMstr,
                     as: 'sales',
                     attributes: [],
-                    required: false,
+                    required: true,
                     where: {
                         so_add_date: {
                             [Op.between]: [startDate, endDate]
