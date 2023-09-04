@@ -8,21 +8,21 @@ class Route {
                 route_admin: '/admin',
                 feature: {
                     visitation: {
-                        index_and_create: '/visitation',
-                        visitation_type: '/visitation/type',
-                        visitation_sales: '/visitation/sales',
-                        visitation: '/visitation/:ptnr_id/sales',
-                        visitation_periode: '/visitation/periode',
-                        visitation_goal: '/visitation/:userid/goal',
-                        visitation_customer: '/visitation/customer',
-                        visitation_code: '/visitation/:userid/code',
-                        visitation_visit_customer: '/visitation/visit',
-                        visitation_create_periode: '/visitation/periode',
-                        visitation_detail: '/visitation/:visited_oid/detail',
-                        visitation_output: '/visitation/:user_ptnr_id/output',
-                        visitation_schedule: '/visitation/:visit_code/schedule',
-                        visitation_checkin: '/visitation/:user_ptnr_id/checkin',
-                        visitation_sales_quotation: '/visitation/:user_ptnr_id/sales-quotation',
+                        index_and_create: '/',
+                        visitation_type: '/type',
+                        visitation_sales: '/sales',
+                        visitation: '/:ptnr_id/sales',
+                        visitation_periode: '/periode',
+                        visitation_goal: '/:userid/goal',
+                        visitation_customer: '/customer',
+                        visitation_code: '/:userid/code',
+                        visitation_visit_customer: '/visit',
+                        visitation_create_periode: '/periode',
+                        visitation_detail: '/:visited_oid/detail',
+                        visitation_output: '/:user_ptnr_id/output',
+                        visitation_schedule: '/:visit_code/schedule',
+                        visitation_checkin: '/:user_ptnr_id/checkin',
+                        visitation_sales_quotation: '/:user_ptnr_id/sales-quotation',
                     },
                     auth: {
                         admin_login: '/admin-login',
@@ -52,19 +52,17 @@ class Route {
                         planning_detail: '/:plans_oid/detail'
                     },
                     visitation: {
-                        visitation_index: '/visitation',
-                        visitation_type: '/visitation/type',
-                        visitation_output: '/visitation/output',
-                        visitation_create_schedule: '/visitation',
-                        visitation_input_custoer: '/visitation/customer',
-                        visitation_sales_periode: '/visitation/:periode/sales',
-                        visitation_customer: '/visitation/customer/per-periode',
-                        visitation_check_in: '/visitation/:visited_oid/checkin',
-                        visitation_check_out: '/visitation/:visited_oid/checkout',
-                        visitation_delete_schedule: '/visitation/:visit_code/delete',
-                        visitation_detail: '/visitation/:visited_oid/visitation_detail',
-                        visitation_schedule: '/visitation/:visit_code/visitation_schedule',
-                        visitation_delete_customer: '/visitation/customer/:visited_oid/delete',
+                        visitation_type: '/type', //done
+                        visitation_output: '/output', //done
+                        visitation_index_and_create: '/', //done
+                        visitation_input_customer: '/customer', //done
+                        visitation_detail: '/:visited_oid/detail', //done
+                        visitation_sales_periode: '/:periode/sales', //done
+                        visitation_schedule: '/:visit_code/schedule', //done
+                        visitation_check_in: '/:visited_oid/checkin', //done
+                        visitation_check_out: '/:visited_oid/checkout', //done
+                        visitation_delete_schedule: '/:visit_code/delete', //done
+                        visitation_delete_customer: '/customer/:visited_oid/delete', //done
                     },
                     product: {
                         // product
@@ -83,17 +81,15 @@ class Route {
                     },
                     sales_quotation: {
                         // create sq
-                        sq_create_sales_quotation: '/create-sales-quotation', 
+                        sq_index_and_create: '/', 
                         // data support
-                        sq_site: '/get-site', 
-                        sq_area: '/get-area', 
-                        sq_location: '/location/:en_id', 
-                        sq_unit_measure: '/get-unitmeasure', 
-                        sq_get_sales_quotation: '/get-sales-quotation', 
-                        sq_total_debt: '/sum-debt-from-customer/ptnrid/:ptnrId', 
-                        sq_credit_limit: '/get-credit-limit-customer/ptnrid/:ptnrId', 
-                        sq_price_list_by_group: '/get-price-list/partnergroupid/:partnerGroupId', 
-                        sq_product_by_price: '/get-product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', 
+                        sq_site: '/site', //done
+                        sq_location: '/:en_id/location', //done
+                        sq_unit_measure: '/unitmeasure', //done
+                        sq_total_debt: '/partner/:ptnrId/debt', //done 
+                        sq_credit_limit: '/partner/:ptnrId/limit-credit', //done
+                        sq_price_list_by_group: '/price-list/:partnerGroupId/group', //done
+                        sq_product_by_price: '/product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', 
                     },
                     auth: {
                         login: '/login',

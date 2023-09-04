@@ -50,19 +50,19 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter)
-app.use('/visit', visitRouter)
 app.use('/users', usersRouter)
-app.use('/sales-quotation', salesQuotationRouter)
 app.use(`${route_service}${Client.route_client}/plans`, planRouter)
 app.use(`${route_service}${Default.route_default}/master`, masterRouter)
+app.use(`${route_service}${Client.route_client}/visitation`, visitRouter)
 app.use(`${route_service}${Client.route_client}/report`, clientRoutes.reportRouter)
 app.use(`${route_service}${Client.route_client}/partner`, clientRoutes.partnerRouter)
 app.use(`${route_service}${Client.route_client}/product`, clientRoutes.productRouter)
+app.use(`${route_service}${Client.route_client}/sales-quotation`, salesQuotationRouter)
 app.use(`${route_service}${Client.route_client}/partner-address`, clientRoutes.partnerAddressRouter)
 app.use(`${route_service}${Client.route_client}/partner-contact-address`, clientRoutes.partnerContactRouter)
 
 // adminRoute
-app.use(`${route_service}${Admin.route_admin}`, adminRoutes.visitationRouter)
+app.use(`${route_service}${Admin.route_admin}/visitation`, adminRoutes.visitationRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
