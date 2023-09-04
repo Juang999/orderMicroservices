@@ -2,7 +2,7 @@ class Controller {
 	constructor () {
 		return {
 			Admin: {
-				SalesQuotationController: require('./Admin/SalesQuotationController')
+				VisitController: require('./Admin/VisitController')
 			},
 			Client: {
 				ProductController: require('./Client/ProductController'),
