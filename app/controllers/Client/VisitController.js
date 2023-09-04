@@ -184,11 +184,28 @@ class VisitController {
 				visit_code: visitCode,
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
-				visit_en_id: en_id,
-				visit_sales_id: userid,
+				visit_en_id: parseInt(en_id),
+				visit_sales_id: parseInt(userid),
 				visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visit_add_by: usernama,
 				visit_status: 'N'
+			}, {
+				logging: (sql, queryObject) => {
+					let value = queryObject.bind
+
+					helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4],
+							$6: value[5],
+							$7: value[6],
+							$8: value[7],
+						}
+					})
+				}
 			})
 
 			await transaction.commit()
@@ -217,12 +234,29 @@ class VisitController {
 			visited_oid: uuidv4(),
 			visited_visit_code: req.body.visit_code,
 			visited_type: req.body.type,
-			visited_ptnr_id: req.body.ptnr_id,
+			visited_ptnr_id: parseInt(req.body.ptnr_id),
 			visited_cus_name: req.body.cus_name,
 			visited_cus_address: req.body.cus_address,
 			visited_cus_phone: req.body.cus_phone,
 			visited_add_by: authUser.usernama,
 			visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
+		}, {
+			logging: (sql, queryObject) => {
+				let value = queryObject.bind
+
+				helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+					}
+				})
+			}
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -291,12 +325,28 @@ class VisitController {
 				visited_address_gps_check_in: req.body.checkin_address,
 				visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visited_foto: `images/checkin/${file.name}`,
-				visited_objective: req.body.objective,
+				visited_objective: parseInt(req.body.objective),
 				visited_upd_by: authUser.usernama,
 				visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 			}, {
 				where: {
 					visited_oid: req.params.visited_oid
+				},
+				logging: (sql, queryObject) => {
+					let value = queryObject.bind
+
+					helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4],
+							$6: value[5],
+							$7: value[6],
+							$8: value[7],
+						}
+					})
 				}
 			})
 
@@ -326,12 +376,29 @@ class VisitController {
 			visited_address_gps_check_out: req.body.checkout_address,
 			visited_check_out: moment().format('YYYY-MM-DD HH:mm:ss'),
 			visited_result: req.body.result,
-			visited_output: req.body.output,
+			visited_output: parseInt(req.body.output),
 			visited_upd_by: authUser.usernama,
 			visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 		}, {
 			where: {
-				visited_oid: req.params.visited_oid
+				visited_oid: req.params.visited_oid,
+			},
+			logging: (sql, queryObject) => {
+				let value = queryObject.bind
+
+				helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+						$9: value[8],
+					}
+				})
 			}
 		}).then(result => {
 			res.status(200)
@@ -354,6 +421,9 @@ class VisitController {
 		VisitedDet.destroy({
 			where: {
 				visited_oid: req.params.visited_oid
+			},
+			logging: (sql) => {
+				helper.Query.delete(sql)
 			}
 		}).then(result => {
 			res.status(200)
@@ -376,6 +446,9 @@ class VisitController {
 		VisitMstr.destroy({
 			where: {
 				visit_code: req.params.visit_code
+			},
+			logging: (sql) => {
+				helper.Query.delete(sql)
 			}
 		}).then(result => {
 			res.status(200)
@@ -392,33 +465,6 @@ class VisitController {
 					error: err.message
 				})
 		})
-	}
-
-	getCustomerPerPeriode = async (req, res) => {
-		try {
-			let customer = await PtnrMstr.findAll({
-				where: {
-					ptnr_id: {
-						[Op.in]: Sequelize.literal(`(SELECT plansd_ptnr_id FROM public.plansd_det WHERE plansd_plans_oid = (SELECT plans_oid FROM public.plans_mstr WHERE plans_periode = (SELECT periode_code FROM public.psperiode_mstr WHERE periode_start_date = '${moment().startOf('month').format('YYYY-MM-DD')}')))`)
-					}
-				},
-				attributes: ['ptnr_name', 'ptnr_id']
-			})
-
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data kostumer per periode',
-					data: customer
-				})
-		} catch (error) {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data kostumer per periode',
-					error: error.message
-				})
-		}
 	}
 
 	getVisitType = (req, res) => {
@@ -533,6 +579,16 @@ class VisitController {
 					visit_code: {
 						[Op.eq]: visit_code
 					}
+				},
+				logging: async (sql, queryObject) => {
+					let value = queryObject.bind
+					
+					await helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1]
+						}
+					})
 				}
 			})
 	

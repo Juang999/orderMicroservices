@@ -57,9 +57,11 @@ class ExportController {
             attributes: [
                 'ptnr_id',
                 'ptnr_name',
-                [Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.fn('SUM', Sequelize.col('sales.so_total')), 0), 0), 'total'],
                 [
-                    Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.literal(`(sum(sales.so_total) / (select sum(so_total) from public.so_mstr where so_add_by between '${startDate}' and '${endDate}')) * 100/100`), 2), 0), 'percentage'
+                    Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.fn('SUM', Sequelize.col('sales.so_total')), 0), 0), 'total'
+                ],
+                [
+                    Sequelize.fn('COALESCE', Sequelize.fn('ROUND', Sequelize.literal(`(sum(sales.so_total) / (select sum(so_total) from public.so_mstr where so_add_date between '${startDate}' and '${endDate}')) * 100/100`), 2), 0), 'percentage'
                 ]
             ],
             include: [
@@ -68,21 +70,25 @@ class ExportController {
                     as: 'sales',
                     attributes: [],
                     required: true,
-                    where: {
-                        so_add_date: {
-                            [Op.between]: [startDate, endDate]
-                        }
-                    }
                 }
             ],
             where: {
-                ptnr_is_emp: 'Y'
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('ptnr_is_emp'), {
+                        [Op.eq]: 'Y'
+                    }),
+                    Sequelize.where(Sequelize.col('sales.so_add_date'), {
+                        [Op.between]: [startDate, endDate]
+                    })
+                ]
             },
             group: [
                 'ptnr_oid',
                 'ptnr_name'
             ],
-            order: [['total', 'desc']]
+            order: [
+                ['total', 'desc']
+            ]
         })
         .then(result => {
             res.status(200)

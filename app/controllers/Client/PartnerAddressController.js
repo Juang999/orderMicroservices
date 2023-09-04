@@ -22,8 +22,8 @@ class PartnerAddressController {
         
 		PtnraAddr.create({
 			ptnra_oid: uuidv4(),
-			ptnra_id: ptnra_id,
-			ptnra_dom_id: req.body.partnerDomainId,
+			ptnra_id: parseInt(ptnra_id),
+			ptnra_dom_id: parseInt(req.body.partnerDomainId),
 			ptnra_en_id: req.body.partnerEntityId,
 			ptnra_add_by: authUser.usernama,
 			ptnra_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
@@ -36,10 +36,37 @@ class PartnerAddressController {
 			ptnra_fax_2: req.body.partnerFax2,
 			ptnra_zip: req.body.partnerZip,
 			ptnra_ptnr_oid: req.body.partnerOid,
-			ptnra_addr_type: req.body.partnerAddressType,
+			ptnra_addr_type: parseInt(req.body.partnerAddressType),
 			ptnra_comment: req.body.partnerComment,
 			ptnra_active: (req.body.ptnra_active) ? req.body.ptnra_active : 'Y',
 			ptnra_dt: date
+		}, {
+			logging: async (sql, queryObject) => {
+				let value = queryObject.bind
+
+				await helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+						$9: value[8],
+						$10: value[9],
+						$11: value[10],
+						$12: value[11],
+						$13: value[12],
+						$14: value[13],
+						$15: value[14],
+						$16: value[15],
+						$17: value[16],
+						$18: value[17],
+					}
+				})
+			}
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -48,6 +75,7 @@ class PartnerAddressController {
 					data: result
 				})
 		}).catch(err => {
+			console.log(err)
 			res.status(400)
 				.json({
 					status: 'failed',

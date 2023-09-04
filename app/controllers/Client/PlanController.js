@@ -67,9 +67,23 @@ class PlanController {
 			let data = await PlansdDet.create({
 				plansd_oid: uuidv4(),
 				plansd_plans_oid: getPlanMaster.plans_oid,
-				plansd_ptnr_id: req.body.ptnr_id,
-				plansd_amount: req.body.amount,
+				plansd_ptnr_id: parseInt(req.body.ptnr_id),
+				plansd_amount: parseInt(req.body.amount),
 				plansd_seq: seq
+			}, {
+				logging: async (sql, queryObject) => {
+					let value = queryObject.bind
+
+					await helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4]
+						}
+					})
+				}
 			})
 
 			res.status(200)

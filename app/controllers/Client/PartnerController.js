@@ -126,10 +126,10 @@ class PartnerController {
 				ptnr_is_volunteer: (req.body.partnerIsVolunteer) ? req.body.partnerIsVolunteer : null,
 				ptnr_is_sbm: (req.body.partnerIsSbm) ? req.body.partnerIsSbm : 'N',
 			}, {
-				logging: (sql, queryObject) => {
+				logging: async (sql, queryObject) => {
 					let value = queryObject.bind
 	
-					helper.Query.insert(sql, {
+					await helper.Query.insert(sql, {
 						bind: {
 							$1: value[0],
 							$2: value[1],

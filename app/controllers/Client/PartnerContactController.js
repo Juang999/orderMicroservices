@@ -24,12 +24,32 @@ class PartnerContactController {
 				ptnrac_add_by: authUser.usernama,
 				ptnrac_add_date: moment().tz('Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ss'),
 				ptnrac_seq: seq,
-				ptnrac_function: req.body.partnerAccountFunction, 
+				ptnrac_function: parseInt(req.body.partnerAccountFunction), 
 				ptnrac_contact_name: req.body.partnerContactName,
 				ptnrac_phone_1: req.body.partnerPhone1,
 				ptnrac_phone_2: req.body.partnerContact2,
 				ptnrac_email: req.body.partnerContactEmail,
 				ptnrac_dt: date
+			}, {
+				logging: async (sql, queryObject) => {
+					let value = queryObject.bind
+
+					await helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4],
+							$6: value[5],
+							$7: value[6],
+							$8: value[7],
+							$9: value[8],
+							$10: value[9],
+							$11: value[10],
+						}
+					})
+				}
 			})
 
 			res.status(200)
