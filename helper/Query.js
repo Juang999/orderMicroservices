@@ -4,11 +4,8 @@ const moment = require('moment')
 
 class Query {
     insert = async (sql, bind) => {
-        console.log(uuidv4())
-
-        let keys = Object.keys(bind.bind)
         let query = sql
-
+        let keys = Object.keys(bind.bind)
         query = query.replace("Executing (default): ", '')
 
         for (const key of keys) {
@@ -22,6 +19,16 @@ class Query {
             sql_command: query,
             waktu: moment().format('YYYY-MM-DD HH:mm:ss'),
             mili_second: (bind.miliSecond) ? bind.miliSecond : 100
+        })
+    }
+
+    delete = async (sql) => {
+        await TSqlOut.create({
+            sql_uid: uuidv4(),
+            seq: 1,
+            command: sql,
+            waktu: moment().format('YYYY-MM-DD HH:mm:ss'),
+            mili_second: 100
         })
     }
 }
