@@ -59,7 +59,7 @@ class PartnerController {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
-			let partnerParent = (req.body.customerIsDistributor) ? authUser.user_ptnr_id : req.params.partnerParent;
+			let partnerParent = (req.body.customerIsDistributor == 'Y') ? authUser.user_ptnr_id : req.params.partnerParent;
 	
 			// getLastIdFromTable ptnr_mstr
 			let lastCustomer = await PtnrMstr.findOne({
