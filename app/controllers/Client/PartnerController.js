@@ -1,5 +1,5 @@
 const {Op} = require('sequelize')
-const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr} = require('../../../models')
+const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr, Sequelize} = require('../../../models')
 const {v4: uuidv4} = require('uuid')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
@@ -58,6 +58,8 @@ class PartnerController {
 	createNewPartner = async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
+
+			let partnerParent = (req.body.customerIsDistributor) ? authUser.user_ptnr_id : req.params.partnerParent;
 	
 			// getLastIdFromTable ptnr_mstr
 			let lastCustomer = await PtnrMstr.findOne({
@@ -94,6 +96,7 @@ class PartnerController {
 				ptnr_code: partner_code,
 				ptnr_name: (req.body.partnerName)? req.body.partnerName : null,
 				ptnr_ptnrg_id: parseInt(req.body.partnerGroupId),
+				ptnr_parent: partnerParent,
 				ptnr_is_cust: (req.body.partnerIsCustomer)? req.body.partnerIsCustomer : 'N',
 				ptnr_is_vend: (req.body.partnerIsVendor)? req.body.partnerIsVendor : 'N',
 				ptnr_active: (req.body.partnerActive)? req.body.partnerActive : 'N',
@@ -170,7 +173,8 @@ class PartnerController {
 							$37: value[36],
 							$38: value[37],
 							$39: value[38],
-							$40: value[39]
+							$40: value[39],
+							$41: value[40]
 						}
 					})
 				}
@@ -285,6 +289,51 @@ class PartnerController {
 					error: error.message
 				})
 		}
+	}
+
+	getParentSales = (req, res) => {
+		PtnrMstr.findAll({
+			attributes: [
+				'ptnr_id',
+				'ptnr_name',
+				[
+					Sequelize.literal('ptnr_group.ptnrg_desc'), 'group'
+				]
+			],
+			include: [
+				{
+					model: PtnrgGrp,
+					as: 'ptnr_group',
+					attributes: []
+				}
+			],
+			where: {
+				ptnr_ptnrg_id: {
+					[Op.in]: (req.query.groupid) ? [parseInt(req.query.groupid)] : [998, 9911]
+				},
+				ptnr_name: {
+					[Op.iLike]: (req.query.search) ? `%${req.query.search}%` : '%%'
+				},
+				ptnr_is_cust: 'Y',
+				ptnr_active: 'Y'
+			}
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'success',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'failed!',
+					data: null,
+					error: err.message
+				})
+		})
 	}
 }
 

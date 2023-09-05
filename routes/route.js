@@ -37,7 +37,8 @@ class Route {
                     partner: {
                         partner_index_and_create: '/',
                         partner_detail: '/:ptnr_oid/detail',
-                        partner_mitra: '/mitra'
+                        partner_mitra: '/mitra',
+                        partner_parent: '/parent'
                     },
                     partnerAddress: {
                         address_create: '/', //done
