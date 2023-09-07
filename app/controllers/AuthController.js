@@ -1,5 +1,5 @@
 require('dotenv').config({path: 'root/microservice_dev/orderMicroservice/.env'})
-const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, ArMstr, TokenStorage} = require('../../models')
+const {TConfUser, TConfGroup, PlansMstr, VisitMstr, EnMstr, PtnrMstr, PtnraAddr, PtnrgGrp, ArMstr, TokenStorage} = require('../../models')
 const cryptr = require('cryptr')
 const crypter = new cryptr('thisIsSecretPassword')
 const jwt = require('jsonwebtoken')
@@ -123,12 +123,16 @@ const AuthController = {
 			let user = await TConfUser.findOne({
 				attributes: [
 					'userid',
+					'user_ptnr_id',
 					'usernama',
 					'password',
 					'nik_id',
 					[Sequelize.col('group.groupnama'), 'groupnama'],
 					[Sequelize.col('detail_user.ptnr_code'), 'ptnr_code'],
 					[Sequelize.col('entity.en_desc'), 'en_desc'],
+					[Sequelize.col('detail_user->ptnr_group.ptnrg_id'), 'partner_group_id'],
+					[Sequelize.col('detail_user->ptnr_group.ptnrg_desc'), 'partner_group'],
+					[Sequelize.col('detail_user.ptnr_area_id'), 'area_id'],
 					[
 						Sequelize.fn('CONCAT', 
 							Sequelize.col('detail_user->address_partner.ptnra_line_1'), 
@@ -157,6 +161,12 @@ const AuthController = {
 								as: 'address_partner',
 								required: false,
 								attributes: []
+							},
+							{
+								model: PtnrgGrp,
+								as: 'ptnr_group',
+								required: false,
+								attributes: []
 							}
 						]
 					}, {
@@ -181,7 +191,7 @@ const AuthController = {
 				.json({
 					status: 'gagal',
 					message: 'gagal mengambil data profile',
-					error: error.message
+					error: error.stack
 				})
 		}
 	},
