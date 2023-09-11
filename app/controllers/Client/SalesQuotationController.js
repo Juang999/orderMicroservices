@@ -1,4 +1,23 @@
-const {SqMstr, SqdDet, SiMstr, LocMstr, PtnrMstr, SoMstr, SoShipMstr, ArMstr, PiMstr, sequelize, PtnrgGrp, PtMstr, PidDet, PiddDet, CodeMstr, InvcMstr, InvctTable, AreaMstr} = require('../../../models')
+const {
+	SqMstr, 
+	SqdDet, 
+	SiMstr, 
+	LocMstr, 
+	PtnrMstr, 
+	SoMstr, 
+	SoShipMstr, 
+	ArMstr, 
+	PiMstr, 
+	sequelize, 
+	PtnrgGrp, 
+	PtMstr, 
+	PidDet, 
+	PiddDet, 
+	CodeMstr, 
+	InvcMstr, 
+	InvctTable, 
+	AreaMstr
+} = require('../../../models')
 const {Op, Sequelize} = require('sequelize')
 const helper = require('../../../helper/helper')
 const {v4: uuidv4} = require('uuid')
@@ -28,10 +47,30 @@ class SalesQuotationController {
 	}
 
 	getLocation = (req, res) => {
+		let locId
+
+		switch (req.params.en_id) {
+			case "1":
+				locId = [10001]
+				break;
+
+			case "2":
+				locId = [200010]
+				break;
+
+			case "3":
+				locId = [300018]
+				break;
+
+			default:
+				locId = [10001, 200010, 300018]
+				break;
+		}
+
 		LocMstr.findAll({
 			where: {
 				loc_id: {
-					[Op.in]: [10001, 1000122, 1000121, 10006, 1000191, 1000166, 100091]
+					[Op.in]: locId
 				}
 			},
 			attributes: ['loc_id', 'loc_desc']
@@ -179,25 +218,21 @@ class SalesQuotationController {
 	}
 
 	getProduct = async (req, res) => {
-		let where = {
-			[Op.and]: [
-				Sequelize.where(Sequelize.col('pt_id'), {
-					[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
-				}),
-				Sequelize.where(Sequelize.col('pt_id'), {
-					[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
-				})
-			]
-		}
-	
 		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
 	
 		let pageQuery = (req.query.page) ? req.query.page : 1
 		let {limit, offset} = helper.page(pageQuery, 10)
 	
 		PtMstr.findAll({
-			attributes: ['pt_id', 'pt_code', 'pt_desc1', 'pt_desc2', 'pt_clothes_id'],
-			where: where,
+			attributes: [
+				'pt_id', 
+				'pt_code', 
+				'pt_desc1', 
+				'pt_clothes_id',
+				[Sequelize.col('price->detail_price.pidd_price'), 'price'],
+				[Sequelize.fn('ROUND', Sequelize.col('price->detail_price.pidd_disc'), 2), 'discount'],
+				[Sequelize.col('Qty.invc_qty_available'), 'qty']
+			],
 			offset: offset,
 			limit: limit,
 			order: [['pt_clothes_id', 'asc']],
@@ -205,52 +240,52 @@ class SalesQuotationController {
 				{
 					model: PidDet,
 					as: 'price',
-					attributes: ['pid_pt_id', 'pid_pi_oid'],
-					where: {
-						[Op.and]: [
-							Sequelize.where(Sequelize.col('pid_pi_oid'), {
-								[Op.eq]: req.params.pricelistOid
-							}),
-							Sequelize.where(Sequelize.col('pid_oid'), {
-								[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
-							})
-						]
-					},
+					attributes: [],
+					required: true,
+					duplicating: false,
 					include: [
 						{
-							model: PiMstr,
-							as: 'price_list',
-							attributes: ['pi_oid', 'pi_desc']
-						}, {
 							model: PiddDet,
 							as: 'detail_price',
-							attributes: ['pidd_price', 'pidd_disc'],
-							include: [
-								{
-									model: CodeMstr,
-									as: 'PaymentType',
-									attributes: ['code_name']
-								}
-							]
+							attributes: [],
+							required: true,
+							duplicating: false,
 						}
 					]
 				}, 
 				{
 					model: InvcMstr,
 					as: 'Qty',
-					attributes: ['invc_qty_available'],
-					where: {
-						invc_loc_id: req.params.locId
-					},
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_id', 'loc_desc']
-						}
-					]
+					required: true,
+					duplicating: false,
+					attributes: [],
 				}
-			]
+			],
+			where: {
+				[Op.and]: [
+					Sequelize.where(Sequelize.col('Qty.invc_loc_id'), {
+						[Op.eq]: req.params.locId
+					}),
+					Sequelize.where(Sequelize.col('price.pid_pi_oid'), {
+						[Op.eq]: req.params.pricelistOid
+					}),
+					Sequelize.where(Sequelize.col('pt_desc1'), {
+						[Op.iLike]: `%${(req.query.query) ? req.query.query : ''}%`
+					}),
+					Sequelize.where(Sequelize.col('price->detail_price.pidd_payment_type'), {
+						[Op.eq]: 9942
+					}),
+					Sequelize.where(Sequelize.col('pt_id'), {
+						[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
+					}),
+					Sequelize.where(Sequelize.col('price.pid_oid'), {
+						[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
+					}),
+					Sequelize.where(Sequelize.col('pt_id'), {
+						[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
+					}),
+				]
+			}
 		})
 			.then(result => {
 				res.status(200)

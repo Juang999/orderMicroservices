@@ -24,6 +24,7 @@ let clientRoutes = {
     reportRouter: require('./routes/Client/report'),
     partnerRouter: require('./routes/Client/partner'),
     productRouter: require('./routes/Client/product-knowledge'),
+    pointOfSalesRouter: require('./routes/Client/point-of-sales'),
     partnerAddressRouter: require('./routes/Client/partner-address'),
     salesQuotationRouter: require('./routes/Client/sales-quotation'),
     partnerContactRouter: require('./routes/Client/partner-contact-address'),
@@ -58,6 +59,7 @@ app.use(`${route_service}${Client.route_client}/report`, clientRoutes.reportRout
 app.use(`${route_service}${Client.route_client}/partner`, clientRoutes.partnerRouter)
 app.use(`${route_service}${Client.route_client}/product`, clientRoutes.productRouter)
 app.use(`${route_service}${Client.route_client}/sales-quotation`, salesQuotationRouter)
+app.use(`${route_service}${Client.route_client}/point-of-sales`, clientRoutes.pointOfSalesRouter)
 app.use(`${route_service}${Client.route_client}/partner-address`, clientRoutes.partnerAddressRouter)
 app.use(`${route_service}${Client.route_client}/partner-contact-address`, clientRoutes.partnerContactRouter)
 
