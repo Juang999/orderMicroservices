@@ -218,91 +218,54 @@ class SalesQuotationController {
 	}
 
 	getProduct = async (req, res) => {
-		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
-	
-		let pageQuery = (req.query.page) ? req.query.page : 1
-		let {limit, offset} = helper.page(pageQuery, 10)
-	
-		PtMstr.findAll({
-			attributes: [
-				'pt_id', 
-				'pt_code', 
-				'pt_desc1', 
-				'pt_clothes_id',
-				[Sequelize.col('price->detail_price.pidd_price'), 'price'],
-				[Sequelize.fn('ROUND', Sequelize.col('price->detail_price.pidd_disc'), 2), 'discount'],
-				[Sequelize.col('Qty.invc_qty_available'), 'qty']
-			],
-			offset: offset,
-			limit: limit,
-			order: [['pt_clothes_id', 'asc']],
-			include: [
-				{
-					model: PidDet,
-					as: 'price',
-					attributes: [],
-					required: true,
-					duplicating: false,
-					include: [
-						{
-							model: PiddDet,
-							as: 'detail_price',
-							attributes: [],
-							required: true,
-							duplicating: false,
-						}
+		try {
+			let pageQuery = (req.query.page) ? req.query.page : 1
+			let {limit, offset} = helper.page(pageQuery, 10)
+
+			let dataProducts = await PtMstr.findAll({
+				attributes: [
+					'pt_id', 
+					'pt_code', 
+					'pt_desc1', 
+					'pt_clothes_id',
+				],
+				offset: offset,
+				limit: limit,
+				order: [['pt_clothes_id', 'asc']],
+				where: {
+					[Op.and]: [
+						Sequelize.where(Sequelize.col('pt_id'), {
+							[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
+						}),
+						Sequelize.where(Sequelize.col('pt_id'), {
+							[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
+						}),
 					]
-				}, 
-				{
-					model: InvcMstr,
-					as: 'Qty',
-					required: true,
-					duplicating: false,
-					attributes: [],
 				}
-			],
-			where: {
-				[Op.and]: [
-					Sequelize.where(Sequelize.col('Qty.invc_loc_id'), {
-						[Op.eq]: req.params.locId
-					}),
-					Sequelize.where(Sequelize.col('price.pid_pi_oid'), {
-						[Op.eq]: req.params.pricelistOid
-					}),
-					Sequelize.where(Sequelize.col('pt_desc1'), {
-						[Op.iLike]: `%${(req.query.query) ? req.query.query : ''}%`
-					}),
-					Sequelize.where(Sequelize.col('price->detail_price.pidd_payment_type'), {
-						[Op.eq]: 9942
-					}),
-					Sequelize.where(Sequelize.col('pt_id'), {
-						[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
-					}),
-					Sequelize.where(Sequelize.col('price.pid_oid'), {
-						[Op.in]: Sequelize.literal(`(SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId})`)
-					}),
-					Sequelize.where(Sequelize.col('pt_id'), {
-						[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
-					}),
-				]
+			})
+
+			for (const dataProduct of dataProducts) {
+				let {qty, price_now, discount} = await this.priceAndQty(dataProduct.dataValues.pt_id, req.params.locId, req.params.pricelistOid, 9942, req.params.areaId)
+
+				dataProduct.dataValues.price_now = price_now
+				dataProduct.dataValues.discount = discount
+				dataProduct.dataValues.qty = qty
 			}
-		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data produk',
-						error: err.message
-					})
-			})
+
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data',
+					data: dataProducts
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data produk',
+					error: error.message
+				})
+		}
 	}
 
 	getLimitCreditCustomer = async (req, res) => {
@@ -742,6 +705,38 @@ class SalesQuotationController {
 	
 	
 		return unitMeasureProduct
+	}
+
+	priceAndQty = async (ptId, locId, piOid, piddPaymentType, areaId) => {
+		let qty = InvcMstr.findOne({
+			attributes: [['invc_qty_available', 'Qty']],
+			where: {
+				invc_pt_id: ptId,
+				invc_loc_id: locId
+			}
+		})
+
+		let price = PiddDet.findOne({
+			attributes: [
+				['pidd_price', 'price_now'],
+				[Sequelize.fn('ROUND', Sequelize.col('pidd_disc'), 2), 'discount']
+			],
+			where: {
+				pidd_payment_type: piddPaymentType,
+				pidd_area_id: areaId,
+				pidd_pid_oid: {
+					[Op.eq]: Sequelize.literal(`(SELECT pid_oid FROM public.pid_det WHERE pid_pt_id = ${ptId} AND pid_pi_oid = '${piOid}')`)
+				}
+			}
+		})
+
+		let dataDetail = await Promise.all([qty, price])
+
+		return {
+			qty: dataDetail[0].dataValues.Qty,
+			price_now: dataDetail[1].dataValues.price_now,
+			discount: dataDetail[1].dataValues.discount
+		}
 	}
 }
 
