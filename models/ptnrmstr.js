@@ -100,6 +100,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'ptnr_id',
         foreignKey: 'so_sales_person'
       })
+
+      PtnrMstr.hasOne(models.LocMstr, {
+        as: 'warehouse',
+        sourceKey: 'ptnr_id',
+        foreignKey: 'loc_ptnr_id'
+      })
     }
   }
   PtnrMstr.init({
