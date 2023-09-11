@@ -38,7 +38,8 @@ class Route {
                         partner_index_and_create: '/',
                         partner_detail: '/:ptnr_oid/detail',
                         partner_mitra: '/mitra',
-                        partner_parent: '/parent'
+                        partner_parent: '/parent',
+                        partner_warehouse: '/warehouse'
                     },
                     partnerAddress: {
                         address_create: '/', //done
@@ -99,6 +100,9 @@ class Route {
                     report: {
                         report_total_so: '/so',
                         report_total_sq: '/sq'
+                    },
+                    pointofsales: {
+                        pos_product_consigment: '/:warehouse_id/product-consigment'
                     }
                 }
             },
