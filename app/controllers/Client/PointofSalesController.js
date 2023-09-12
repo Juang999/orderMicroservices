@@ -17,6 +17,7 @@ class PointofSalesController {
                 return
             }
 
+
             let dataProductConsigment = await SoshipdDet.findAll({
                 attributes: [
                     [Sequelize.col('warehouse_shippment.loc_id'), 'warehouse_id'],
@@ -27,7 +28,7 @@ class PointofSalesController {
                     [Sequelize.col('detail_sales_order->detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_sales_order.sod_qty'), 'qty'],
                     [Sequelize.col('detail_sales_order.sod_qty_shipment'), 'qty_shipment'],
-                    [Sequelize.fn('TO_CHAR', Sequelize.col('soshipd_dt'), 'YYYY-MM-DD HH24:mm:ss'), 'shippment_date']
+                    [Sequelize.fn('TO_CHAR', Sequelize.col('soshipd_dt'), 'YYYY-MM-DD HH24:mi:ss'), 'shippment_date']
                 ],
                 include: [
                     {
@@ -59,7 +60,7 @@ class PointofSalesController {
                     soshipd_loc_id: req.params.warehouse_id,
                     soshipd_dt: {
                         [Op.between]: [
-                            Sequelize.literal(`(SELECT soshipd_dt FROM public.soshipd_det WHERE soshipd_loc_id = ${req.params.warehouse_id} AND soshipd_dt > '${req.query.last_date}' ORDER BY soshipd_dt ASC LIMIT 1)`),
+                            Sequelize.literal(`(SELECT soshipd_dt FROM public.soshipd_det WHERE soshipd_loc_id = ${req.params.warehouse_id} AND soshipd_dt > '${moment.unix(req.query.last_date).format('YYYY-MM-DD HH:mm:ss')}' ORDER BY soshipd_dt ASC LIMIT 1)`),
                             Sequelize.literal(`(SELECT soshipd_dt FROM public.soshipd_det WHERE soshipd_loc_id = ${req.params.warehouse_id} ORDER BY soshipd_dt DESC LIMIT 1)`)
                         ]
                     }
@@ -96,7 +97,7 @@ class PointofSalesController {
         })
 
         let momentSoshipdDt = moment(soshipd_dt).format('YYYY-MM-DD HH:mm:ss')
-        let momentDate = moment(date).format('YYYY-MM-DD HH:mm:ss')
+        let momentDate = moment.unix(date).format('YYYY-MM-DD HH:mm:ss')
 
         return (momentSoshipdDt == momentDate) ? true : false
     }
