@@ -28,6 +28,7 @@ class PointofSalesController {
                     [Sequelize.col('detail_sales_order->detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_sales_order.sod_qty'), 'qty'],
                     [Sequelize.col('detail_sales_order.sod_qty_shipment'), 'qty_shipment'],
+                    [Sequelize.col('detail_sales_order.sod_price'), 'product_price'],
                     [Sequelize.fn('TO_CHAR', Sequelize.col('soshipd_dt'), 'YYYY-MM-DD HH24:mi:ss'), 'shippment_date']
                 ],
                 include: [
