@@ -21,6 +21,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'ptsfr_oid',
         foreignKey: 'ptsfrd_ptsfr_oid'
       })
+
+      PtsfrMstr.belongsTo(models.LocMstr, {
+        as: 'detail_location_purpose',
+        targetKey: 'loc_id',
+        foreignKey: 'ptsfr_loc_to_id'
+      })
     }
   }
   PtsfrMstr.init({

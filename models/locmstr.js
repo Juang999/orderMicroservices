@@ -28,6 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'ptnr_id',
         foreignKey: 'loc_ptnr_id'
       })
+
+      LocMstr.hasMany(models.PtsfrMstr, {
+        as: 'location_to',
+        sourceKey: 'loc_id',
+        foreignKey: 'ptsfr_loc_to_id'
+      })
     }
   }
   LocMstr.init({
