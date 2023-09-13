@@ -342,7 +342,12 @@ class PartnerController {
 				['wh_oid', 'warehouse_oid'],
 				['wh_id', 'warehouse_id'],
 				['wh_desc', 'warehouse_name']
-			]
+			],
+			where: {
+				wh_id: {
+					[Op.in]: Sequelize.literal(`(SELECT DISTINCT loc_wh_id FROM public.loc_mstr)`)
+				}
+			}
 		})
 		.then(result => {
 			res.status(200)
