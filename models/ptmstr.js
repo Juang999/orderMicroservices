@@ -67,6 +67,18 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'pt_id',
         foreignKey: 'sod_pt_id'
       })
+
+      PtMstr.hasMany(models.SqdDet, {
+        as: 'detail_sales_quotation',
+        sourceKey: 'pt_id',
+        foreignKey: 'sqd_pt_id'
+      })
+
+      PtMstr.hasMany(models.PtsfrdDet, {
+        as: 'detail_product_transfer',
+        sourceKey: 'pt_id',
+        foreignKey: 'ptsfrd_pt_id'
+      })
     }
   }
   PtMstr.init({

@@ -10,7 +10,17 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      PtsfrMstr.belongsTo(models.SqMstr, {
+        as: 'sales_quotation',
+        targetKey: 'sq_oid',
+        foreignKey: 'ptsfr_sq_oid'
+      })
+
+      PtsfrMstr.hasMany(models.PtsfrdDet, {
+        as: 'detail_consigment_items',
+        sourceKey: 'ptsfr_oid',
+        foreignKey: 'ptsfrd_ptsfr_oid'
+      })
     }
   }
   PtsfrMstr.init({

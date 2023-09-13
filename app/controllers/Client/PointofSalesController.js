@@ -1,79 +1,90 @@
-const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PtsfrMstr, PtsfrdDet, LocMstr, PtnrMstr, PtMstr, Sequelize} = require('../../../models')
+const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PtsfrMstr, PtsfrdDet, SqMstr, SqdDet, LocMstr, PtnrMstr, PtMstr, Sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const moment = require('moment')
 
 class PointofSalesController {
     getProductConsigment = async (req, res) => {
         try {
-            if (await this.checkLastSentProduct(req.params.warehouse_id, req.query.last_date) == true) {
-                res.status(300)
-                    .json({
-                        code: 300,
-                        status: 'data telah terkirim',
-                        data: null,
-                        error: null
-                    })
-
-                return
+            let where = {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('ptsfrd_qty_receive'), {
+                        [Op.not]: null
+                    }),
+                    Sequelize.where(Sequelize.col('header_ptsfr->sales_quotation.sq_sales_program'), {
+                        [Op.eq]: 'SATSET'
+                    }),
+                ]
             }
 
+            if (req.query.last_date) {
+                if (await this.checkLastSentProduct(req.params.warehouse_id, req.query.last_date) == true) {
+                    res.status(300)
+                        .json({
+                            code: 300,
+                            status: 'data telah terkirim',
+                            data: null,
+                            error: null
+                        })
 
-            let dataProductConsigment = await SoshipdDet.findAll({
+                    return
+                }
+
+                where[Op.and][2] = Sequelize.where(Sequelize.col('header_ptsfr.ptsfr_dt'), {
+                    [Op.between]: [
+                            Sequelize.literal(`(SELECT ptsfr_dt FROM public.ptsfr_mstr WHERE ptsfr_loc_to_id = ${req.params.warehouse_id} AND ptsfr_dt > '${moment.unix(req.query.last_date).format('YYYY-MM-DD HH:mm:ss')}' ORDER BY ptsfr_dt ASC LIMIT 1)`),
+                            Sequelize.literal(`(SELECT ptsfr_dt FROM public.ptsfr_mstr WHERE ptsfr_loc_to_id = ${req.params.warehouse_id} ORDER BY ptsfr_dt DESC LIMIT 1)`)
+                        ]
+                })
+            }
+
+            let rawDataProduct = await PtsfrdDet.findAll({
                 attributes: [
-                    [Sequelize.col('warehouse_shippment.loc_id'), 'warehouse_id'],
-                    [Sequelize.col('warehouse_shippment.loc_desc'), 'warehouse_name'],
-                    [Sequelize.col('warehouse_shippment->warehouse_owner.ptnr_name'), 'owner_name'],
-                    [Sequelize.col('detail_sales_order->detail_product.pt_desc1'), 'product_name'],
-                    [Sequelize.col('detail_sales_order->detail_product.pt_id'), 'product_id'],
-                    [Sequelize.col('detail_sales_order->detail_product.pt_code'), 'product_partnumber'],
-                    [Sequelize.col('detail_sales_order.sod_qty'), 'qty'],
-                    [Sequelize.col('detail_sales_order.sod_qty_shipment'), 'qty_shipment'],
-                    [Sequelize.col('detail_sales_order.sod_price'), 'product_price'],
-                    [Sequelize.fn('TO_CHAR', Sequelize.col('soshipd_dt'), 'YYYY-MM-DD HH24:mi:ss'), 'shippment_date']
+                    ['ptsfrd_pt_id', 'pt_id'],
+                    [Sequelize.col('detail_product.pt_desc1'), 'product_name'],
+                    ['ptsfrd_qty', 'qty'],
+                    ['ptsfrd_qty_receive', 'qty_receive'],
+                    [Sequelize.col('header_ptsfr.ptsfr_oid'), 'ptsfr_oid'],
+                    [Sequelize.col('header_ptsfr->sales_quotation.sq_oid'), 'sq_oid']
                 ],
                 include: [
                     {
-                        model: SodDet,
-                        as: 'detail_sales_order',
+                        model: PtMstr,
+                        as: 'detail_product',
                         attributes: [],
+                        required: true,
+                        duplicating: false
+                    }, {
+                        model: PtsfrMstr,
+                        as: 'header_ptsfr',
+                        attributes: [],
+                        required: true,
+                        duplicating: false,
                         include: [
                             {
-                                model: PtMstr,
-                                as: 'detail_product',
-                                attributes: []
-                            }
-                        ]
-                    },
-                    {
-                        model: LocMstr,
-                        as: 'warehouse_shippment',
-                        attributes: [],
-                        include: [
-                            {
-                                model: PtnrMstr,
-                                as: 'warehouse_owner',
-                                attributes: []
+                                model: SqMstr,
+                                as: 'sales_quotation',
+                                attributes: [],
+                                required: true,
+                                duplicating: false,
+                                nest: true,
+                                raw: true,
                             }
                         ]
                     }
                 ],
-                where: {
-                    soshipd_loc_id: req.params.warehouse_id,
-                    soshipd_dt: {
-                        [Op.between]: [
-                            Sequelize.literal(`(SELECT soshipd_dt FROM public.soshipd_det WHERE soshipd_loc_id = ${req.params.warehouse_id} AND soshipd_dt > '${moment.unix(req.query.last_date).format('YYYY-MM-DD HH:mm:ss')}' ORDER BY soshipd_dt ASC LIMIT 1)`),
-                            Sequelize.literal(`(SELECT soshipd_dt FROM public.soshipd_det WHERE soshipd_loc_id = ${req.params.warehouse_id} ORDER BY soshipd_dt DESC LIMIT 1)`)
-                        ]
-                    }
-                },
-                order: [['shippment_date', 'asc']]
+                where: where,
+                limit: 20
             })
+
+            for (const dataProduct of rawDataProduct) {
+                dataProduct.dataValues.product_price = await this.getDetailProductConsigment(dataProduct.dataValues.sq_oid, dataProduct.dataValues.pt_id)
+            }
 
             res.status(200)
                 .json({
                     code: 200,
                     status: 'success',
-                    data: dataProductConsigment,
+                    data: rawDataProduct,
                     error: null
                 })
         } catch (error) {
@@ -87,17 +98,28 @@ class PointofSalesController {
         }
     }
 
-    checkLastSentProduct = async (warehouse_id, date) => {
-        let {soshipd_dt} = await SoshipdDet.findOne({
-            attributes: ['soshipd_dt'],
+    getDetailProductConsigment = async (sq_oid, pt_id) => {
+        let {sqd_price} = await SqdDet.findOne({
+            attributes: ['sqd_price'],
             where: {
-                soshipd_loc_id: warehouse_id
-            },
-            limit: 1,
-            order: [['soshipd_dt', 'desc']]
+                sqd_sq_oid: sq_oid,
+                sqd_pt_id: pt_id
+            }
         })
 
-        let momentSoshipdDt = moment(soshipd_dt).format('YYYY-MM-DD HH:mm:ss')
+        return sqd_price
+    }
+
+    checkLastSentProduct = async (warehouse_id, date) => {
+        let {ptsfr_dt} = await PtsfrMstr.findOne({
+            attributes: ['ptsfr_dt'],
+            where: {
+                ptsfr_loc_to_id: warehouse_id
+            },
+            order: [['ptsfr_dt', 'desc']]
+        })
+
+        let momentSoshipdDt = moment(ptsfr_dt).format('YYYY-MM-DD HH:mm:ss')
         let momentDate = moment.unix(date).format('YYYY-MM-DD HH:mm:ss')
 
         return (momentSoshipdDt == momentDate) ? true : false

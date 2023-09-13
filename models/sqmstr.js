@@ -21,6 +21,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sq_ptnr_id_sold',
         targetKey: 'ptnr_id'
       })
+
+      SqMstr.hasOne(models.PtsfrMstr, {
+        as: 'consigment_item',
+        sourceKey: 'sq_oid',
+        foreignKey: 'ptsfr_sq_oid'
+      })
+
+      SqMstr.hasMany(models.SqdDet, {
+        as: 'detail_sales_quotation',
+        sourceKey: 'sq_oid',
+        foreignKey: 'sqd_sq_oid'
+      })
     }
   }
   SqMstr.init({
