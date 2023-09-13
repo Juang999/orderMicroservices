@@ -13,6 +13,9 @@ class PointofSalesController {
                     Sequelize.where(Sequelize.col('header_ptsfr->sales_quotation.sq_sales_program'), {
                         [Op.eq]: 'SATSET'
                     }),
+                    Sequelize.where(Sequelize.col('header_ptsfr.ptsfr_loc_to_id'), {
+                        [Op.eq]: req.params.warehouse_id
+                    })
                 ]
             }
 
@@ -39,12 +42,16 @@ class PointofSalesController {
 
             let rawDataProduct = await PtsfrdDet.findAll({
                 attributes: [
-                    ['ptsfrd_pt_id', 'pt_id'],
+                    [Sequelize.col('header_ptsfr.ptsfr_loc_to_id'), 'location_id'],
+                    [Sequelize.col('header_ptsfr->detail_location_purpose.loc_desc'), 'location_name'],
+                    [Sequelize.col('detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_product.pt_desc1'), 'product_name'],
-                    ['ptsfrd_qty', 'qty'],
-                    ['ptsfrd_qty_receive', 'qty_receive'],
-                    [Sequelize.col('header_ptsfr.ptsfr_oid'), 'ptsfr_oid'],
-                    [Sequelize.col('header_ptsfr->sales_quotation.sq_oid'), 'sq_oid']
+                    ['ptsfrd_qty_receive', 'qty_shippment'],
+                    ['ptsfrd_dt', 'shippment_date'],
+                    ['ptsfrd_pt_id', 'pt_id'],
+                    // ['ptsfrd_qty', 'qty'],
+                    // [Sequelize.col('header_ptsfr.ptsfr_oid'), 'ptsfr_oid'],
+                    [Sequelize.col('header_ptsfr->sales_quotation.sq_oid'), 'sq_oid'],
                 ],
                 include: [
                     {
@@ -68,12 +75,17 @@ class PointofSalesController {
                                 duplicating: false,
                                 nest: true,
                                 raw: true,
+                            }, {
+                                model: LocMstr,
+                                as: 'detail_location_purpose'   ,
+                                attributes: [],
+                                required: true,
+                                duplicating: false
                             }
                         ]
                     }
                 ],
                 where: where,
-                limit: 20
             })
 
             for (const dataProduct of rawDataProduct) {
