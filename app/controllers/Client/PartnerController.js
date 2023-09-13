@@ -1,5 +1,5 @@
 const {Op} = require('sequelize')
-const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr, LocMstr, Sequelize} = require('../../../models')
+const {PtnrMstr, PtnraAddr, PtnrgGrp, CodeMstr, EnMstr, LocMstr, WhMstr, Sequelize} = require('../../../models')
 const {v4: uuidv4} = require('uuid')
 const helper = require('../../../helper/helper')
 const moment = require('moment')
@@ -337,13 +337,41 @@ class PartnerController {
 	}
 
 	getPartnerWithWarehouse = (req, res) => {
+		WhMstr.findAll({
+			attributes: [
+				['wh_oid', 'warehouse_oid'],
+				['wh_id', 'warehouse_id'],
+				['wh_desc', 'warehouse_name']
+			]
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					code: 200,
+					status: 'berhasil!',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					code: 400,
+					status: 'gagal!',
+					data: null,
+					error: err.message
+				})
+		})
+	}
+
+	getPartnerWithLocation = (req, res) => {
 		PtnrMstr.findAll({
 			distinct: true,
 			attributes: [
 				['ptnr_id', 'partner_id'],
 				['ptnr_name', 'partner_name'],
-				[Sequelize.col('warehouse.loc_id'), 'warehouse_id'],
-				[Sequelize.col('warehouse.loc_desc'), 'warehouse_name']
+				[Sequelize.col('warehouse.loc_id'), 'location_id'],
+				[Sequelize.col('warehouse.loc_desc'), 'location_name']
 			],
 			include: [
 				{
@@ -359,6 +387,9 @@ class PartnerController {
 					}),
 					Sequelize.where(Sequelize.col('ptnr_is_emp'), {
 						[Op.eq]: 'N'
+					}),
+					Sequelize.where(Sequelize.col('warehouse.loc_wh_id'), {
+						[Op.eq]: req.params.warehouse_id
 					})
 				]
 			}

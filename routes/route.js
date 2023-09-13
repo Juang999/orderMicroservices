@@ -39,7 +39,8 @@ class Route {
                         partner_detail: '/:ptnr_oid/detail',
                         partner_mitra: '/mitra',
                         partner_parent: '/parent',
-                        partner_warehouse: '/warehouse'
+                        partner_warehouse: '/warehouse',
+                        partner_location: '/:warehouse_id/location'
                     },
                     partnerAddress: {
                         address_create: '/', //done
@@ -103,6 +104,9 @@ class Route {
                     },
                     pointofsales: {
                         pos_product_consigment: '/:warehouse_id/product-consigment'
+                    },
+                    inventory: {
+                        invc_transfer_receipt: '/transfer-receipt'
                     }
                 }
             },
