@@ -106,7 +106,8 @@ class Route {
                         pos_product_consigment: '/:warehouse_id/product-consigment'
                     },
                     inventory: {
-                        invc_transfer_receipt: '/transfer-receipt'
+                        invc_transfer_receipt: '/transfer-receipt',
+                        invc_detail_transfer_receipt: '/:ptsfr_oid/detail-transfer-receipt',
                     }
                 }
             },

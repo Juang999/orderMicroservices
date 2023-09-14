@@ -27,6 +27,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'loc_id',
         foreignKey: 'ptsfr_loc_to_id'
       })
+
+      PtsfrMstr.belongsTo(models.EnMstr, {
+        as: 'entity',
+        targetKey: 'en_id',
+        foreignKey: 'ptsfr_en_id'
+      })
     }
   }
   PtsfrMstr.init({

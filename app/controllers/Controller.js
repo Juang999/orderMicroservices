@@ -13,7 +13,8 @@ class Controller {
 				VisitController: require('./Client/VisitController'),
 				SalesQuotationController: require('./Client/SalesQuotationController'),
 				ReportController: require('./Client/ReportController'),
-				PointofSalesController: require('./Client/PointofSalesController')
+				PointofSalesController: require('./Client/PointofSalesController'),
+				InventoryController: require('./Client/InventoryController')
 			},
 			Default: {
 				AuthController: require('./AuthController'),

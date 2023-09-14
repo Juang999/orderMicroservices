@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       })
 
       LocMstr.belongsTo(models.PtnrMstr, {
-        as: 'warehouse_owner',
+        as: 'location_owner',
         targetKey: 'ptnr_id',
         foreignKey: 'loc_ptnr_id'
       })
