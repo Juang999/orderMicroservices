@@ -1,4 +1,4 @@
-const {PtMstr, InvcMstr, SodDet, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, SoshipdDet, PtnrMstr, LocMstr, EnMstr, Sequelize} = require('../../../models')
+const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, Sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const {auth, page} = require('../../../helper/helper')
 
@@ -14,7 +14,6 @@ class InventoryController {
                     ['ptsfr_oid', 'transfer_oid'],
                     ['ptsfr_loc_to_id', 'location_id'],
                     [Sequelize.col('entity.en_desc'), 'entity_name'],
-                    [Sequelize.col('sales_quotation.sq_ship_to'), 'ship_to'],
                     [Sequelize.col('detail_location_purpose.loc_desc'), 'location_name'],
                     [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
                     [Sequelize.fn('SUM', Sequelize.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
@@ -32,10 +31,6 @@ class InventoryController {
                                 attributes: []
                             }
                         ]
-                    }, {
-                        model: SqMstr,
-                        as: 'sales_quotation',
-                        attributes: [],
                     }, {
                         model: PtsfrdDet,
                         as: 'detail_consigment_items',
@@ -62,8 +57,7 @@ class InventoryController {
                     'ptsfr_oid',
                     'location_name',
                     'receiver_name',
-                    'entity_name',
-                    'ship_to'
+                    'entity_name'
                 ]
             })
 
