@@ -1,6 +1,7 @@
-const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, Sequelize} = require('../../../models')
+const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, Sequelize, sequelize} = require('../../../models')
 const {Op} = require('sequelize')
-const {auth, page} = require('../../../helper/helper')
+const {auth, page, Query: query} = require('../../../helper/helper')
+let moment = require('moment')
 
 class InventoryController {
     getInventoryTransferReceipt = async (req, res) => {
@@ -13,11 +14,11 @@ class InventoryController {
                 attributes: [
                     ['ptsfr_oid', 'transfer_oid'],
                     ['ptsfr_loc_to_id', 'location_id'],
-                    [Sequelize.col('entity.en_desc'), 'entity_name'],
-                    [Sequelize.col('detail_location_purpose.loc_desc'), 'location_name'],
-                    [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
-                    [Sequelize.fn('SUM', Sequelize.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
-                    [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_dt'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
+                    [SequelizeModel.col('entity.en_desc'), 'entity_name'],
+                    [SequelizeModel.col('detail_location_purpose.loc_desc'), 'location_name'],
+                    [SequelizeModel.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
+                    [SequelizeModel.fn('SUM', SequelizeModel.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
+                    [SequelizeModel.fn('TO_CHAR', SequelizeModel.col('ptsfr_dt'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
                 ],
                 include: [
                     {
@@ -45,10 +46,10 @@ class InventoryController {
                 ],
                 where: {
                     ptsfr_loc_to_id: {
-                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id}))`)
+                        [Op.in]: SequelizeModel.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id}))`)
                     },
                     ptsfr_receive_date: {
-                        [Op.is]: (req.query.is_complete == 'Y') ? Sequelize.literal('NOT NULL') : Sequelize.literal('NULL')
+                        [Op.is]: (req.query.is_complete == 'Y') ? SequelizeModel.literal('NOT NULL') : SequelizeModel.literal('NULL')
                     }
                 },
                 limit: limit,
@@ -82,11 +83,11 @@ class InventoryController {
             attributes: [
                 'ptsfr_oid',
                 'ptsfr_code',
-                [Sequelize.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
+                [SequelizeModel.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
                 'ptsfr_dt',
-                [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
-                [Sequelize.fn('SUM', Sequelize.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
-                [Sequelize.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
+                [SequelizeModel.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
+                [SequelizeModel.fn('SUM', SequelizeModel.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
+                [SequelizeModel.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
             ],
             include: [
                 {
@@ -96,7 +97,7 @@ class InventoryController {
                     duplicating: false,
                     attributes: [
                         'ptsfrd_oid',
-                        [Sequelize.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
+                        [SequelizeModel.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
                         'ptsfrd_qty',
                     ],
                     include: [
@@ -153,6 +154,78 @@ class InventoryController {
                     error: err.message
                 })
         })
+    }
+
+    updateTransferReceipt = async (req, res) => {
+        const authUser = await auth(req.headers['authorization'])
+        let transaction = await sequelize.transaction()
+        
+        try {
+            const detailTransferReceipt = JSON.parse(req.body.body_transfer_receipt)
+
+            await PtsfrMstr.update({
+                ptsfr_receive_date: moment().format('YYYY-MM-DD'),
+                ptsfr_upd_by: authUser.usernama,
+                ptsfr_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
+            }, {
+                where: {
+                    ptsfr_oid: req.params.ptsfr_oid
+                },
+                logging: async (sql, queryObject) => {
+                    let value = queryObject.bind
+                    
+                    await query.insert(sql, {
+                        bind: {
+                            $1: value[0],
+                            $2: value[1],
+                            $3: value[2],
+                            $4: value[3]
+                        }
+                    })
+                }
+            })
+
+            for (const detailData of detailTransferReceipt) {
+                await PtsfrdDet.update({
+                    ptsfrd_qty_receive: detailData.qty_receive,
+                    ptsfrd_upd_by: authUser.usernama,
+                    ptsfrd_upd_date: moment().format('YYYY-MM-DD HH:ii:ss')
+                }, {
+                    where: {
+                        ptsfrd_oid: detailData.ptsfrd_oid
+                    },
+                    logging: async (sql, queryObject) => {
+                        let value = queryObject.bind
+                        
+                        await query.insert(sql, {
+                            bind: {
+                                $1: value[0],
+                                $2: value[1],
+                                $3: value[2],
+                                $4: value[3]
+                            }
+                        })
+                    }
+                })
+            }
+
+            transaction.commit()
+
+            res.status(200)
+                .json({
+                    status: 'success',
+                    data: true,
+                    error: null
+                })
+        } catch (error) {
+            transaction.rollback()
+            res.status(400)
+                .json({
+                    status: 'failed',
+                    data: null,
+                    error: error.message
+                })
+        }
     }
 }
 

@@ -108,6 +108,7 @@ class Route {
                     inventory: {
                         invc_transfer_receipt: '/transfer-receipt',
                         invc_detail_transfer_receipt: '/:ptsfr_oid/detail-transfer-receipt',
+                        invc_update_transfer_receipt: '/:ptsfr_oid/update-transfer-receipt'
                     }
                 }
             },
