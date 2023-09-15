@@ -376,7 +376,8 @@ class PartnerController {
 				['ptnr_id', 'partner_id'],
 				['ptnr_name', 'partner_name'],
 				[Sequelize.col('warehouse.loc_id'), 'location_id'],
-				[Sequelize.col('warehouse.loc_desc'), 'location_name']
+				[Sequelize.col('warehouse.loc_desc'), 'location_name'],
+				[Sequelize.col('warehouse.loc_parent_id'), 'location_parent_id']
 			],
 			include: [
 				{
@@ -387,14 +388,11 @@ class PartnerController {
 			],
 			where: {
 				[Op.and]: [
-					Sequelize.where(Sequelize.col('warehouse.loc_ptnr_id'), {
-						[Op.not]: null
-					}),
-					Sequelize.where(Sequelize.col('ptnr_is_emp'), {
-						[Op.eq]: 'N'
-					}),
 					Sequelize.where(Sequelize.col('warehouse.loc_wh_id'), {
 						[Op.eq]: req.params.warehouse_id
+					}),
+					Sequelize.where(Sequelize.col('warehouse.loc_parent_id'), {
+						[Op.is]: null
 					})
 				]
 			}
