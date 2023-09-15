@@ -1,4 +1,4 @@
-const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PtsfrMstr, PtsfrdDet, SqMstr, SqdDet, LocMstr, PtnrMstr, PtMstr, Sequelize} = require('../../../models')
+const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PartnerLoc, PtsfrMstr, PtsfrdDet, SqMstr, SqdDet, LocMstr, PtnrMstr, PtMstr, Sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const moment = require('moment')
 
@@ -42,8 +42,8 @@ class PointofSalesController {
 
             let rawDataProduct = await PtsfrdDet.findAll({
                 attributes: [
-                    [Sequelize.col('header_ptsfr.ptsfr_loc_to_id'), 'location_id'],
-                    [Sequelize.col('header_ptsfr->detail_location_purpose.loc_desc'), 'location_name'],
+                    [Sequelize.col('header_ptsfr->detail_location_purpose->parent_location.loc_id'), 'location_id'],
+                    [Sequelize.col('header_ptsfr->detail_location_purpose->parent_location.loc_desc'), 'location_name'],
                     [Sequelize.col('detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_product.pt_desc1'), 'product_name'],
                     ['ptsfrd_qty_receive', 'qty_shippment'],
@@ -79,7 +79,16 @@ class PointofSalesController {
                                 as: 'detail_location_purpose'   ,
                                 attributes: [],
                                 required: true,
-                                duplicating: false
+                                duplicating: false,
+                                include: [
+                                    {
+                                        model: PartnerLoc,
+                                        as: 'parent_location',
+                                        required: false,
+                                        duplicating: false,
+                                        attributes: []
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -134,6 +143,27 @@ class PointofSalesController {
         let momentDate = moment.unix(date).format('YYYY-MM-DD HH:mm:ss')
 
         return (momentSoshipdDt == momentDate) ? true : false
+    }
+
+    testRelationship = async () => {
+        let dataLocation = await LocMstr.findAll({
+            attributes: [
+                ['loc_desc', 'child_location'],
+                [Sequelize.col('parent_location.loc_desc'), 'parent_location_name']
+            ],
+            include: [
+                {
+                    model: PartnerLoc,
+                    as: 'parent_location',
+                    attributes: []
+                }
+            ],
+            where: {
+                loc_parent_id: 300099
+            }
+        })
+
+        return dataLocation
     }
 }
 

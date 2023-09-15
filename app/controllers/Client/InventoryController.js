@@ -19,7 +19,7 @@ class InventoryController {
                     [Sequelize.col('detail_location_purpose.loc_desc'), 'location_name'],
                     [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
                     [Sequelize.fn('SUM', Sequelize.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
-                    [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_dt'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
+                    [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_date'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
                 ],
                 include: [
                     {
@@ -58,6 +58,9 @@ class InventoryController {
                 },
                 limit: limit,
                 offset: offset,
+                order: [
+                    ['ptsfr_date', 'desc']
+                ],
                 group: [
                     'ptsfr_oid',
                     'location_name',
