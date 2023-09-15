@@ -14,11 +14,11 @@ class InventoryController {
                 attributes: [
                     ['ptsfr_oid', 'transfer_oid'],
                     ['ptsfr_loc_to_id', 'location_id'],
-                    [SequelizeModel.col('entity.en_desc'), 'entity_name'],
-                    [SequelizeModel.col('detail_location_purpose.loc_desc'), 'location_name'],
-                    [SequelizeModel.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
-                    [SequelizeModel.fn('SUM', SequelizeModel.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
-                    [SequelizeModel.fn('TO_CHAR', SequelizeModel.col('ptsfr_dt'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
+                    [Sequelize.col('entity.en_desc'), 'entity_name'],
+                    [Sequelize.col('detail_location_purpose.loc_desc'), 'location_name'],
+                    [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
+                    [Sequelize.fn('SUM', Sequelize.col('detail_consigment_items.ptsfrd_qty')), 'qty_product'],
+                    [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_dt'), 'YYYY-MM-DD HH:mi:ss'), 'date'],
                 ],
                 include: [
                     {
@@ -46,10 +46,10 @@ class InventoryController {
                 ],
                 where: {
                     ptsfr_loc_to_id: {
-                        [Op.in]: SequelizeModel.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id}))`)
+                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id}))`)
                     },
                     ptsfr_receive_date: {
-                        [Op.is]: (req.query.is_complete == 'Y') ? SequelizeModel.literal('NOT NULL') : SequelizeModel.literal('NULL')
+                        [Op.is]: (req.query.is_complete == 'Y') ? Sequelize.literal('NOT NULL') : Sequelize.literal('NULL')
                     }
                 },
                 limit: limit,
@@ -83,11 +83,11 @@ class InventoryController {
             attributes: [
                 'ptsfr_oid',
                 'ptsfr_code',
-                [SequelizeModel.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
+                [Sequelize.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
                 'ptsfr_dt',
-                [SequelizeModel.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
-                [SequelizeModel.fn('SUM', SequelizeModel.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
-                [SequelizeModel.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
+                [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
+                [Sequelize.fn('SUM', Sequelize.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
+                [Sequelize.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
             ],
             include: [
                 {
@@ -97,7 +97,7 @@ class InventoryController {
                     duplicating: false,
                     attributes: [
                         'ptsfrd_oid',
-                        [SequelizeModel.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
+                        [Sequelize.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
                         'ptsfrd_qty',
                     ],
                     include: [
