@@ -87,7 +87,7 @@ class InventoryController {
                 'ptsfr_oid',
                 'ptsfr_code',
                 [Sequelize.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
-                'ptsfr_dt',
+                [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_date'), 'YYYY-MM-DD'), 'ptsfr_dt'],
                 [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
                 [Sequelize.fn('SUM', Sequelize.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
                 [Sequelize.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
