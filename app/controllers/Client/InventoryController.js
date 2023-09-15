@@ -190,17 +190,17 @@ class InventoryController {
 
             for (const detailData of detailTransferReceipt) {
                 await PtsfrdDet.update({
-                    ptsfrd_qty_receive: detailData.qty_receive,
+                    ptsfrd_qty_receive: detailData.ptsfrd_qty_receive,
                     ptsfrd_upd_by: authUser.usernama,
                     ptsfrd_upd_date: moment().format('YYYY-MM-DD HH:ii:ss')
                 }, {
                     where: {
-                        ptsfrd_oid: detailData.ptsfrd_oid
+                        ptsfrd_oid: detailData["ptsfrd_oid"]
                     },
-                    logging: async (sql, queryObject) => {
+                    logging: (sql, queryObject) => {
                         let value = queryObject.bind
-                        
-                        await query.insert(sql, {
+
+                        query.insert(sql, {
                             bind: {
                                 $1: value[0],
                                 $2: value[1],
