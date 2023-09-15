@@ -14,6 +14,7 @@ class InventoryController {
                 attributes: [
                     ['ptsfr_oid', 'transfer_oid'],
                     ['ptsfr_loc_to_id', 'location_id'],
+                    ['ptsfr_code', 'transfer_code'],
                     [Sequelize.col('entity.en_desc'), 'entity_name'],
                     [Sequelize.col('detail_location_purpose.loc_desc'), 'location_name'],
                     [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
