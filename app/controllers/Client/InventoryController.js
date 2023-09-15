@@ -50,6 +50,9 @@ class InventoryController {
                     },
                     ptsfr_receive_date: {
                         [Op.is]: (req.query.is_complete == 'Y') ? Sequelize.literal('NOT NULL') : Sequelize.literal('NULL')
+                    },
+                    ptsfr_sq_oid: {
+                        [Op.is]: Sequelize.literal('NOT NULL')
                     }
                 },
                 limit: limit,
@@ -117,7 +120,7 @@ class InventoryController {
                     include: [
                         {
                             model: SqdDet,
-                            required: true,
+                            required: false,
                             as: 'detail_sales_quotation',
                             attributes: []
                         }, {
