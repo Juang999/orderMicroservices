@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class LocMstr extends Model {
+  class PartnerLoc extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,38 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      LocMstr.hasMany(models.InvcMstr, {
-        as: 'location',
-        sourceKey: 'loc_id',
-        foreignKey: 'invc_loc_id'
-      })
-
-      LocMstr.hasMany(models.SoshipdDet, {
-        as: 'detail_shipment',
-        sourceKey: 'loc_id',
-        foreignKey: 'soshipd_loc_id'
-      })
-
-      LocMstr.belongsTo(models.PtnrMstr, {
-        as: 'location_owner',
-        targetKey: 'ptnr_id',
-        foreignKey: 'loc_ptnr_id'
-      })
-
-      LocMstr.hasMany(models.PtsfrMstr, {
-        as: 'location_to',
-        sourceKey: 'loc_id',
-        foreignKey: 'ptsfr_loc_to_id'
-      })
-
-      LocMstr.belongsTo(models.PartnerLoc, {
-        as: 'parent_location',
-        targetKey: 'loc_id',
-        foreignKey: 'loc_parent_id'
+      PartnerLoc.hasMany(models.LocMstr, {
+        as: 'child_location',
+        sourceKey: 'loc_parent_id',
+        foreignKey: 'loc_id'
       })
     }
   }
-  LocMstr.init({
+  PartnerLoc.init({
     loc_oid: {
       type: DataTypes.UUID,
       primaryKey: true
@@ -56,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     loc_id: DataTypes.INTEGER,
     loc_wh_id: DataTypes.INTEGER,
     loc_si_id: DataTypes.INTEGER,
-    loc_code: DataTypes.INTEGER,
+    loc_code: DataTypes.STRING,
     loc_desc: DataTypes.STRING,
     loc_type: DataTypes.INTEGER,
     loc_cat: DataTypes.INTEGER,
@@ -66,13 +42,14 @@ module.exports = (sequelize, DataTypes) => {
     loc_git: DataTypes.STRING,
     loc_ptnr_id: DataTypes.INTEGER,
     loc_default: DataTypes.STRING,
-    loc_booked: DataTypes.STRING
+    loc_booked: DataTypes.STRING,
+    loc_parent_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',
-    modelName: 'LocMstr',
+    modelName: 'PartnerLoc',
     tableName: 'loc_mstr',
     timestamps: false
   });
-  return LocMstr;
+  return PartnerLoc;
 };
