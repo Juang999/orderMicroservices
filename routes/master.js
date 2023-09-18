@@ -8,6 +8,7 @@ const {Default} = require('./route')
 router.get(Default.master.master_entity, controller.Default.MasterController.getEntity)
 router.get(Default.master.master_location, controller.Default.MasterController.getLocation)
 router.get(Default.master.master_payment_type, controller.Default.MasterController.getPaymentType)
+router.get(Default.master.master_sales_program, [middleware.posAuthenticate], controller.Default.MasterController.getSalesProgram)
 router.get(Default.master.master_payment_method, controller.Default.MasterController.getPaymentMethod)
 router.get(Default.master.master_credit_terms, controller.Default.MasterController.getCreditTermsMstr)
 // need token to access endpoint

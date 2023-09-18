@@ -131,7 +131,8 @@ class Route {
                     master_contact_person: '/contact_person', //done
                     master_payment_method: '/payment-method', //done
                     master_credit_terms: '/creditterms-mstr', //done
-                    master_default_periode: '/periode/default' //done
+                    master_default_periode: '/periode/default', //done
+                    master_sales_program: '/sales-program',
                 }
             }
         }

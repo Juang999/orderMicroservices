@@ -375,6 +375,34 @@ class MasterController {
 					})
 			})
 	}
+
+	getSalesProgram = (req, res) => {
+		CodeMstr.findAll({
+			attributes: ['code_id','code_field','code_name'],
+			where: {
+				code_field: 'sales_program'
+			},
+			order: [['code_id', 'asc']]
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					code: 200,
+					status: 'success',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					code: 400,
+					status: 'failed',
+					data: null,
+					error: err.message
+				})
+		})
+	}
 }
 
 module.exports = new MasterController()
