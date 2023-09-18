@@ -47,13 +47,19 @@ class InventoryController {
                 ],
                 where: {
                     ptsfr_loc_to_id: {
-                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id}))`)
+                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id})))`)
                     },
                     ptsfr_receive_date: {
                         [Op.is]: (req.query.is_complete == 'Y') ? Sequelize.literal('NOT NULL') : Sequelize.literal('NULL')
                     },
                     ptsfr_sq_oid: {
                         [Op.is]: Sequelize.literal('NOT NULL')
+                    },
+                    ptsfr_date: {
+                        [Op.between]: [
+                            moment(req.query.start_date).format('YYYY-MM-DD'),
+                            moment(req.query.end_date).format('YYYY-MM-DD')
+                        ]
                     }
                 },
                 limit: limit,
