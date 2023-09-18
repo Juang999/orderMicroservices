@@ -40,6 +40,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'en_id',
         foreignKey: 'ptsfr_en_id'
       })
+
+      EnMstr.hasMany(models.WhMstr, {
+        as: 'entity_warehouse',
+        sourceKey: 'en_id',
+        foreignKey: 'wh_en_id'
+      })
     }
   }
   EnMstr.init({

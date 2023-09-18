@@ -341,7 +341,14 @@ class PartnerController {
 			attributes: [
 				['wh_oid', 'warehouse_oid'],
 				['wh_id', 'warehouse_id'],
-				['wh_desc', 'warehouse_name']
+				[Sequelize.fn('CONCAT', Sequelize.col('wh_desc'), ' ', Sequelize.col('entity.en_desc')), 'warehouse_name'],
+			],
+			include: [
+				{
+					model: EnMstr,
+					as: 'entity',
+					attributes: []
+				}
 			],
 			where: {
 				wh_id: {

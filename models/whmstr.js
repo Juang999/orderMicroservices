@@ -10,7 +10,11 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      WhMstr.belongsTo(models.EnMstr, {
+        as: 'entity',
+        targetKey: 'en_id',
+        foreignKey: 'wh_en_id'
+      })
     }
   }
   WhMstr.init({
