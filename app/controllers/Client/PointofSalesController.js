@@ -11,7 +11,7 @@ class PointofSalesController {
                         [Op.not]: null
                     }),
                     Sequelize.where(Sequelize.col('header_ptsfr->sales_quotation.sq_sales_program'), {
-                        [Op.eq]: 'SATSET'
+                        [Op.eq]: req.query.sales_program
                     }),
                     Sequelize.where(Sequelize.col('header_ptsfr.ptsfr_loc_to_id'), {
                         [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id = ${req.params.warehouse_id})`)
@@ -145,25 +145,12 @@ class PointofSalesController {
         return (momentSoshipdDt == momentDate) ? true : false
     }
 
-    testRelationship = async () => {
-        let dataLocation = await LocMstr.findAll({
-            attributes: [
-                ['loc_desc', 'child_location'],
-                [Sequelize.col('parent_location.loc_desc'), 'parent_location_name']
-            ],
-            include: [
-                {
-                    model: PartnerLoc,
-                    as: 'parent_location',
-                    attributes: []
-                }
-            ],
-            where: {
-                loc_parent_id: 300099
-            }
-        })
-
-        return dataLocation
+    getProductOrderOnline = async (req, res) => {
+        try {
+            
+        } catch (error) {
+            
+        }
     }
 }
 
