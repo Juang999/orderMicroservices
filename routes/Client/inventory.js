@@ -7,5 +7,6 @@ const {authenticate} = require('../../app/kernel')
 router.get(Client.feature.inventory.invc_transfer_receipt, [authenticate], Controller.Client.InventoryController.getInventoryTransferReceipt)
 router.get(Client.feature.inventory.invc_detail_transfer_receipt, [authenticate], Controller.Client.InventoryController.detailInventoryTransferReceipt)
 router.patch(Client.feature.inventory.invc_update_transfer_receipt, [authenticate], Controller.Client.InventoryController.updateTransferReceipt)
+router.get(Client.feature.inventory.invc_product_from_exapro, [authenticate], Controller.Client.InventoryController.getDataInventoryExapro)
 
 module.exports = router

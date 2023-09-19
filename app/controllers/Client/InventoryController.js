@@ -242,6 +242,51 @@ class InventoryController {
                 })
         }
     }
+
+    getDataInventoryExapro = async (req, res) => {
+        try {
+            let user = await auth(req.headers['authorization'])
+
+            let dataProductFromExapro = await PtsfrdDet.findAll({
+                attributes: [
+                    [Sequelize.col('detail_product.pt_code'), 'pt_code'],
+                    [Sequelize.col('detail_product.pt_desc1'), 'pt_name'],
+                    [Sequelize.fn('SUM', Sequelize.col('ptsfrd_qty_receive')), 'total_qty']
+                ],
+                include: [
+                    {
+                        model: PtMstr,
+                        required: true,
+                        as: 'detail_product',
+                        attributes: []
+                    }
+                ],
+                where: {
+                    ptsfrd_ptsfr_oid: {
+                        [Op.in]: Sequelize.literal(`(SELECT ptsfr_oid FROM public.ptsfr_mstr WHERE ptsfr_loc_to_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id = ${req.params.ptnr_id}))`)
+                    }
+                },
+                group: [
+                    'pt_code',
+                    'pt_name',
+                ]
+            })
+
+            res.status(200)
+                .json({
+                    status: 'success',
+                    data: dataProductFromExapro,
+                    error: null
+                })
+        } catch (error) {
+            res.status(400)
+                .json({
+                    status: 'failed',
+                    data: null,
+                    error: error.message
+                })
+        }
+    }
 }
 
 module.exports = new InventoryController()
