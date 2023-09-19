@@ -8,7 +8,7 @@ class ProductController {
 		try {
 			let page = (req.query.page == null) ? 1 : req.query.page
 
-			let limit = 10
+			let limit = 4
 			let offset = (page * limit) - limit
 			let whereSubquery = (req.query.pi_oid) ? `WHERE pid_pi_oid = '${req.query.pi_oid}'` : ''
             
@@ -27,7 +27,7 @@ class ProductController {
 			let {count, rows} = await PtMstr.findAndCountAll({
 				limit: limit,
 				offset: offset,
-				attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+				attributes: ['pt_desc2', 'pt_desc1', 'pt_code', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
 				order: [['pt_clothes_id', 'asc']],
 				where: where,
 				include: [
@@ -91,7 +91,7 @@ class ProductController {
 					},
 				}
 			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
+			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_code', 'pt_clothes_id', 'pt_color_tag'],
 			include: [
 				{
 					model: EnMstr,
@@ -171,7 +171,7 @@ class ProductController {
 	getProductByLocation = (req, res) => {
 		let page = (req.query.page == null) ? 1 : req.query.page
 
-		let limit = 10
+		let limit = 4
 		let offset = (page * limit) - limit
 		let whereLocation = (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
 
@@ -189,7 +189,7 @@ class ProductController {
 		PtMstr.findAndCountAll({
 			limit: limit,
 			offset: offset,
-			attributes: ['pt_desc2', 'pt_desc1', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+			attributes: ['pt_desc2', 'pt_desc1', 'pt_code', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
 			order: [['pt_clothes_id', 'asc']],
 			where: where,
 			include: [

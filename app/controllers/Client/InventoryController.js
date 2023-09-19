@@ -49,8 +49,8 @@ class InventoryController {
                     ptsfr_loc_to_id: {
                         [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id})))`)
                     },
-                    ptsfr_receive_date: {
-                        [Op.is]: (req.query.is_complete == 'Y') ? Sequelize.literal('NOT NULL') : Sequelize.literal('NULL')
+                    ptsfr_trans_id: {
+                        [Op.eq]: (req.query.is_complete == 'Y') ? 'C' : 'D'
                     },
                     ptsfr_sq_oid: {
                         [Op.is]: Sequelize.literal('NOT NULL')
@@ -100,7 +100,7 @@ class InventoryController {
                 [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_date'), 'YYYY-MM-DD'), 'ptsfr_dt'],
                 [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
                 [Sequelize.fn('SUM', Sequelize.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
-                [Sequelize.literal(`CASE WHEN ptsfr_receive_date IS NULL THEN 'uncheck' ELSE 'checked' END`), 'status']
+                [Sequelize.literal(`CASE WHEN ptsfr_trans_id = 'D' THEN 'uncheck' ELSE 'checked' END`), 'status']
             ],
             include: [
                 {
@@ -179,6 +179,7 @@ class InventoryController {
             await PtsfrMstr.update({
                 ptsfr_receive_date: moment().format('YYYY-MM-DD'),
                 ptsfr_upd_by: authUser.usernama,
+                ptsfr_trans_id: 'C',
                 ptsfr_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
             }, {
                 where: {
@@ -192,7 +193,8 @@ class InventoryController {
                             $1: value[0],
                             $2: value[1],
                             $3: value[2],
-                            $4: value[3]
+                            $4: value[3],
+                            $5: value[4]
                         }
                     })
                 }
