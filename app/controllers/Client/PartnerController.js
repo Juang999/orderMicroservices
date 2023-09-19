@@ -423,6 +423,44 @@ class PartnerController {
 				})
 		})
 	}
+
+	getPartnerPerParent = async (req, res) => {
+		try {
+			let user = await helper.auth(req.headers['authorization'])
+
+			let partnerPerParent = await PtnrMstr.findAll({
+				attributes: [
+					'ptnr_id',
+					'ptnr_name',
+					[Sequelize.col('ptnr_group.ptnrg_desc'), 'group_name']
+				],
+				include: [
+					{
+						model: PtnrgGrp,
+						as: 'ptnr_group',
+						attributes: []
+					}
+				],
+				where: {
+					ptnr_parent: user.user_ptnr_id
+				}
+			})
+
+			res.status(200)
+				.json({
+					status: 'success',
+					data: partnerPerParent,
+					error: null
+				})
+		} catch (error) {
+			res.status(400)
+				.json({
+					status: 'failed',
+					data: null,
+					error: error.message
+				})
+		}
+	}
 }
 
 module.exports = new PartnerController()

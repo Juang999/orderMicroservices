@@ -11,5 +11,6 @@ router.get(Client.feature.partner.partner_index_and_create, [middleware.authenti
 router.post(Client.feature.partner.partner_index_and_create, [middleware.authenticate], controller.Client.PartnerController.createNewPartner)
 router.get(Client.feature.partner.partner_warehouse, [middleware.posAuthenticate], controller.Client.PartnerController.getPartnerWithWarehouse)
 router.get(Client.feature.partner.partner_location, [middleware.posAuthenticate], controller.Client.PartnerController.getPartnerWithLocation)
+router.get(Client.feature.partner.partner_partner, [middleware.authenticate], controller.Client.PartnerController.getPartnerPerParent)
 
 module.exports = router

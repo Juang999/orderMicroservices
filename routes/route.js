@@ -40,7 +40,8 @@ class Route {
                         partner_mitra: '/mitra',
                         partner_parent: '/parent',
                         partner_warehouse: '/warehouse',
-                        partner_location: '/:warehouse_id/location'
+                        partner_location: '/:warehouse_id/location',
+                        partner_partner: '/partner'
                     },
                     partnerAddress: {
                         address_create: '/', //done
@@ -108,7 +109,8 @@ class Route {
                     inventory: {
                         invc_transfer_receipt: '/transfer-receipt',
                         invc_detail_transfer_receipt: '/:ptsfr_oid/detail-transfer-receipt',
-                        invc_update_transfer_receipt: '/:ptsfr_oid/update-transfer-receipt'
+                        invc_update_transfer_receipt: '/:ptsfr_oid/update-transfer-receipt',
+                        invc_product_from_exapro: '/:ptnr_id/exapro'
                     }
                 }
             },
@@ -132,7 +134,7 @@ class Route {
                     master_payment_method: '/payment-method', //done
                     master_credit_terms: '/creditterms-mstr', //done
                     master_default_periode: '/periode/default', //done
-                    master_sales_program: '/sales-program',
+                    master_sales_program: '/sales-program', //done
                 }
             }
         }
