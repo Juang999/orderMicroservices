@@ -243,49 +243,69 @@ class InventoryController {
         }
     }
 
-    getDataInventoryExapro = async (req, res) => {
-        try {
-            let user = await auth(req.headers['authorization'])
+    getDataInventoryExapro = (req, res) => {
+        let numberPage = (req.query.page) ? req.query.page : 1
+        let {limit, offset} = page(numberPage, 30)
 
-            let dataProductFromExapro = await PtsfrdDet.findAll({
-                attributes: [
-                    [Sequelize.col('detail_product.pt_code'), 'pt_code'],
-                    [Sequelize.col('detail_product.pt_desc1'), 'pt_name'],
-                    [Sequelize.fn('SUM', Sequelize.col('ptsfrd_qty_receive')), 'total_qty']
-                ],
-                include: [
-                    {
-                        model: PtMstr,
-                        required: true,
-                        as: 'detail_product',
-                        attributes: []
-                    }
-                ],
-                where: {
-                    ptsfrd_ptsfr_oid: {
+        PtsfrdDet.findAll({
+            attributes: [
+                [Sequelize.col('detail_product.pt_code'), 'pt_code'],
+                [Sequelize.col('detail_product.pt_desc1'), 'pt_name'],
+                [Sequelize.fn('SUM', Sequelize.col('ptsfrd_qty_receive')), 'total_qty'],
+                [Sequelize.col('detail_product->EnMstr.en_desc'), 'entity']
+            ],
+            include: [
+                {
+                    model: PtMstr,
+                    required: true,
+                    as: 'detail_product',
+                    attributes: [],
+                    include: [
+                        {
+                            model: EnMstr,
+                            as: 'EnMstr',
+                            attributes: []
+                        }
+                    ]
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('ptsfrd_ptsfr_oid'), {
                         [Op.in]: Sequelize.literal(`(SELECT ptsfr_oid FROM public.ptsfr_mstr WHERE ptsfr_loc_to_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id = ${req.params.ptnr_id}))`)
-                    }
-                },
-                group: [
-                    'pt_code',
-                    'pt_name',
+                    }),
+                    Sequelize.where(Sequelize.col('detail_product.pt_en_id'), {
+                        [Op.in]: (req.query.entity) ? [req.query.entity] : [1, 2, 3]
+                    }),
+                    Sequelize.where(Sequelize.col('detail_product.pt_desc1'), {
+                        [Op.iLike]: (req.query.search) ? `%${req.query.search}%` : `%%`
+                    })
                 ]
-            })
-
+            },
+            limit: limit,
+            offset: offset,
+            group: [
+                'pt_code',
+                'pt_name',
+                'entity'
+            ]
+        })
+        .then(result => {
             res.status(200)
                 .json({
                     status: 'success',
-                    data: dataProductFromExapro,
+                    data: result,
                     error: null
                 })
-        } catch (error) {
+        })
+        .catch(err => {
             res.status(400)
                 .json({
                     status: 'failed',
                     data: null,
-                    error: error.message
+                    error: err.message
                 })
-        }
+        })
     }
 }
 
