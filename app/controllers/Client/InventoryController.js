@@ -96,7 +96,7 @@ class InventoryController {
             attributes: [
                 'ptsfr_oid',
                 'ptsfr_code',
-                [Sequelize.col('sales_quotation->sold_to.ptnr_name'), 'receiver_name'],
+                [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
                 [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_date'), 'YYYY-MM-DD'), 'ptsfr_dt'],
                 [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
                 [Sequelize.fn('SUM', Sequelize.col('sales_quotation->detail_sales_quotation.sqd_price')), 'price'],
@@ -104,6 +104,17 @@ class InventoryController {
             ],
             include: [
                 {
+                    model: LocMstr,
+                    as: 'detail_location_purpose',
+                    attributes: [],
+                    include: [
+                        {
+                            model: PtnrMstr,
+                            as: 'location_owner',
+                            attributes: []
+                        }
+                    ]
+                }, {
                     model: PtsfrdDet,
                     as: 'detail_consigment_items',
                     required: true,
@@ -132,10 +143,6 @@ class InventoryController {
                             model: SqdDet,
                             required: false,
                             as: 'detail_sales_quotation',
-                            attributes: []
-                        }, {
-                            model: PtnrMstr,
-                            as: 'sold_to',
                             attributes: []
                         }
                     ]
