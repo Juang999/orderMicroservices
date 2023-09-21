@@ -173,11 +173,10 @@ class ProductController {
 
 		let limit = 4
 		let offset = (page * limit) - limit
-		let whereLocation = (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
 
 		let where ={
 			pt_id: {
-				[Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${whereLocation}))`)
+				[Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${(req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]}))`)
 			}
 		}
 
@@ -189,36 +188,54 @@ class ProductController {
 		PtMstr.findAndCountAll({
 			limit: limit,
 			offset: offset,
-			attributes: ['pt_desc2', 'pt_desc1', 'pt_code', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
+			attributes: [
+				'pt_desc2', 
+				'pt_desc1', 
+				'pt_code', 
+				'pt_clothes_id', 
+				'pt_en_id', 
+				'pt_id',
+				[Sequelize.col('EnMstr.en_desc'), 'entity'],
+				[Sequelize.col('category_product.ptcat_desc'), 'category'],
+				[Sequelize.col('sub_category.ptscat_desc'), 'sub_category_product']
+			],
 			order: [['pt_clothes_id', 'asc']],
 			where: where,
 			include: [
 				{
 					model: EnMstr,
 					as: 'EnMstr',
-					attributes: ['en_id', 'en_desc'],
+					required: true,
+					attributes: [],
 				}, {
 					model: PtCatMstr,
+					required: true,
 					as: 'category_product',
-					attributes: [['ptcat_desc', 'category']]
+					attributes: []
 				}, {
 					model: PtsCatCat,
+					required: true,
 					as: 'sub_category',
-					attributes: [['ptscat_desc', 'sub_category']]
+					attributes: []
 				}, {
 					model: InvcMstr,
 					as: 'Qty',
-					attributes: ['invc_oid', 'invc_pt_id', 'invc_loc_id'],
+					attributes: [
+						'invc_oid', 
+						'invc_pt_id', 
+						'invc_loc_id',
+					],
+					required: true,
 					where: {
 						invc_loc_id: {
-							[Op.in]: whereLocation
+							[Op.in]: (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
 						}
 					},
 					include: [
 						{
 							model: LocMstr,
 							as: 'location',
-							attributes: ['loc_id', 'loc_desc']
+							attributes: ['loc_desc']
 						}
 					]
 				}
@@ -249,29 +266,32 @@ class ProductController {
 	}
 
 	showProductByLocation = (req, res) => {
-		let idLocation
+		let idLocation = []
 
 		switch (parseInt(req.query.entity)) {
 			case 1:
-				idLocation = 10001
+				idLocation.push(10001)
 				break;
 
 			case 2:
-				idLocation = 200010
+				idLocation.push(200010)
 				break
 
 			case 3:
-				idLocation = 300010
+				idLocation.push(300010)
 				break
 
-		}
+			default:
+				idLocation.push(10001)
+				idLocation.push(200010)
+				idLocation.push(300010)
+				break
+			}
 
 		PtMstr.findOne({
 			where: {
-				[Op.and]: {
-					pt_id: {
-						[Op.eq]: req.params.pt_id
-					},
+				pt_id: {
+					[Op.eq]: req.params.pt_id
 				}
 			},
 			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],

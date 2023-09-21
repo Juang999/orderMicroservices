@@ -123,6 +123,7 @@ class InventoryController {
                         'ptsfrd_oid',
                         [Sequelize.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
                         'ptsfrd_qty',
+                        [Sequelize.literal('CASE WHEN ptsfrd_qty_receive IS NULL THEN 0 ELSE ptsfrd_qty_receive END'), 'qty_receive']
                     ],
                     include: [
                         {
