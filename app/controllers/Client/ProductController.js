@@ -6,71 +6,93 @@ const {page} = require('../../../helper/helper')
 class ProductController {
 	getProductByPriceList = async (req, res) => {
 		try {
-			let page = (req.query.page == null) ? 1 : req.query.page
+			let thePage = (req.query.page == null) ? 1 : req.query.page
 
-			let limit = 4
-			let offset = (page * limit) - limit
-			let whereSubquery = (req.query.pi_oid) ? `WHERE pid_pi_oid = '${req.query.pi_oid}'` : ''
-            
-			let where = {
-				pt_id: {
-					[Op.in]: Sequelize.literal(`(SELECT DISTINCT(pid_pt_id) FROM public.pid_det ${whereSubquery})`)
-				}
-			}
+			let {limit, offset} = page(thePage, 4)
 
-			let wherePricelist = (req.query.pi_oid) ? {pi_oid: req.query.pi_oid} : ''
-
-			if (req.query.entity) where.pt_en_id = {[Op.eq]: req.query.entity}
-			if (req.query.category) where.pt_cat_id = {[Op.eq]: req.query.category}
-			if (req.query.query) where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}
-
-			let {count, rows} = await PtMstr.findAndCountAll({
+			let data = await PtMstr.findAll({
 				limit: limit,
 				offset: offset,
-				attributes: ['pt_desc2', 'pt_desc1', 'pt_code', 'pt_clothes_id', 'pt_en_id', 'pt_id'],
-				order: [['pt_clothes_id', 'asc']],
-				where: where,
+				attributes: [
+					'pt_desc2', 
+					'pt_desc1', 
+					'pt_code', 
+					'pt_clothes_id', 
+					'pt_en_id', 
+					'pt_id',
+					[Sequelize.col('EnMstr.en_desc'), 'en_desc'],
+					[Sequelize.col('category_product.ptcat_desc'), 'category'],
+					[Sequelize.col('sub_category.ptscat_desc'), 'sub_category_product']
+				],
 				include: [
 					{
 						model: EnMstr,
 						as: 'EnMstr',
-						attributes: ['en_id', 'en_desc'],
+						required: true,
+						attributes: [],
 					}, {
 						model: PtCatMstr,
 						as: 'category_product',
-						attributes: [['ptcat_desc', 'category']]
+						required: true,
+						attributes: []
 					}, {
 						model: PtsCatCat,
 						as: 'sub_category',
-						attributes: [['ptscat_desc', 'sub_category']]
-					}, {
+						required: true,
+						attributes: []
+					}, 
+					{
 						model: PidDet,
 						as: 'price',
-						attributes: ['pid_pt_id', 'pid_pi_oid'],
+						attributes: ['pid_oid'],
 						include: [
 							{
 								model: PiMstr,
 								as: 'price_list',
-								attributes: ['pi_oid', 'pi_desc'],
-								where: wherePricelist
+								attributes: ['pi_desc']
+							}, {
+								model: PiddDet,
+								as: 'detail_price',
+								attributes: [
+									'pidd_pid_oid', 
+									'pidd_price',
+								],
+								include: [
+									{
+										model: CodeMstr,
+										as: 'PaymentType',
+										attributes: ['code_name']
+									}
+								]
 							}
 						]
 					}
-				]
+				],
+				where: {
+					pt_en_id: {
+						[Op.in]: (req.query.entity) ? [req.query.entity] : [1, 2, 3]
+					},
+					pt_desc1: {
+						[Op.like]: (req.query.query) ? `%${req.query.query}%` : '%%'
+					},
+					pt_cat_id: {
+						[Op.in]: (req.query.category) ? [req.query.category] : Sequelize.literal(`(SELECT ptcat_id FROM public.ptcat_mstr)`)
+					},
+					pt_scat_id: {
+						[Op.in]: (req.query.subcategory) ? [req.query.subcategory] : Sequelize.literal(`(SELECT ptscat_id FROM public.ptscat_cat)`)
+					},
+					pt_id: {
+						[Op.in]: Sequelize.literal(`(SELECT DISTINCT(pid_pt_id) FROM public.pid_det ${(req.query.pi_oid) ? `WHERE pid_pi_oid = '${req.query.pi_oid}'` : ''})`)
+					}
+				},
+				order: [['pt_clothes_id', 'asc']],
 			})
-
-			let result = {
-				data: rows,
-				totalData: rows.length,
-				page: page,
-				totalPage: Math.ceil(count/limit)
-			}
 
 			res.status(200)
 				.json({
 					status: 'berhasil',
 					message: 'berhasil mengambil data',
-					data: result
+					data: data
 				})
 		} catch (error) {
 			res.status(400)
@@ -169,23 +191,11 @@ class ProductController {
 	}
 
 	getProductByLocation = (req, res) => {
-		let page = (req.query.page == null) ? 1 : req.query.page
+		let thePage = (req.query.page == null) ? 1 : req.query.page
 
-		let limit = 4
-		let offset = (page * limit) - limit
+		let {limit, offset} = page(thePage, 4)
 
-		let where ={
-			pt_id: {
-				[Op.in]: Sequelize.literal(`(SELECT DISTINCT(invc_pt_id) FROM public.invc_mstr WHERE invc_loc_id IN (${(req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]}))`)
-			}
-		}
-
-		if (req.query.query) {where.pt_desc1 = {[Op.like]: `%${req.query.query}%`}}
-		if (req.query.category) {where.pt_cat_id = {[Op.eq]: req.query.category}}
-		if (req.query.subcategory) {where.pt_scat_id = {[Op.eq]: req.query.subcategory}}
-		if (req.query.entity) {where.pt_en_id = {[Op.eq]: req.query.entity}}
-
-		PtMstr.findAndCountAll({
+		PtMstr.findAll({
 			limit: limit,
 			offset: offset,
 			attributes: [
@@ -200,9 +210,28 @@ class ProductController {
 				[Sequelize.col('sub_category.ptscat_desc'), 'sub_category_product']
 			],
 			order: [['pt_clothes_id', 'asc']],
-			where: where,
 			include: [
 				{
+					model: InvcMstr,
+					as: 'Qty',
+					distinct: true,
+					attributes: [
+						'invc_oid',
+						'invc_qty_available',
+					],
+					include: [
+						{
+							model: LocMstr,
+							as: 'location',
+							attributes: ['loc_desc']
+						}
+					],
+					where: {
+						invc_loc_id: {
+							[Op.in]: (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
+						}
+					}
+				}, {
 					model: EnMstr,
 					as: 'EnMstr',
 					required: true,
@@ -217,43 +246,31 @@ class ProductController {
 					required: true,
 					as: 'sub_category',
 					attributes: []
-				}, {
-					model: InvcMstr,
-					as: 'Qty',
-					attributes: [
-						'invc_oid', 
-						'invc_pt_id', 
-						'invc_loc_id',
-					],
-					required: true,
-					where: {
-						invc_loc_id: {
-							[Op.in]: (req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]
-						}
-					},
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_desc']
-						}
-					]
-				}
+				},
 			],
-			distinct: true
-		}).then(result => {
-			let theResult = {
-				data: result.rows,
-				totalData: result.rows.length,
-				page: page,
-				totalPage: Math.ceil(result.count/limit)
+			where: {
+				pt_desc1: {
+					[Op.like]: (req.query.query) ? `%${req.query.query}%` : '%%'
+				},
+				pt_en_id: {
+					[Op.in]: (req.query.entity) ? [req.query.entity] : [1, 2, 3]
+				},
+				pt_cat_id: {
+					[Op.in]: (req.query.category) ? [req.query.category] : Sequelize.literal(`(SELECT ptcat_id FROM public.ptcat_mstr)`)
+				},
+				pt_scat_id: {
+					[Op.in]: (req.query.subcategory) ? [req.query.subcategory] : Sequelize.literal(`(SELECT ptscat_id FROM public.ptscat_cat)`)
+				},
+				pt_id: {
+					[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id IN (${(req.query.loc_id) ? [req.query.loc_id] : [10001, 200010, 300018]}))`)
+				}
 			}
-
+		}).then(result => {
 			res.status(200)
 				.json({
 					status: 'berhasil',
 					message: 'berhasil mengambil data produk berdasarkan lokasi',
-					data: theResult
+					data: result
 				})
 		}).catch(err => {
 			res.status(400)
