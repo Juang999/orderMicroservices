@@ -20,7 +20,7 @@ class ProductController {
 					'pt_clothes_id', 
 					'pt_en_id', 
 					'pt_id',
-					[Sequelize.col('EnMstr.en_desc'), 'en_desc'],
+					[Sequelize.col('EnMstr.en_desc'), 'entity'],
 					[Sequelize.col('category_product.ptcat_desc'), 'category'],
 					[Sequelize.col('sub_category.ptscat_desc'), 'sub_category_product']
 				],
@@ -44,7 +44,7 @@ class ProductController {
 					{
 						model: PidDet,
 						as: 'price',
-						attributes: ['pid_oid'],
+						attributes: ['pid_oid', 'pid_pi_oid'],
 						include: [
 							{
 								model: PiMstr,
@@ -295,64 +295,32 @@ class ProductController {
 				break
 
 			case 3:
-				idLocation.push(300010)
+				idLocation.push(300018)
 				break
 
 			default:
 				idLocation.push(10001)
 				idLocation.push(200010)
-				idLocation.push(300010)
+				idLocation.push(300018)
 				break
 			}
 
 		PtMstr.findOne({
-			where: {
-				pt_id: {
-					[Op.eq]: req.params.pt_id
-				}
-			},
-			attributes: ['pt_id', 'pt_desc1', 'pt_desc2', 'pt_clothes_id', 'pt_color_tag'],
+			attributes: [
+				'pt_id', 
+				'pt_desc1', 
+				'pt_desc2', 
+				'pt_clothes_id', 
+				'pt_en_id',
+				'pt_color_tag',
+				[Sequelize.col('EnMstr.en_desc'), 'entity']
+			],
 			include: [
 				{
 					model: EnMstr,
 					as: 'EnMstr',
-					attributes: ['en_id', 'en_desc']
-				},{
-					model: PidDet,
-					as: 'price',
-					attributes: ['pid_oid', 'pid_pt_id', 'pid_pi_oid'],
-					include: [
-						{
-							model: PiMstr,
-							as: 'price_list',
-							attributes: ['pi_oid', 'pi_desc']
-						}, {
-							model: PiddDet,
-							as: 'detail_price',
-							attributes: ['pidd_price', 'pidd_disc'],
-							include: [
-								{
-									model: CodeMstr,
-									as: 'PaymentType',
-									attributes: ['code_code', 'code_id', 'code_desc']
-								}
-							]
-						}
-					]
-				}, {
-					model: InvcMstr,
-					as: 'Qty',
-					attributes: ['invc_qty_available'],
-					include: [
-						{
-							model: LocMstr,
-							as: 'location',
-							attributes: ['loc_id', 'loc_desc'],
-							where: {
-								loc_id: idLocation
-							}
-						}
-					]
+					required: true,
+					attributes: []
 				}, {
 					model: PtCatMstr,
 					as: 'category_product',
@@ -365,8 +333,71 @@ class ProductController {
 					model: SizeMstr,
 					as: 'size',
 					attributes: ['size_desc']
+				}, {
+					model: InvcMstr,
+					as: 'Qty',
+					attributes: [
+						'invc_qty_available',
+						'invc_loc_id'
+					],
+					where: {
+						invc_loc_id: {
+							[Op.in]: [idLocation]
+						}
+					},
+					include: [
+						{
+							model: LocMstr,
+							as: 'location',
+							attributes: [
+								'loc_id', 
+								'loc_desc'
+							],
+						}
+					]
+				},
+				{
+					model: PidDet,
+					as: 'price',
+					attributes: [
+						'pid_oid', 
+						'pid_pi_oid'
+					],
+					include: [
+						{
+							model: PiMstr,
+							as: 'price_list',
+							attributes: [
+								'pi_oid', 
+								'pi_desc'
+							]
+						}, {
+							model: PiddDet,
+							as: 'detail_price',
+							attributes: [
+								'pidd_price', 
+								'pidd_disc',
+							],
+							include: [
+								{
+									model: CodeMstr,
+									as: 'PaymentType',
+									attributes: [
+										'code_code', 
+										'code_id', 
+										'code_desc'
+									]
+								}
+							]
+						}
+					]
 				}
-			]
+			],
+			where: {
+				pt_id: {
+					[Op.eq]: req.params.pt_id
+				}
+			},
 		}).then(result => {
 			res.status(200)
 				.json({
