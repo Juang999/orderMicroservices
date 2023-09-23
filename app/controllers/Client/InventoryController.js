@@ -133,7 +133,10 @@ class InventoryController {
                             as: 'detail_product',
                             attributes: []
                         }
-                    ]
+                    ],
+                    order: [
+                        [Sequelize.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'asc']
+                    ],
                 }, {
                     model: SqMstr,
                     as: 'sales_quotation',
