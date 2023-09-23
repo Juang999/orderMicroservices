@@ -215,7 +215,7 @@ class InventoryController {
 
             for (const detailData of detailTransferReceipt) {
                 if (sqStatus['sq_dropshipper'] == 'Y') {
-                    await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booking'] - detailData.ptsfrd_qty_receive)
+                    await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booked'] - detailData.ptsfrd_qty_receive)
                 }
 
                 await PtsfrdDet.update({
@@ -329,7 +329,7 @@ class InventoryController {
 
     updateStatusSalesQuotation = async (ptsfr_uuid) => {
         let getDataInvcMstr = InvcMstr.findAll({
-            attributes: ['invc_oid', 'invc_qty_booking'],
+            attributes: ['invc_oid', 'invc_qty_booked'],
             where: {
                 invc_oid: {
                     [Op.in]: Sequelize.literal(`(SELECT sqd_invc_oid FROM public.sqd_det WHERE sqd_sq_oid = (SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}'))`)
@@ -377,7 +377,7 @@ class InventoryController {
 
     updateInventory = async (invc_oid, invc_qty) => {
         await InvcMstr.update({
-            invc_qty_booking: invc_qty
+            invc_qty_booked: invc_qty
         }, {
             where: {
                 invc_oid: invc_oid
