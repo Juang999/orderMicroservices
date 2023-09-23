@@ -379,7 +379,19 @@ class InventoryController {
         await InvcMstr.update({
             invc_qty_booking: invc_qty
         }, {
-            invc_oid: invc_oid
+            where: {
+                invc_oid: invc_oid
+            },
+            logging: async (sql, queryObject) => {
+                let value = queryObject.bind
+
+                await query.insert(sql, {
+                    bind: {
+                        $1: value[0],
+                        $2: value[1]
+                    }
+                })
+            }
         })
     }
 }
