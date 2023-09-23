@@ -1,4 +1,4 @@
-const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, Sequelize, sequelize} = require('../../../models')
+const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, InvcMstr, Sequelize, sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const {auth, page, Query: query} = require('../../../helper/helper')
 let moment = require('moment')
@@ -47,7 +47,7 @@ class InventoryController {
                 ],
                 where: {
                     ptsfr_loc_to_id: {
-                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent = ${authUser.user_ptnr_id})))`)
+                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent IN (SELECT dbgd_ptnr_id FROM public.dbgd_det WHERE dbgd_dbg_oid = (SELECT dbgd_dbg_oid FROM public.dbgd_det WHERE dbgd_ptnr_id = ${authUser.user_ptnr_id})))))`)
                     },
                     ptsfr_trans_id: {
                         [Op.eq]: (req.query.is_complete == 'Y') ? 'C' : 'D'
@@ -208,7 +208,16 @@ class InventoryController {
                 }
             })
 
+            let inventoryData = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
+            let {sqStatus, dataInventory} = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
+
+            let number = 0
+
             for (const detailData of detailTransferReceipt) {
+                if (sqStatus['sq_dropshipper'] == 'Y') {
+                    await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booking'] - detailData.ptsfrd_qty_receive)
+                }
+
                 await PtsfrdDet.update({
                     ptsfrd_qty_receive: detailData.ptsfrd_qty_receive,
                     ptsfrd_upd_by: authUser.usernama,
@@ -230,6 +239,8 @@ class InventoryController {
                         })
                     }
                 })
+
+                number += 1
             }
 
             transaction.commit()
@@ -313,6 +324,62 @@ class InventoryController {
                     data: null,
                     error: err.message
                 })
+        })
+    }
+
+    updateStatusSalesQuotation = async (ptsfr_uuid) => {
+        let getDataInvcMstr = InvcMstr.findAll({
+            attributes: ['invc_oid', 'invc_qty_booking'],
+            where: {
+                invc_oid: {
+                    [Op.in]: Sequelize.literal(`(SELECT sqd_invc_oid FROM public.sqd_det WHERE sqd_sq_oid = (SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}'))`)
+                }
+            }
+        })
+
+        let getStatusSalesQuotation = SqMstr.findOne({
+            attributes: ['sq_dropshipper'],
+            where: {
+                sq_oid: {
+                    [Op.eq]: Sequelize.literal(`(SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}')`)
+                }
+            }
+        })
+
+        let updateStatusSalesQuotation = SqMstr.update({
+            sq_trans_id: 'C'
+        }, {
+            where: {
+                sq_oid: {
+                    [Op.eq]: Sequelize.literal(`(SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}')`)
+                }
+            },
+            logging: async (sql, queryObject) => {
+                let value = queryObject.bind
+
+                await query.insert(sql, {
+                    bind: {
+                        $1: value[0],
+                        $2: value[1]
+                    }
+                })
+                
+            }
+        })
+
+        let allData = await Promise.all([getDataInvcMstr, updateStatusSalesQuotation, getStatusSalesQuotation])
+
+        return {
+            dataInventory: allData[0],
+            sqStatus: allData[2]
+        }
+    }
+
+    updateInventory = async (invc_oid, invc_qty) => {
+        await InvcMstr.update({
+            invc_qty_booking: invc_qty
+        }, {
+            invc_oid: invc_oid
         })
     }
 }
