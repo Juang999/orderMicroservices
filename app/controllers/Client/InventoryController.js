@@ -210,15 +210,15 @@ class InventoryController {
                 }
             })
 
-            let inventoryData = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
-            let {sqStatus, dataInventory} = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
+            // let inventoryData = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
+            // let {sqStatus, dataInventory} = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
 
             let number = 0
 
             for (const detailData of detailTransferReceipt) {
-                if (sqStatus['sq_dropshipper'] == 'Y') {
-                    await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booked'] - detailData.ptsfrd_qty_receive)
-                }
+                // if (sqStatus['sq_dropshipper'] == 'Y') {
+                //     await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booked'] - detailData.ptsfrd_qty_receive)
+                // }
 
                 await PtsfrdDet.update({
                     ptsfrd_qty_receive: detailData.ptsfrd_qty_receive,
