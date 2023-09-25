@@ -14,7 +14,7 @@ class PointofSalesController {
                         [Op.eq]: req.query.sales_program
                     }),
                     Sequelize.where(Sequelize.col('header_ptsfr.ptsfr_loc_to_id'), {
-                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id = ${req.params.warehouse_id})`)
+                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_wh_id = ${req.params.warehouse_id})`)
                     })
                 ]
             }
