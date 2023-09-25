@@ -1,4 +1,4 @@
-const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PartnerLoc, PtsfrMstr, PtsfrdDet, SqMstr, SqdDet, LocMstr, PtnrMstr, PtMstr, Sequelize} = require('../../../models')
+const {SoMstr, SodDet, SoshipMstr, SoshipdDet, PartnerLoc, EnMstr, PtsfrMstr, PtsfrdDet, SqMstr, SqdDet, LocMstr, PtnrMstr, PtMstr, WhMstr, Sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const moment = require('moment')
 
@@ -42,8 +42,8 @@ class PointofSalesController {
 
             let rawDataProduct = await PtsfrdDet.findAll({
                 attributes: [
-                    [Sequelize.col('header_ptsfr->detail_location_purpose->parent_location.loc_id'), 'location_id'],
-                    [Sequelize.col('header_ptsfr->detail_location_purpose->parent_location.loc_desc'), 'location_name'],
+                    [Sequelize.col('header_ptsfr->detail_location_purpose->warehouse.wh_id'), 'location_id'],
+                    [Sequelize.fn('CONCAT', Sequelize.col('header_ptsfr->detail_location_purpose->warehouse.wh_desc'), ' ', Sequelize.col('header_ptsfr->detail_location_purpose->warehouse->entity.en_desc')), 'location_name'],
                     [Sequelize.col('detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_product.pt_desc1'), 'product_name'],
                     ['ptsfrd_qty_receive', 'qty_shippment'],
@@ -82,11 +82,20 @@ class PointofSalesController {
                                 duplicating: false,
                                 include: [
                                     {
-                                        model: PartnerLoc,
-                                        as: 'parent_location',
+                                        model: WhMstr,
+                                        as: 'warehouse',
                                         required: false,
                                         duplicating: false,
-                                        attributes: []
+                                        attributes: [],
+                                        include: [
+                                            {
+                                                model: EnMstr,
+                                                as: 'entity',
+                                                required: false,
+                                                duplicating: false,
+                                                attributes: []
+                                            }
+                                        ]
                                     }
                                 ]
                             }
