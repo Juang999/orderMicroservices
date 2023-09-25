@@ -47,7 +47,8 @@ class PointofSalesController {
                     [Sequelize.col('detail_product.pt_code'), 'product_partnumber'],
                     [Sequelize.col('detail_product.pt_desc1'), 'product_name'],
                     ['ptsfrd_qty_receive', 'qty_shippment'],
-                    ['ptsfrd_dt', 'shippment_date'],
+                    [Sequelize.col('header_ptsfr.ptsfr_oid'), 'transfer_oid'],
+                    [Sequelize.col('header_ptsfr.ptsfr_receive_date'), 'shippment_date'],
                     ['ptsfrd_pt_id', 'pt_id'],
                     ['ptsfrd_qty', 'qty'],
                     [Sequelize.col('header_ptsfr->sales_quotation.sq_oid'), 'sq_oid'],
@@ -103,6 +104,9 @@ class PointofSalesController {
                     }
                 ],
                 where: where,
+                order: [
+                    ['shippment_date', 'asc']
+                ]
             })
 
             for (const dataProduct of rawDataProduct) {
@@ -143,7 +147,9 @@ class PointofSalesController {
         let {ptsfr_receive_date} = await PtsfrMstr.findOne({
             attributes: ['ptsfr_receive_date'],
             where: {
-                ptsfr_loc_to_id: warehouse_id
+                ptsfr_loc_to_id: {
+                    [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_wh_id = ${warehouse_id})`)
+                }
             },
             order: [['ptsfr_dt', 'desc']]
         })
