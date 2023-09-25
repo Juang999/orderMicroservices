@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'en_id',
         foreignKey: 'wh_en_id'
       })
+
+      WhMstr.hasMany(models.LocMstr, {
+        as: 'location',
+        sourceKey: 'wh_id',
+        foreignKey: 'loc_wh_id'
+      })
     }
   }
   WhMstr.init({

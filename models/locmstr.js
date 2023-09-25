@@ -40,6 +40,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'loc_id',
         foreignKey: 'loc_parent_id'
       })
+
+      LocMstr.belongsTo(models.WhMstr, {
+        as: 'warehouse',
+        targetKey: 'wh_id',
+        foreignKey: 'loc_wh_id'
+      })
     }
   }
   LocMstr.init({
