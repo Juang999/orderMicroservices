@@ -46,9 +46,17 @@ class InventoryController {
                     }
                 ],
                 where: {
-                    ptsfr_loc_to_id: {
-                        [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent IN (SELECT dbgd_ptnr_id FROM public.dbgd_det WHERE dbgd_dbg_oid = (SELECT dbgd_dbg_oid FROM public.dbgd_det WHERE dbgd_ptnr_id = ${authUser.user_ptnr_id})))))`)
-                    },
+                    [Op.or]: [
+                        {
+                            ptsfr_loc_to_id: {
+                                [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IN (SELECT loc_id FROM public.loc_mstr WHERE loc_parent_id IS NULL AND loc_ptnr_id IN (SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent IN (SELECT dbgd_ptnr_id FROM public.dbgd_det WHERE dbgd_dbg_oid = (SELECT dbgd_dbg_oid FROM public.dbgd_det WHERE dbgd_ptnr_id = ${authUser.user_ptnr_id})))))`),
+                            },
+                        }, {
+                            ptsfr_loc_to_id: {
+                                [Op.in]: Sequelize.literal(`(SELECT loc_id FROM public.loc_mstr WHERE loc_ptnr_id IN (SELECT dbgd_ptnr_id FROM public.dbgd_det WHERE dbgd_dbg_oid = (SELECT dbgd_dbg_oid FROM public.dbgd_det WHERE dbgd_ptnr_id = ${authUser.user_ptnr_id})))`)
+                            }
+                        }
+                    ],
                     ptsfr_trans_id: {
                         [Op.eq]: (req.query.is_complete == 'Y') ? 'C' : 'D'
                     },
