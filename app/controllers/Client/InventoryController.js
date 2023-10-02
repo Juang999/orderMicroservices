@@ -104,6 +104,9 @@ class InventoryController {
             attributes: [
                 'ptsfr_oid',
                 'ptsfr_code',
+                'ptsfr_loc_git',
+                'ptsfr_loc_to_id',
+                'ptsfr_booking',
                 [Sequelize.literal(`CASE WHEN "detail_location_purpose->location_owner"."ptnr_name" IS NOT NULL THEN "detail_location_purpose->location_owner"."ptnr_name" ELSE '-' END`), 'receiver_name'],
                 [Sequelize.fn('TO_CHAR', Sequelize.col('ptsfr_date'), 'YYYY-MM-DD'), 'ptsfr_dt'],
                 [Sequelize.literal(`(SELECT SUM(ptsfrd_qty) FROM public.ptsfrd_det WHERE ptsfrd_ptsfr_oid = '${req.params.ptsfr_oid}')`), 'qty_product'],
@@ -131,6 +134,7 @@ class InventoryController {
                         'ptsfrd_oid',
                         [Sequelize.literal('"detail_consigment_items->detail_product"."pt_desc1"'), 'product_name'],
                         'ptsfrd_qty',
+                        'ptsfrd_pt_id',
                         [Sequelize.literal('CASE WHEN ptsfrd_qty_receive IS NULL THEN 0 ELSE ptsfrd_qty_receive END'), 'qty_receive']
                     ],
                     include: [
@@ -218,16 +222,7 @@ class InventoryController {
                 }
             })
 
-            // let inventoryData = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
-            // let {sqStatus, dataInventory} = await this.updateStatusSalesQuotation(req.params.ptsfr_oid)
-
-            let number = 0
-
             for (const detailData of detailTransferReceipt) {
-                // if (sqStatus['sq_dropshipper'] == 'Y') {
-                //     await this.updateInventory(inventoryData['dataInventory'][number]['invc_oid'], inventoryData['dataInventory'][number]['invc_qty_booked'] - detailData.ptsfrd_qty_receive)
-                // }
-
                 await PtsfrdDet.update({
                     ptsfrd_qty_receive: detailData.ptsfrd_qty_receive,
                     ptsfrd_upd_by: authUser.usernama,
@@ -250,7 +245,13 @@ class InventoryController {
                     }
                 })
 
-                number += 1
+                let qtyReceive = detailData.ptsfrd_qty_receive
+                let location_git = req.body.loc_git
+                let location_to_id = req.body.loc_to_id
+                let pt_id = detailData.ptsfrd_pt_id
+                let is_booked = req.body.is_booked
+
+                await this.updateQtyInventory(qtyReceive, location_git, location_to_id, pt_id, is_booked)
             }
 
             transaction.commit()
@@ -337,72 +338,90 @@ class InventoryController {
         })
     }
 
-    updateStatusSalesQuotation = async (ptsfr_uuid) => {
-        let getDataInvcMstr = InvcMstr.findAll({
-            attributes: ['invc_oid', 'invc_qty_booked'],
-            where: {
-                invc_oid: {
-                    [Op.in]: Sequelize.literal(`(SELECT sqd_invc_oid FROM public.sqd_det WHERE sqd_sq_oid = (SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}'))`)
-                }
+    updateQtyInventory = async (pt_id, loc_git, loc_to_id, qty, is_booked) => {
+        let dataGIT = await this.getQtyProduct(pt_id, loc_git)
+
+        if (dataGIT != null) {
+            let qtyData
+
+            if (is_booked == 'Y') {
+                qtyData = dataGIT['invc_qty_booked'] - qty
+            } else {
+                qtyData = dataGIT['invc_qty_available'] - qty
             }
-        })
 
-        let getStatusSalesQuotation = SqMstr.findOne({
-            attributes: ['sq_dropshipper'],
-            where: {
-                sq_oid: {
-                    [Op.eq]: Sequelize.literal(`(SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}')`)
-                }
+            await this.updateQtyProduct(pt_id, loc_git, qtyData, is_booked)
+        }
+
+        let dataMS = await this.getQtyProduct(pt_id, loc_to_id)
+
+        if (dataMS != null) {
+            let qtyData
+
+            if (is_booked == 'Y') {
+                qtyData = dataMS['invc_qty_booked'] + qty
+            } else {
+                qtyData = dataMS['invc_qty_available'] + qty
             }
-        })
 
-        let updateStatusSalesQuotation = SqMstr.update({
-            sq_trans_id: 'C'
-        }, {
-            where: {
-                sq_oid: {
-                    [Op.eq]: Sequelize.literal(`(SELECT ptsfr_sq_oid FROM public.ptsfr_mstr WHERE ptsfr_oid = '${ptsfr_uuid}')`)
-                }
-            },
-            logging: async (sql, queryObject) => {
-                let value = queryObject.bind
-
-                await query.insert(sql, {
-                    bind: {
-                        $1: value[0],
-                        $2: value[1]
-                    }
-                })
-                
-            }
-        })
-
-        let allData = await Promise.all([getDataInvcMstr, updateStatusSalesQuotation, getStatusSalesQuotation])
-
-        return {
-            dataInventory: allData[0],
-            sqStatus: allData[2]
+            await this.updateQtyProduct(pt_id, loc_to_id, qtyData, is_booked)
         }
     }
 
-    updateInventory = async (invc_oid, invc_qty) => {
-        await InvcMstr.update({
-            invc_qty_booked: invc_qty
-        }, {
+    getQtyProduct = async (pt_id, loc_id) => {
+        let {invc_qty_booked, invc_qty_available} = await InvcMstr.findOne({
+            attributes: ['invc_qty_booked', 'invc_qty_available'],
             where: {
-                invc_oid: invc_oid
-            },
-            logging: async (sql, queryObject) => {
-                let value = queryObject.bind
-
-                await query.insert(sql, {
-                    bind: {
-                        $1: value[0],
-                        $2: value[1]
-                    }
-                })
+                invc_pt_id: pt_id,
+                invc_loc_id: loc_id
             }
         })
+
+        return {invc_qty_booked, invc_qty_available}
+    }
+
+    updateQtyProduct = async (pt_id, loc_id, qty, is_booked) => {
+        if (is_booked == 'Y') {
+            await InvcMstr.update({
+                invc_qty_booked: qty
+            }, {
+                where: {
+                    invc_pt_id: pt_id,
+                    invc_loc_id: loc_id
+                },
+                logging: async (sql, queryObject) => {
+                    let value = queryObject
+
+                    await query.insert(sql, {
+                        bind: {
+                            $1: value[0],
+                            $2: value[1],
+                            $3: value[2]
+                        }
+                    })
+                }
+            })
+        } else {
+            await InvcMstr.update({
+                invc_qty_available: qty
+            }, {
+                where: {
+                    invc_pt_id: pt_id,
+                    invc_loc_id: loc_id
+                },
+                logging: async (sql, queryObject) => {
+                    let value = queryObject
+
+                    await query.insert(sql, {
+                        bind: {
+                            $1: value[0],
+                            $2: value[1],
+                            $3: value[2]
+                        }
+                    })
+                }
+            })
+        }
     }
 }
 
