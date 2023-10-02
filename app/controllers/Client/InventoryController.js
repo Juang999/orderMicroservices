@@ -251,7 +251,7 @@ class InventoryController {
                 let pt_id = detailData.ptsfrd_pt_id
                 let is_booked = req.body.is_booked
 
-                await this.updateQtyInventory(qtyReceive, location_git, location_to_id, pt_id, is_booked)
+                await this.updateQtyInventory(pt_id, location_git, location_to_id, qtyReceive, is_booked)
             }
 
             transaction.commit()
@@ -369,7 +369,7 @@ class InventoryController {
     }
 
     getQtyProduct = async (pt_id, loc_id) => {
-        let {invc_qty_booked, invc_qty_available} = await InvcMstr.findOne({
+        let data = await InvcMstr.findOne({
             attributes: ['invc_qty_booked', 'invc_qty_available'],
             where: {
                 invc_pt_id: pt_id,
@@ -377,7 +377,7 @@ class InventoryController {
             }
         })
 
-        return {invc_qty_booked, invc_qty_available}
+        return data
     }
 
     updateQtyProduct = async (pt_id, loc_id, qty, is_booked) => {
