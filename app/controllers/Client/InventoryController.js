@@ -345,9 +345,9 @@ class InventoryController {
             let qtyData
 
             if (is_booked == 'Y') {
-                qtyData = dataGIT['invc_qty_booked'] - qty
+                qtyData = (dataGIT['invc_qty_booked'] != null) ? dataGIT['invc_qty_booked'] - qty : qty
             } else {
-                qtyData = dataGIT['invc_qty_available'] - qty
+                qtyData = (dataGIT['invc_qty_available'] != null) ? dataGIT['invc_qty_available'] - qty : qty
             }
 
             await this.updateQtyProduct(pt_id, loc_git, qtyData, is_booked)
@@ -359,9 +359,9 @@ class InventoryController {
             let qtyData
 
             if (is_booked == 'Y') {
-                qtyData = dataMS['invc_qty_booked'] + qty
+                qtyData = (dataMS['invc_qty_booked'] != null ) ? dataMS['invc_qty_booked'] + qty : qty
             } else {
-                qtyData = dataMS['invc_qty_available'] + qty
+                qtyData = (dataMS['invc_qty_available'] != null) ? dataMS['invc_qty_available'] + qty : qty
             }
 
             await this.updateQtyProduct(pt_id, loc_to_id, qtyData, is_booked)
