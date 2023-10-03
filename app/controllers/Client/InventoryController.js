@@ -347,33 +347,45 @@ class InventoryController {
         })
     }
 
-    updateQtyInventory = async (pt_id, loc_git, loc_to_id, qty, is_booked, en_id) => {
-        let dataGIT = await this.getQtyProduct(pt_id, loc_git, en_id)
+    updateQtyInventory = async (ptId, locGit, locToId, qty, isBooked, enId) => {
+        let dataGIT = await this.getQtyProduct(ptId, locGit, enId)
 
         if (dataGIT != null) {
-            let qtyData
+            let qtyBooked
+            let qtyAvailable
+            let qtyTotal
 
-            if (is_booked == 'Y') {
-                qtyData = (dataGIT['invc_qty_booked'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_booked']) - parseInt(qty) : parseInt(qty)
+            if (isBooked == 'Y') {
+                qtyBooked = (dataGIT['invc_qty_booked'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_booked']) - parseInt(qty) : parseInt(qty)
+                qtyAvailable = parseInt(dataGIT['invc_qty_available'])
+                qtyTotal = qtyBooked + qtyAvailable
             } else {
-                qtyData = (dataGIT['invc_qty_available'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_available']) - parseInt(qty) : parseInt(qty)
+                qtyBooked = parseInt(dataGIT['invc_qty_booked'])
+                qtyAvailable = (dataGIT['invc_qty_available'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_available']) - parseInt(qty) : parseInt(qty)
+                qtyTotal = qtyAvailable + qtyBooked
             }
 
-            await this.updateQtyProduct(pt_id, loc_git, qtyData, is_booked)
+            await this.updateQtyProduct(ptId, locGit, qtyBooked, qtyAvailable, qtyTotal, parseInt(dataGIT['invc_qty']))
         }
 
-        let dataMS = await this.getQtyProduct(pt_id, loc_to_id, en_id)
+        let dataMS = await this.getQtyProduct(ptId, locToId, enId)
 
         if (dataMS != null) {
-            let qtyData
+            let qtyBooked
+            let qtyAvailable
+            let qtyTotal
 
-            if (is_booked == 'Y') {
-                qtyData = (dataMS['invc_qty_booked'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_booked']) + parseInt(qty) : parseInt(qty)
+            if (isBooked == 'Y') {
+                qtyBooked = (dataMS['invc_qty_booked'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_booked']) + parseInt(qty) : parseInt(qty)
+                qtyAvailable = parseInt(dataMS['invc_qty_available'])
+                qtyTotal = qtyBooked + qtyAvailable
             } else {
-                qtyData = (dataMS['invc_qty_available'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_available']) + parseInt(qty) : parseInt(qty)
+                qtyBooked = parseInt(dataMS['invc_qty_booked'])
+                qtyAvailable = (dataMS['invc_qty_available'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_available']) + parseInt(qty) : parseInt(qty)
+                qtyTotal = qtyAvailable + qtyBooked
             }
 
-            await this.updateQtyProduct(pt_id, loc_to_id, qtyData, is_booked)
+            await this.updateQtyProduct(ptId, locToId, qtyBooked, qtyAvailable, qtyTotal, parseInt(dataMS['invc_qty']))
         }
     }
 
@@ -381,13 +393,13 @@ class InventoryController {
         let data
         
         data = await InvcMstr.findOne({
-            attributes: ['invc_qty_booked', 'invc_qty_available'],
+            attributes: ['invc_qty_booked', 'invc_qty_available', 'invc_qty', 'invc_qty_old'],
             where: {
                 invc_pt_id: pt_id,
                 invc_loc_id: loc_id
             }
         })
-
+3
         if (data == null) {
             data = await this.createDataInventory(loc_id, pt_id, en_id)
         }
@@ -395,48 +407,32 @@ class InventoryController {
         return data
     }
 
-    updateQtyProduct = async (pt_id, loc_id, qty, is_booked) => {
-        if (is_booked == 'Y') {
-            await InvcMstr.update({
-                invc_qty_booked: qty
-            }, {
-                where: {
-                    invc_pt_id: pt_id,
-                    invc_loc_id: loc_id
-                },
-                logging: async (sql, queryObject) => {
-                    let value = queryObject.bind
+    updateQtyProduct = async (pt_id, loc_id, qty_booked, qty_available, total_qty, qty_old) => {
+        await InvcMstr.update({
+            invc_qty_available: qty_available,
+            invc_qty_booked: qty_booked,
+            invc_qty: total_qty,
+            invc_qty_old: qty_old
+        }, {
+            where: {
+                invc_pt_id: pt_id,
+                invc_loc_id: loc_id
+            },
+            logging: async (sql, queryObject) => {
+                let value = queryObject.bind
 
-                    await query.insert(sql, {
-                        bind: {
-                            $1: value[0],
-                            $2: value[1],
-                            $3: value[2]
-                        }
-                    })
-                }
-            })
-        } else {
-            await InvcMstr.update({
-                invc_qty_available: qty
-            }, {
-                where: {
-                    invc_pt_id: pt_id,
-                    invc_loc_id: loc_id
-                },
-                logging: async (sql, queryObject) => {
-                    let value = queryObject.bind
-
-                    await query.insert(sql, {
-                        bind: {
-                            $1: value[0],
-                            $2: value[1],
-                            $3: value[2]
-                        }
-                    })
-                }
-            })
-        }
+                await query.insert(sql, {
+                    bind: {
+                        $1: value[0],
+                        $2: value[1],
+                        $3: value[2],
+                        $4: value[3],
+                        $5: value[4],
+                        $6: value[5]
+                    }
+                })
+            }
+        })
     }
 
     createDataInventory = async (loc_id, pt_id, en_id) => {
