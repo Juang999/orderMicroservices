@@ -1,7 +1,8 @@
 const {PtMstr, SqMstr, SqdDet, PtsfrMstr, PtsfrdDet, PtnrMstr, LocMstr, EnMstr, InvcMstr, Sequelize, sequelize} = require('../../../models')
 const {Op} = require('sequelize')
 const {auth, page, Query: query} = require('../../../helper/helper')
-let moment = require('moment')
+const moment = require('moment')
+const {v4: uuidv4} = require('uuid')
 
 class InventoryController {
     getInventoryTransferReceipt = async (req, res) => {
@@ -222,6 +223,13 @@ class InventoryController {
                 }
             })
 
+            let {ptsfr_en_id} = await PtsfrMstr.findOne({
+                attributes: ['ptsfr_en_id'],
+                where: {
+                    ptsfr_oid: req.params.ptsfr_oid
+                }
+            })
+
             for (const detailData of detailTransferReceipt) {
                 await PtsfrdDet.update({
                     ptsfrd_qty_receive: detailData.ptsfrd_qty_receive,
@@ -250,8 +258,9 @@ class InventoryController {
                 let location_to_id = req.body.loc_to_id
                 let pt_id = detailData.ptsfrd_pt_id
                 let is_booked = req.body.is_booked
+                let en_id = ptsfr_en_id
 
-                await this.updateQtyInventory(pt_id, location_git, location_to_id, qtyReceive, is_booked)
+                await this.updateQtyInventory(pt_id, location_git, location_to_id, qtyReceive, is_booked, en_id)
             }
 
             transaction.commit()
@@ -338,8 +347,8 @@ class InventoryController {
         })
     }
 
-    updateQtyInventory = async (pt_id, loc_git, loc_to_id, qty, is_booked) => {
-        let dataGIT = await this.getQtyProduct(pt_id, loc_git)
+    updateQtyInventory = async (pt_id, loc_git, loc_to_id, qty, is_booked, en_id) => {
+        let dataGIT = await this.getQtyProduct(pt_id, loc_git, en_id)
 
         if (dataGIT != null) {
             let qtyData
@@ -353,7 +362,7 @@ class InventoryController {
             await this.updateQtyProduct(pt_id, loc_git, qtyData, is_booked)
         }
 
-        let dataMS = await this.getQtyProduct(pt_id, loc_to_id)
+        let dataMS = await this.getQtyProduct(pt_id, loc_to_id, en_id)
 
         if (dataMS != null) {
             let qtyData
@@ -368,14 +377,21 @@ class InventoryController {
         }
     }
 
-    getQtyProduct = async (pt_id, loc_id) => {
-        let data = await InvcMstr.findOne({
+    getQtyProduct = async (pt_id, loc_id, en_id) => {
+        let data
+        
+        data = await InvcMstr.findOne({
             attributes: ['invc_qty_booked', 'invc_qty_available'],
             where: {
                 invc_pt_id: pt_id,
                 invc_loc_id: loc_id
             }
         })
+
+        if (data == null) {
+            console.log('hello world')
+            data = await this.createDataInventory(loc_id, pt_id, en_id)
+        }
 
         return data
     }
@@ -390,7 +406,7 @@ class InventoryController {
                     invc_loc_id: loc_id
                 },
                 logging: async (sql, queryObject) => {
-                    let value = queryObject
+                    let value = queryObject.bind
 
                     await query.insert(sql, {
                         bind: {
@@ -410,7 +426,7 @@ class InventoryController {
                     invc_loc_id: loc_id
                 },
                 logging: async (sql, queryObject) => {
-                    let value = queryObject
+                    let value = queryObject.bind
 
                     await query.insert(sql, {
                         bind: {
@@ -422,6 +438,48 @@ class InventoryController {
                 }
             })
         }
+    }
+
+    createDataInventory = async (loc_id, pt_id, en_id) => {
+        let newData = await InvcMstr.create({
+            invc_oid: uuidv4(),
+            invc_dom_id: 1,
+            invc_en_id: en_id,
+            invc_si_id: 992,
+            invc_loc_id: loc_id,
+            invc_pt_id: pt_id,
+            invc_qty_available: 0,
+            invc_qty_booked: 0,
+            invc_qty: 0,
+            invc_qty_old: 0,
+            invc_qty_alloc: 0,
+            invc_total: 0,
+            invc_qty_booking: 0
+        }, {
+            logging: async (sql, queryObject) => {
+                let value = queryObject.bind
+
+                await query.insert(sql, {
+                    bind: {
+                        $1: value[0],
+                        $2: value[1],
+                        $3: value[2],
+                        $4: value[3],
+                        $5: value[4],
+                        $6: value[5],
+                        $7: value[6],
+                        $8: value[7],
+                        $9: value[8],
+                        $10: value[9],
+                        $11: value[10],
+                        $12: value[11],
+                        $13: value[12],
+                    }
+                })
+            }
+        })
+
+        return newData
     }
 }
 
