@@ -354,9 +354,9 @@ class InventoryController {
             let qtyData
 
             if (is_booked == 'Y') {
-                qtyData = (dataGIT['invc_qty_booked'] != null) ? dataGIT['invc_qty_booked'] - qty : qty
+                qtyData = (dataGIT['invc_qty_booked'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_booked']) - parseInt(qty) : parseInt(qty)
             } else {
-                qtyData = (dataGIT['invc_qty_available'] != null) ? dataGIT['invc_qty_available'] - qty : qty
+                qtyData = (dataGIT['invc_qty_available'] != null || dataGIT['invc_qty_booked'] > 0) ? parseInt(dataGIT['invc_qty_available']) - parseInt(qty) : parseInt(qty)
             }
 
             await this.updateQtyProduct(pt_id, loc_git, qtyData, is_booked)
@@ -368,9 +368,9 @@ class InventoryController {
             let qtyData
 
             if (is_booked == 'Y') {
-                qtyData = (dataMS['invc_qty_booked'] != null ) ? dataMS['invc_qty_booked'] + qty : qty
+                qtyData = (dataMS['invc_qty_booked'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_booked']) + parseInt(qty) : parseInt(qty)
             } else {
-                qtyData = (dataMS['invc_qty_available'] != null) ? dataMS['invc_qty_available'] + qty : qty
+                qtyData = (dataMS['invc_qty_available'] != null || parseInt(dataMS['invc_qty_booked']) > 0) ? parseInt(dataMS['invc_qty_available']) + parseInt(qty) : parseInt(qty)
             }
 
             await this.updateQtyProduct(pt_id, loc_to_id, qtyData, is_booked)
@@ -389,7 +389,6 @@ class InventoryController {
         })
 
         if (data == null) {
-            console.log('hello world')
             data = await this.createDataInventory(loc_id, pt_id, en_id)
         }
 
