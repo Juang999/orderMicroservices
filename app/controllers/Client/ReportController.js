@@ -137,10 +137,31 @@ class ExportController {
                 order: [['ar_date', 'desc']]
             })
 
+            let remainingDebt = await ArMstr.findAll({
+                attributes: [
+                    [Sequelize.literal('SUM(ar_amount) - SUM(ar_pay_amount)'), 'total_debt']
+                ],
+                where: {
+                    ar_bill_to: authUser.user_ptnr_id,
+                    ar_status: {
+                        [Op.is]: null
+                    },
+                    ar_pay_amount: {
+                        [Op.lt]: Sequelize.col('ar_amount')
+                    },
+                    ar_date: {
+                        [Op.between]: [startDate, endDate]
+                    },
+                }
+            })
+
             res.status(200)
                 .json({
                     status: 'success',
-                    data: historyDebt,
+                    data: {
+                        history_debt: historyDebt,
+                        total_debt: remainingDebt[0].dataValues.total_debt
+                    },
                     error: null
                 })
         } catch (error) {
@@ -150,6 +171,20 @@ class ExportController {
                     data: null,
                     error: error.message
                 })
+        }
+    }
+
+    getDetailHistoryDebt = async (req, res) => {
+        try {
+            let authUser = await auth(req.headers['authorization'])
+
+            let detailHistoryDebt = await ArMstr.findOne({
+                attributes: [
+
+                ]
+            })
+        } catch (error) {
+            
         }
     }
 }
