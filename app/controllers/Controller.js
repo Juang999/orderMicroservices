@@ -5,16 +5,16 @@ class Controller {
 				VisitController: require('./Admin/VisitController')
 			},
 			Client: {
-				ProductController: require('./Client/ProductController'),
-				PartnerController: require('./Client/PartnerController'),
 				PlanController: require('./Client/PlanController'),
+				VisitController: require('./Client/VisitController'),
+				ReportController: require('./Client/ReportController'),
+				PartnerController: require('./Client/PartnerController'),
+				ProductController: require('./Client/ProductController'),
+				InventoryController: require('./Client/InventoryController'),
+				PointofSalesController: require('./Client/PointofSalesController'),
 				PartnerAddressController: require('./Client/PartnerAddressController'),
 				ParnterContactController: require('./Client/PartnerContactController'),
-				VisitController: require('./Client/VisitController'),
 				SalesQuotationController: require('./Client/SalesQuotationController'),
-				ReportController: require('./Client/ReportController'),
-				PointofSalesController: require('./Client/PointofSalesController'),
-				InventoryController: require('./Client/InventoryController')
 			},
 			Default: {
 				AuthController: require('./AuthController'),

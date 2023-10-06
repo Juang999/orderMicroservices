@@ -1,6 +1,7 @@
-const {SoMstr, SqMstr, Sequelize, PtnrMstr} = require('../../../models')
+const {SoMstr, SqMstr, Sequelize, PtnrMstr, ArMstr} = require('../../../models')
 const moment = require('moment')
 const {Op} = require('sequelize')
+const {auth} = require('../../../helper/helper')
 
 class ExportController {
     getTotalSOSales = (req, res) => {
@@ -106,6 +107,50 @@ class ExportController {
                     error: err.message
                 })
         })
+    }
+
+    getHistoryDebt = async (req, res) => {
+        try {
+            let startDate = (req.query.start_date) ? moment(req.query.start_date).format('YYYY-MM-DD') : moment().startOf('months').format('YYYY-MM-DD')
+            let endDate = (req.query.start_date) ? moment(req.query.end_date).format('YYYY-MM-DD') : moment().endOf('months').format('YYYY-MM-DD')
+            let status = (req.query.status == 'C') ? 'c' : null
+
+            let authUser = await auth(req.headers['authorization'])
+
+            let historyDebt = await ArMstr.findAll({
+                attributes: [
+                    'ar_oid',
+                    'ar_code',
+                    'ar_amount',
+                    'ar_pay_amount',
+                    'ar_date'
+                ],
+                where: {
+                    ar_bill_to: authUser.user_ptnr_id,
+                    ar_date: {
+                        [Op.between]: [startDate, endDate]
+                    },
+                    ar_status: {
+                        [Op.eq]: status
+                    }
+                },
+                order: [['ar_date', 'desc']]
+            })
+
+            res.status(200)
+                .json({
+                    status: 'success',
+                    data: historyDebt,
+                    error: null
+                })
+        } catch (error) {
+            res.status(400)
+                .json({
+                    status: 'failed',
+                    data: null,
+                    error: error.message
+                })
+        }
     }
 }
 

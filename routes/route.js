@@ -41,7 +41,9 @@ class Route {
                         partner_parent: '/parent',
                         partner_warehouse: '/warehouse',
                         partner_location: '/:warehouse_id/location',
-                        partner_partner: '/partner'
+                        partner_partner: '/partner',
+                        partner_distributor: '/distributor',
+                        partner_pos: '/:ptnr_id/partner-pos'
                     },
                     partnerAddress: {
                         address_create: '/', //done
@@ -101,7 +103,8 @@ class Route {
                     },
                     report: {
                         report_total_so: '/so',
-                        report_total_sq: '/sq'
+                        report_total_sq: '/sq',
+                        report_history_debt: '/debt'
                     },
                     pointofsales: {
                         pos_product_consigment: '/:warehouse_id/product-consigment'
@@ -135,6 +138,7 @@ class Route {
                     master_credit_terms: '/creditterms-mstr', //done
                     master_default_periode: '/periode/default', //done
                     master_sales_program: '/sales-program', //done
+                    master_input_periode: '/periode/input'
                 }
             }
         }
