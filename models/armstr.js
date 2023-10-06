@@ -22,6 +22,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'ptnr_id',
         foreignKey: 'ar_bill_to'
       })
+
+      ArMstr.hasMany(models.ArsoSo, {
+        as: 'data_so',
+        sourceKey: 'ar_oid',
+        foreignKey: 'arso_ar_oid'
+      })
     }
   }
   ArMstr.init({

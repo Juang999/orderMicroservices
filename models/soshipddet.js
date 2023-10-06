@@ -21,6 +21,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'loc_id',
         foreignKey: 'soshipd_loc_id'
       })
+
+      SoshipdDet.belongsTo(models.SoShipMstr, {
+        as: 'header_shipment',
+        targetKey: 'soship_oid',
+        foreignKey: 'soshipd_soship_oid'
+      })
     }
   }
   SoshipdDet.init({

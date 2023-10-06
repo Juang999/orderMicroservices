@@ -45,6 +45,12 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'ptnr_id',
         foreignKey: 'so_sales_person'
       })
+
+      SoMstr.hasMany(models.ArsoSo, {
+        as: 'data_debt',
+        sourceKey: 'so_oid',
+        foreignKey: 'arso_so_oid'
+      })
     }
   }
   SoMstr.init({
