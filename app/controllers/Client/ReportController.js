@@ -1,4 +1,4 @@
-const {SoMstr, SqMstr, Sequelize, PtnrMstr, ArMstr} = require('../../../models')
+const {SoMstr, SqMstr, Sequelize, PtnrMstr, ArMstr, ArsoSo, SoShipMstr, SoshipdDet, SodDet, PtMstr} = require('../../../models')
 const moment = require('moment')
 const {Op} = require('sequelize')
 const {auth} = require('../../../helper/helper')
@@ -180,12 +180,97 @@ class ExportController {
 
             let detailHistoryDebt = await ArMstr.findOne({
                 attributes: [
-
-                ]
+                    'ar_oid',
+                    'ar_date',
+                    'ar_code',
+                    'ar_amount',
+                ],
+                include: [
+                    {
+                        model: ArsoSo,
+                        as: 'data_so',
+                        attributes: [
+                            'arso_so_oid',
+                            'arso_so_code',
+                            'arso_so_date'
+                        ]
+                    }
+                ],
+                where: {
+                    ar_oid: req.params.ar_oid,
+                    ar_bill_to: authUser.user_ptnr_id
+                }
             })
+
+            res.status(200)
+                .json({
+                    status: 'success',
+                    data: detailHistoryDebt,
+                    error: null
+                })
         } catch (error) {
-            
+            res.status(400)
+                .json({
+                    status: 'failed',
+                    data: null,
+                    error: error.message
+                })
         }
+    }
+
+    getDataShipment = (req, res) => {
+        SoShipMstr.findAll({
+            attributes: [
+                'soship_oid',
+                'soship_code',
+                'soship_date'
+            ],
+            include: [
+                {
+                    model: SoshipdDet,
+                    as: 'detail_shipment',
+                    attributes: [
+                        'soshipd_oid',
+                        ],
+                    include: [
+                        {
+                            model: SodDet,
+                            as: 'detail_sales_order',
+                            attributes: [
+                                [Sequelize.literal('"detail_shipment->detail_sales_order->detail_product"."pt_desc1"'), 'product_name'],
+                                ['sod_price', 'price'],
+                            ],
+                            include: [
+                                {
+                                    model: PtMstr,
+                                    as: 'detail_product',
+                                    attributes: []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            where: {
+                soship_so_oid: req.params.so_oid
+            }
+        })
+        .then(result => {
+            res.status(200)
+                .json({
+                    status: 'success',
+                    data: result,
+                    error: null
+                })
+        })
+        .catch(err => {
+            res.status(400)
+                .json({
+                    status: 'failed',
+                    data: null,
+                    error: err.message
+                })
+        })
     }
 }
 
