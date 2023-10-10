@@ -96,6 +96,8 @@ class Route {
                         sq_credit_limit: '/partner/:ptnrId/limit-credit', //done
                         sq_price_list_by_group: '/price-list/:partnerGroupId/group', //done
                         sq_product_by_price: '/product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', 
+                        sq_get_package: '/package',
+                        sq_get_detail_package: '/package/:package_oid/detail'
                     },
                     auth: {
                         login: '/login',

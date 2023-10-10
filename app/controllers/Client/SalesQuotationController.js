@@ -16,9 +16,13 @@ const {
 	CodeMstr, 
 	InvcMstr, 
 	InvctTable, 
-	AreaMstr
+	AreaMstr,
+	PsMstr,
+	PsdDet,
+	EnMstr,
+	Sequelize
 } = require('../../../models')
-const {Op, Sequelize} = require('sequelize')
+const {Op, SequelizeScopeError} = require('sequelize')
 const helper = require('../../../helper/helper')
 const {v4: uuidv4} = require('uuid')
 const moment = require('moment')
@@ -220,7 +224,7 @@ class SalesQuotationController {
 	getProduct = async (req, res) => {
 		try {
 			let pageQuery = (req.query.page) ? req.query.page : 1
-			let {limit, offset} = helper.page(pageQuery, 10)
+			let {limit, offset} = helper.page(pageQuery, 6)
 
 			let dataProducts = await PtMstr.findAll({
 				attributes: [
@@ -228,12 +232,49 @@ class SalesQuotationController {
 					'pt_code', 
 					'pt_desc1', 
 					'pt_clothes_id',
+					'pt_code',
+					[Sequelize.col('Qty.invc_oid'), 'invc_oid'],
+					[Sequelize.col('Qty.invc_qty_available'), 'qty_product'],
+					[Sequelize.literal('"price->detail_price"."pidd_price"'), 'price_product']
+				],
+				include: [
+					{
+						model: InvcMstr,
+						as: 'Qty',
+						required: true,
+						duplicating: false,
+						attributes: []
+					}, {
+						model: PidDet,
+						as: 'price',
+						required: true,
+						duplicating: false,
+						attributes: [],
+						include: [
+							{
+								model: PiddDet,
+								as: 'detail_price',
+								required: true,
+								duplicating: false,
+								attributes: []
+							}
+						]
+					}
 				],
 				offset: offset,
 				limit: limit,
-				order: [['pt_clothes_id', 'asc']],
+				order: [['pt_desc1', 'asc']],
 				where: {
 					[Op.and]: [
+						Sequelize.where(Sequelize.col('Qty.invc_loc_id'), {
+							[Op.eq]: req.params.locId
+						}),
+						Sequelize.where(Sequelize.col('price->detail_price.pidd_area_id'), {
+							[Op.eq]: req.params.areaId
+						}),
+						Sequelize.where(Sequelize.col('price->detail_price.pidd_payment_type'), {
+							[Op.eq]: 9942
+						}),
 						Sequelize.where(Sequelize.col('pt_id'), {
 							[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
 						}),
@@ -243,14 +284,6 @@ class SalesQuotationController {
 					]
 				}
 			})
-
-			for (const dataProduct of dataProducts) {
-				let {qty, price_now, discount} = await this.priceAndQty(dataProduct.dataValues.pt_id, req.params.locId, req.params.pricelistOid, 9942, req.params.areaId)
-
-				dataProduct.dataValues.price_now = price_now
-				dataProduct.dataValues.discount = discount
-				dataProduct.dataValues.qty = qty
-			}
 
 			res.status(200)
 				.json({
@@ -707,36 +740,155 @@ class SalesQuotationController {
 		return unitMeasureProduct
 	}
 
-	priceAndQty = async (ptId, locId, piOid, piddPaymentType, areaId) => {
-		let qty = InvcMstr.findOne({
-			attributes: [['invc_qty_available', 'Qty']],
-			where: {
-				invc_pt_id: ptId,
-				invc_loc_id: locId
-			}
-		})
+	getPackage = (req, res) => {
+		let en_id = (req.query.entity) ? [req.query.entity] : [1, 2, 3]
 
-		let price = PiddDet.findOne({
+		PsMstr.findAll({
 			attributes: [
-				['pidd_price', 'price_now'],
-				[Sequelize.fn('ROUND', Sequelize.col('pidd_disc'), 2), 'discount']
+				'ps_oid',
+				[Sequelize.col('entity_package.en_desc'), 'entity'],
+				'ps_par',
+				'ps_desc',
+			],
+			include: [
+				{
+					model: EnMstr,
+					as: 'entity_package',
+					attributes: []
+				}
 			],
 			where: {
-				pidd_payment_type: piddPaymentType,
-				pidd_area_id: areaId,
-				pidd_pid_oid: {
-					[Op.eq]: Sequelize.literal(`(SELECT pid_oid FROM public.pid_det WHERE pid_pt_id = ${ptId} AND pid_pi_oid = '${piOid}')`)
+				ps_en_id: {
+					[Op.in]: en_id
 				}
-			}
+			},
+			group: [
+				'ps_oid',
+				'entity',
+				'ps_par',
+				'ps_desc'
+			]
 		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'success',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'failed',
+					data: null,
+					error: err.message
+				})
+		})
+	}
 
-		let dataDetail = await Promise.all([qty, price])
+	getDetailPackage = (req, res) => {
+		let page = (req.query.page) ? req.query.page : 1
+		let limitPage = (req.query.limit) ? req.query.limit : 10
+		let {limit, offset} = helper.page(page, limitPage)
 
-		return {
-			qty: dataDetail[0].dataValues.Qty,
-			price_now: dataDetail[1].dataValues.price_now,
-			discount: dataDetail[1].dataValues.discount
-		}
+		PsdDet.findAll({
+			attributes: [
+				[Sequelize.col('detail_product.pt_id'), 'pt_id'],
+				[Sequelize.col('detail_product.pt_code'), 'pt_code'],
+				[Sequelize.col('detail_product.pt_desc1'), 'pt_desc1'],
+				[Sequelize.col('detail_product.pt_clothes_id'), 'pt_clothes_id'],
+				['psd_qty', 'qty_product'],
+				[Sequelize.literal('"detail_product->Qty"."invc_oid"'), 'invc_oid'],
+				[Sequelize.literal('"detail_product->price->detail_price"."pidd_price"'), 'price_product']
+			],
+			include: [
+				{
+					model: PtMstr,
+					as: 'detail_product',
+					attributes: [],
+					include: [
+						{
+							model: InvcMstr,
+							as: 'Qty',
+							required: true,
+							duplicating: false,
+							attributes: []
+						}, {
+							model: PidDet,
+							as: 'price',
+							required: true,
+							duplicating: false,
+							attributes: [],
+							include: [
+								{
+									model: PiddDet,
+									as: 'detail_price',
+									required: true,
+									duplicating: false,
+									attributes: []
+								}
+							]
+						}
+					]
+				}
+			],
+			where: {
+				[Op.and]: [
+					Sequelize.where(Sequelize.col('psd_ps_oid'), {
+						[Op.eq]: req.params.package_oid
+					}),
+					Sequelize.where(Sequelize.literal('"detail_product->price"."pid_pi_oid"'), {
+						[Op.eq]: req.query.price_oid
+					})
+				],
+				psd_ps_oid: req.params.package_oid,
+				[Op.or]: {
+					[Op.and]: [
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_en_id"'), {
+							[Op.eq]: 1
+						}),
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_loc_id"'), {
+							[Op.eq]: 10001
+						})
+					], 
+					[Op.and]: [
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_en_id"'), {
+							[Op.eq]: 2
+						}),
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_loc_id"'), {
+							[Op.eq]: 200010
+						})
+					],
+					[Op.and]: [
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_en_id"'), {
+							[Op.eq]: 3
+						}),
+						Sequelize.where(Sequelize.literal('"detail_product->Qty"."invc_loc_id"'), {
+							[Op.eq]: 300018
+						})
+					]
+				}
+			},
+			limit: limit,
+			offset: offset
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'success',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'failed',
+					data: null,
+					error: err.message
+				})
+		})
 	}
 }
 
