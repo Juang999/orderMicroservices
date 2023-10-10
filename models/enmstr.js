@@ -46,6 +46,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'en_id',
         foreignKey: 'wh_en_id'
       })
+
+      EnMstr.hasMany(models.PsMstr, {
+        as: 'entity_of_package',
+        sourceKey: 'en_id',
+        foreignKey: 'ps_en_id'
+      })
     }
   }
   EnMstr.init({
