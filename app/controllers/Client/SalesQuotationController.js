@@ -186,23 +186,8 @@ class SalesQuotationController {
 
 	getPriceListGroupCustomer = async (req, res) => {
 		PiMstr.findAll({
-			where: {
-				pi_ptnrg_id: req.params.partnerGroupId
-			},
 			attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
 		})
-			.then(async result => {
-				if (result.length == 0) {
-					result = await PiMstr.findAll({
-						where: {
-							pi_ptnrg_id: 101
-						},
-						attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
-					})
-				}
-	
-				return result
-			})
 			.then(result => {
 				res.status(200)
 					.json({
