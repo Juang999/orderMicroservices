@@ -220,7 +220,8 @@ class SalesQuotationController {
 					'pt_code',
 					[Sequelize.col('Qty.invc_oid'), 'invc_oid'],
 					[Sequelize.col('Qty.invc_qty_available'), 'qty_product'],
-					[Sequelize.literal('"price->detail_price"."pidd_price"'), 'price_product']
+					[Sequelize.literal('"price->detail_price"."pidd_price"'), 'price_product'],
+					[Sequelize.literal('"price->detail_price"."pidd_disc"'), 'discount_product'],
 				],
 				include: [
 					{
@@ -785,7 +786,8 @@ class SalesQuotationController {
 				[Sequelize.col('detail_product.pt_clothes_id'), 'pt_clothes_id'],
 				['psd_qty', 'qty_product'],
 				[Sequelize.literal('"detail_product->Qty"."invc_oid"'), 'invc_oid'],
-				[Sequelize.literal('"detail_product->price->detail_price"."pidd_price"'), 'price_product']
+				[Sequelize.literal('"detail_product->price->detail_price"."pidd_price"'), 'price_product'],
+				[Sequelize.literal('"detail_product->price->detail_price"."pidd_disc"'), 'discount_product'],
 			],
 			include: [
 				{
