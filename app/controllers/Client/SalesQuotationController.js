@@ -787,7 +787,7 @@ class SalesQuotationController {
 				['psd_qty', 'qty_product'],
 				[Sequelize.literal('"detail_product->Qty"."invc_oid"'), 'invc_oid'],
 				[Sequelize.literal('"detail_product->price->detail_price"."pidd_price"'), 'price_product'],
-				[Sequelize.fn('ROUND', Sequelize.literal('"price->detail_price"."pidd_disc"'), '2'), 'discount_product'],
+				[Sequelize.fn('ROUND', Sequelize.literal('"detail_product->price->detail_price"."pidd_disc"'), '2'), 'discount_product'],
 			],
 			include: [
 				{
