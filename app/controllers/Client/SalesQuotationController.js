@@ -1,26 +1,15 @@
 const {
-	SqMstr, 
-	SqdDet, 
-	SiMstr, 
-	LocMstr, 
-	PtnrMstr, 
-	SoMstr, 
-	SoShipMstr, 
-	ArMstr, 
-	PiMstr, 
-	sequelize, 
-	PtnrgGrp, 
-	PtMstr, 
-	PidDet, 
-	PiddDet, 
-	CodeMstr, 
-	InvcMstr, 
-	InvctTable, 
-	AreaMstr,
-	PsMstr,
-	PsdDet,
-	EnMstr,
-	Sequelize
+	PiMstr, PidDet, 
+	SqMstr, SqdDet, 
+	PsMstr, PsdDet,
+	SiMstr, LocMstr, 
+	PtnrMstr, ArMstr, 
+	PtMstr, CodeMstr, 
+	AreaMstr, EnMstr,
+	Sequelize,PiddDet, 
+	SoMstr, SoShipMstr, 
+	sequelize, PtnrgGrp, 
+	InvcMstr, InvctTable, 
 } = require('../../../models')
 const {Op, SequelizeScopeError} = require('sequelize')
 const helper = require('../../../helper/helper')
@@ -51,50 +40,32 @@ class SalesQuotationController {
 	}
 
 	getLocation = (req, res) => {
-		let locId
-
-		switch (req.params.en_id) {
-			case "1":
-				locId = [10001]
-				break;
-
-			case "2":
-				locId = [200010]
-				break;
-
-			case "3":
-				locId = [300018]
-				break;
-
-			default:
-				locId = [10001, 200010, 300018]
-				break;
-		}
+		let locId = (req.params.en_id) ? [req.params.en_id] : [10001, 200010, 300018]
 
 		LocMstr.findAll({
+			attributes: ['loc_id', 'loc_desc'],
 			where: {
 				loc_id: {
 					[Op.in]: locId
 				}
 			},
-			attributes: ['loc_id', 'loc_desc']
 		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data',
-						error: err.message
-					})
-			})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data',
+					error: err.message
+				})
+		})
 	}
 
 	getLocationGit = (req, res) => {
@@ -104,68 +75,82 @@ class SalesQuotationController {
 			},
 			attributes: ['loc_id', 'loc_desc']
 		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data',
-						error: err.message
-					})
-			})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data',
+					error: err.message
+				})
+		})
 	}
 
 	getSalesQuotation = async (req, res) => {
 		try {
+			// variable to get data user
 			let authUser = await helper.auth(req.get('authorization'))
-		
+			
+			// operation to get limit and offset data
 			let {page, limit, offset} = helper.page(req.query.page, 10)
 		
+			// get dadta SQ
 			let dataSalesQuotation = await SqMstr.findAll({
-				where: {
-					sq_sales_person: authUser.user_ptnr_id
-				},
-				attributes: ['sq_code'],
-				limit: limit,
-				offset: offset,
+				attributes: [
+					'sq_code',
+					[Sequelize.col('sold_to.ptnr_name'), 'customer_name'],
+					[Sequelize.col("sales_order.so_date"), 'so_date'],
+					[Sequelize.col('sales_order.so_code'), 'so_number'],
+					[Sequelize.col('sales_order.shipment.soship_code'), 'shipment_number'],
+					[Sequelize.literal('to_char("sales_order->shipment"."soship_dt", \'YYYY-MM-DD\')'), 'shipment_date'],
+					[Sequelize.col('sales_order.account_receivable.ar_date'), 'dr/cr_memo_date'],
+					[Sequelize.col('sales_order.account_receivable.ar_amount'), 'dr/cr_memo_number'],
+					[Sequelize.col('sales_order.account_receivable.ar_due_date'), 'dr/cr_due_date'],
+					[Sequelize.col('sales_order.account_receivable.ar_code'), 'ar_number'], 
+					[Sequelize.col('sales_order.account_receivable.ar_eff_date'), 'ar_payment']
+					],
 				include: [
 					{
 						model: PtnrMstr,
 						as: 'sold_to',
-						attributes: ['ptnr_name']
-					},{
+						attributes: [],
+						required: true,
+						duplicating: false
+					},
+					{
 						model: SoMstr,
 						as: 'sales_order',
-						attributes: ['so_date', ['so_code', 'so_number']],
+						attributes: [],
 						include: [
 							{
 								model: SoShipMstr,
 								as: 'shipment',
-								attributes: [
-									[Sequelize.literal('to_char(soship_dt, \'YYYY-MM-DD\')'), 'shipment_date'],
-									['soship_code', 'shipment_number']
-								]
-							},{
+								required: true,
+								duplicating: false,
+								attributes: []
+							},
+							{
 								model: ArMstr,
 								as: 'account_receivable',
-								attributes: [
-									['ar_date', 'dr/cr_memo_date'],
-									['ar_amount', 'dr/cr_memo_number'],
-									['ar_due_date', 'dr/cr_due_date'],
-									['ar_code', 'ar_number'], 
-									['ar_eff_date', 'ar_payment']
-								]
+								required: true,
+								duplicating: false,
+								attributes: []
 							}
 						]
 					}
-				]
+				],
+				where: {
+					sq_sales_person: authUser.user_ptnr_id
+				},
+				limit: limit,
+				offset: offset,
 			})
 	
 			res.status(200)
@@ -186,32 +171,36 @@ class SalesQuotationController {
 
 	getPriceListGroupCustomer = async (req, res) => {
 		PiMstr.findAll({
-			attributes: ['pi_oid', 'pi_ptnrg_id', 'pi_id', 'pi_desc']
+			attributes: [
+					'pi_oid', 
+					'pi_ptnrg_id', 
+					'pi_id', 
+					'pi_desc'
+				]
 		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data list harga',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data list harga',
-						error: err.message
-					})
-			})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil data list harga',
+					data: result
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil data list harga',
+					error: err.message
+				})
+		})
 	}
 
-	getProduct = async (req, res) => {
-		try {
+	getProduct = (req, res) => {
 			let pageQuery = (req.query.page) ? req.query.page : 1
 			let {limit, offset} = helper.page(pageQuery, 6)
 
-			let dataProducts = await PtMstr.findAll({
+			PtMstr.findAll({
 				attributes: [
 					'pt_id', 
 					'pt_code', 
@@ -247,11 +236,14 @@ class SalesQuotationController {
 						]
 					}
 				],
-				offset: offset,
-				limit: limit,
-				order: [['pt_desc1', 'asc']],
 				where: {
 					[Op.and]: [
+						Sequelize.where(Sequelize.col('pt_id'), {
+							[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
+						}),
+						Sequelize.where(Sequelize.col('pt_id'), {
+							[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
+						}),
 						Sequelize.where(Sequelize.col('Qty.invc_loc_id'), {
 							[Op.eq]: req.params.locId
 						}),
@@ -261,111 +253,94 @@ class SalesQuotationController {
 						Sequelize.where(Sequelize.col('price->detail_price.pidd_payment_type'), {
 							[Op.eq]: 9942
 						}),
-						Sequelize.where(Sequelize.col('pt_id'), {
-							[Op.in]: Sequelize.literal(`(SELECT invc_pt_id FROM public.invc_mstr WHERE invc_loc_id = ${req.params.locId})`)
-						}),
-						Sequelize.where(Sequelize.col('pt_id'), {
-							[Op.in]: Sequelize.literal(`(SELECT pid_pt_id FROM public.pid_det WHERE pid_pi_oid = '${req.params.pricelistOid}' AND pid_oid IN (SELECT pidd_pid_oid FROM public.pidd_det WHERE pidd_area_id = ${req.params.areaId}))`)
-						}),
 					]
-				}
-			})
-
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data',
-					data: dataProducts
-				})
-		} catch (error) {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data produk',
-					error: error.message
-				})
-		}
-	}
-
-	getLimitCreditCustomer = async (req, res) => {
-		try {
-			var limitCredit
-					
-			limitCredit = await PtnrMstr.findOne({
-				where: {
-					ptnr_id: req.params.ptnrId
 				},
-				attributes: [
-					['ptnr_limit_credit', 'limit_credit'],
-					['ptnr_ptnrg_id', 'ptnrg_id']
-				]
-			})
-		
-			if (limitCredit.dataValues.limit_credit == 0 || limitCredit.dataValues.limit_credit == null) {
-				limitCredit = await PtnrgGrp.findOne({
-					where: {
-						ptnrg_id: limitCredit.dataValues.ptnrg_id
-					},
-					attributes: [
-						['ptnrg_limit_credit', 'limit_credit']
-					]
-				})
-			}
-		
-			let dataLimitCredit = {
-				limit_credit: (limitCredit.dataValues.limit_credit == null) ? 0 : limitCredit.dataValues.limit_credit,
-				status: (limitCredit.dataValues.limit_credit == null || limitCredit.dataValues.limit_credit == 0) ? 'UNLIMITED' : 'LIMITED'
-			}
-		
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data batas kredit pengguna',
-					data: dataLimitCredit
-				})
-		} catch (error) {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data batas kredit barang pengguna',
-					error: error.message
-				})
-		}
-	}
-
-	sumDebtCustomer = (req, res) => {
-		ArMstr.findAll({
-			where: {
-				[Op.and]: {
-					ar_bill_to: req.params.ptnrId,
-					ar_amount: {
-						[Op.gt]: Sequelize.col('ar_pay_amount')
-					}
-				}
-			},
-			attributes: [[Sequelize.fn('sum', Sequelize.literal('ar_amount - ar_pay_amount')), 'debt_total']]
-		})
-			.then(result => {
-				result[0].dataValues.debt_total = (result[0].dataValues.debt_total == null) ? 0 : result[0].dataValues.debt_total
-		
-				return result
+				limit: limit,
+				offset: offset,
+				order: [['pt_desc1', 'asc']],
 			})
 			.then(result => {
 				res.status(200)
 					.json({
 						status: 'berhasil',
-						message: 'berhasil mengambil jumlah hutang',
-						data: result,
+						message: 'berhasil mengambil data',
+						data: result
 					})
 			})
 			.catch(err => {
 				res.status(400)
 					.json({
 						status: 'gagal',
-						message: 'gagal mengambil jumlah hutang',
+						message: 'gagal mengambil data produk',
 						error: err.message
 					})
 			})
+	}
+
+	getLimitCreditCustomer = async (req, res) => {
+		PtnrMstr.findOne({
+			attributes: [
+					'ptnr_id',
+					'ptnr_name',
+					[Sequelize.literal('CASE WHEN ptnr_limit_credit = 0 THEN ptnr_group.ptnrg_limit_credit ELSE ptnr_limit_credit END'), 'limit_credit'],
+				],
+			include: [
+					{
+						model: PtnrgGrp,
+						as: 'ptnr_group',
+						required: true,
+						duplicating: false,
+						attributes: []
+					}
+				],
+			where: {
+				ptnr_id: req.params.ptnrId
+			}
+		})
+		.then(result => {
+				res.status(200)
+					.json({
+						status: 'berhasil',
+						message: 'berhasil mengambil data batas kredit pengguna',
+						data: result
+					})
+		})
+		.catch(err => {
+				res.status(400)
+					.json({
+						status: 'gagal',
+						message: 'gagal mengambil data batas kredit barang pengguna',
+						error: err.message
+					})
+		})
+	}
+
+	sumDebtCustomer = (req, res) => {
+		ArMstr.findAll({
+			attributes: [[Sequelize.literal('CASE WHEN sum(ar_amount - ar_pay_amount) <> 0 THEN sum(ar_amount - ar_pay_amount) ELSE 0 END'), 'debt_total']],
+			where: {
+				ar_bill_to: req.params.ptnrId,
+				ar_amount: {
+					[Op.gt]: Sequelize.col('ar_pay_amount')
+				}
+			},
+		})
+		.then(result => {
+			res.status(200)
+				.json({
+					status: 'berhasil',
+					message: 'berhasil mengambil jumlah hutang',
+					data: result[0],
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					status: 'gagal',
+					message: 'gagal mengambil jumlah hutang',
+					error: err.message
+				})
+		})
 	}
 
 	createSalesQuotation = async (req, res) => {
@@ -382,30 +357,126 @@ class SalesQuotationController {
 			})
 	
 			// checkLimitDebtCustomer
-			let dataCheck = {
+			await this.checkDebtCustomer({
 				ptnrId: partnerCustomer.ptnr_id,
 				ptnrPtnrgId: partnerCustomer.ptnr_ptnrg_id,
 				ptnrLimitCredit: partnerCustomer.ptnr_limit_credit,
 				sqTotal: req.body.sq_total
-			}
-			await this.checkDebtCustomer(dataCheck)
+			})
 	
 			// startTransaction, count data SQ, and create sqCode
 			transaction = await sequelize.transaction()
 			let countDataSQ = await SqMstr.count()
 			const sqCode = `SQ${authUser.detail_user.ptnr_en_id}0${moment().format('MMYY')}00${countDataSQ + 1}`
-	
-			// creaetHeaderSalesQuotation
-			let dataHeader = {
-				bodyHeader: req.body,
-				authUser: authUser,
-				sqCode: sqCode,
-				partnerCustomer: partnerCustomer
+
+			let headerSalesQuotation = await SqMstr.create({
+			sq_oid: uuidv4(),
+			sq_dom_id: authUser.detail_user.ptnr_dom_id,
+			sq_en_id: authUser.detail_user.ptnr_en_id,
+			sq_add_by: authUser.usernama,
+			sq_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+			sq_code: sqCode,
+			sq_ptnr_id_sold: parseInt(req.body.sq_ptnr_id_sold),
+			sq_ptnr_id_bill: parseInt(req.body.sq_ptnr_id_sold),
+			sq_date: moment().format('YYYY-MM-DD'),
+			sq_si_id: 992,
+			sq_type: 'R',
+			sq_sales_person: authUser.user_ptnr_id,
+			sq_pi_id: req.body.sq_pi_id,
+			sq_pay_type: 9942,
+			sq_pay_method: parseInt(req.body.sq_pay_method),
+			sq_dp: 0,
+			sq_disc_header: 0,
+			sq_total: parseInt(req.body.sq_total),
+			sq_due_date: moment().format('YYYY-MM-DD'),
+			sq_close_date: moment().add(3, 'days').format('YYYY-MM-DD'),
+			sq_trans_id: 'D',
+			sq_trans_rmks: (req.body.sq_trans_rmks) ? req.body.sq_trans_rmks : null,
+			sq_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
+			sq_cu_id: 1,
+			sq_total_ppn: 0,
+			sq_total_pph: 0,
+			sq_payment: 0,
+			sq_exc_rate: parseInt(req.body.sq_cu_id),  
+			sq_tax_inc: null,
+			sq_cons: req.body.sq_cons,
+			sq_terbilang: req.body.sq_terbilang,
+			sq_credit_term: req.body.sq_credit_term,
+			sq_interval: 0,
+			sq_ar_ac_id: 13,
+			sq_ar_sb_id: 0,
+			sq_ar_cc_id: 0,
+			sq_need_date: moment(req.body.sq_need_date).format('YYYY-MM-DD'),
+			sq_is_package: 'N',
+			sq_sales_program: '-',
+			sq_booking: req.body.sq_booking,
+			sq_book_start_date: (req.body.due_date) ? req.body.due_date : moment().format('YYYY-MM-DD HH:mm:ss'),
+			sq_book_end_date: moment(req.body.sq_close_date).format('YYYY-MM-DD'),
+			sq_alocated: req.body.sq_alocated,
+			sq_ptsfr_loc_id: parseInt(req.body.sq_loc_id),
+			sq_ptsfr_loc_to_id: 10001,
+			sq_ptsfr_loc_git: 10004,
+			sq_en_to_id: partnerCustomer.ptnr_en_id,
+			sq_dropshipper: req.body.sq_is_dropshipper,
+			sq_ship_to: (req.body.sq_is_dropshipper == 'Y' ) ? req.body.sq_ship_to : null
+		}, {
+			logging: async (sql, queryObject) => {
+				// value ada 45
+				let value = queryObject.bind
+				await helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+						$9: value[8],
+						$10: value[9],
+						$11: value[10],
+						$12: value[11],
+						$13: value[12],
+						$14: value[13],
+						$15: value[14],
+						$16: value[15],
+						$17: value[16],
+						$18: value[17],
+						$19: value[18],
+						$20: value[19],
+						$21: value[20],
+						$22: value[21],
+						$23: value[22],
+						$24: value[23],
+						$25: value[24],
+						$26: value[25],
+						$27: value[26],
+						$28: value[27],
+						$29: value[28],
+						$30: value[29],
+						$31: value[30],
+						$32: value[31],
+						$33: value[32],
+						$34: value[33],
+						$35: value[34],
+						$36: value[35],
+						$37: value[36],
+						$38: value[37],
+						$39: value[38],
+						$40: value[39],
+						$41: value[40],
+						$42: value[41],
+						$43: value[42],
+						$44: value[43],
+						$45: value[44],
+					}
+				})
 			}
-			let headerSalesQuotation = await this.createHeaderSalesQuotation(dataHeader)
+		})
 	
-			// inputProductToTable: public.sqd_det
-			let dataBody = {
+			// inputProductToTable: public.sqd_det	
+			await this.inputProductToDetailSalesQuotation({
 				bodySQ: req.body.sq_body_sales_quotation,
 				sqOid: headerSalesQuotation.sq_oid,
 				sqDomId: headerSalesQuotation.sq_dom_id,
@@ -416,9 +487,7 @@ class SalesQuotationController {
 					ar_sb_id: headerSalesQuotation.sq_ar_sb_id
 				},
 				isBooking: req.body.sq_booking
-			}
-	
-			await this.inputProductToDetailSalesQuotation(dataBody)
+			})
 	
 			// commitTransaction
 			await transaction.commit()
