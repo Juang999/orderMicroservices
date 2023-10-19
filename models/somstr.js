@@ -67,7 +67,13 @@ module.exports = (sequelize, DataTypes) => {
     so_code: DataTypes.STRING,
     so_ptnr_id_sold: DataTypes.INTEGER,
     so_ptnr_id_bill: DataTypes.INTEGER,
-    so_date: DataTypes.DATE,
+    so_date: {
+      type: DataTypes.DATE,
+      get() {
+        const value = this.getDataValue('so_date')
+        return (value) ? value : '-'
+      }
+    },
     so_credit_term: DataTypes.INTEGER,
     so_taxable: DataTypes.STRING,
     so_tax_class: DataTypes.INTEGER,
