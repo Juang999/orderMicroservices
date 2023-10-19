@@ -9,17 +9,17 @@ const {Client} = require('../route')
 */
 
 // don't need token to access API
-router.get(Client.feature.product.product_size, controller.Client.ProductController.getSize)
-router.get(Client.feature.product.product_grade, controller.Client.ProductController.getGrade)
-router.get(Client.feature.product.product_index, controller.Client.ProductController.getAllProduct)
-router.get(Client.feature.product.product_category, controller.Client.ProductController.getCategory)
-router.get(Client.feature.product.product_sub_category, controller.Client.ProductController.getSubCategory)
+router.get('/size', controller.Client.ProductController.getSize)
+router.get('/grade', controller.Client.ProductController.getGrade)
+router.get('/', controller.Client.ProductController.getAllProduct)
+router.get('/category', controller.Client.ProductController.getCategory)
+router.get('/category/:cat_id/sub_category', controller.Client.ProductController.getSubCategory)
 
 // need token to access API
-router.get(Client.feature.product.product_price_list, [middleware.authenticate], controller.Client.ProductController.getPriceList)
-router.get(Client.feature.product.product_by_location, [middleware.authenticate], controller.Client.ProductController.getProductByLocation)
-router.get(Client.feature.product.product_by_price_list, [middleware.authenticate], controller.Client.ProductController.getProductByPriceList)
-router.get(Client.feature.product.product_detail_by_location, [middleware.authenticate], controller.Client.ProductController.showProductByLocation)
-router.get(Client.feature.product.product_detail_by_price_list, [middleware.authenticate], controller.Client.ProductController.showProductByPriceList)
+router.get('/price', [middleware.authenticate], controller.Client.ProductController.getPriceList)
+router.get('/location', [middleware.authenticate], controller.Client.ProductController.getProductByLocation)
+router.get('/price-list', [middleware.authenticate], controller.Client.ProductController.getProductByPriceList)
+router.get('/location/:pt_id/show', [middleware.authenticate], controller.Client.ProductController.showProductByLocation)
+router.get('/price-list/:pt_id/show', [middleware.authenticate], controller.Client.ProductController.showProductByPriceList)
 
 module.exports = router

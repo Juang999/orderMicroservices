@@ -90,14 +90,14 @@ class Route {
                         sq_index_and_create: '/', 
                         // data support
                         sq_site: '/site', //done
+                        sq_get_package: '/package', //done
                         sq_location: '/:en_id/location', //done
                         sq_unit_measure: '/unitmeasure', //done
                         sq_total_debt: '/partner/:ptnrId/debt', //done 
                         sq_credit_limit: '/partner/:ptnrId/limit-credit', //done
+                        sq_get_detail_package: '/package/:package_oid/detail', //done
                         sq_price_list_by_group: '/price-list/:partnerGroupId/group', //done
-                        sq_product_by_price: '/product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', 
-                        sq_get_package: '/package',
-                        sq_get_detail_package: '/package/:package_oid/detail'
+                        sq_product_by_price: '/product/pricelist/:pricelistOid/area/:areaId/locationid/:locId', //done
                     },
                     auth: {
                         login: '/login',
@@ -137,12 +137,12 @@ class Route {
                     master_tax_invoice: '/tax_invoice', //done
                     master_blood_group: '/blood_group', //done
                     master_payment_type: '/payment-type', //done
+                    master_input_periode: '/periode/input', //done
+                    master_sales_program: '/sales-program', //done
                     master_contact_person: '/contact_person', //done
                     master_payment_method: '/payment-method', //done
                     master_credit_terms: '/creditterms-mstr', //done
                     master_default_periode: '/periode/default', //done
-                    master_sales_program: '/sales-program', //done
-                    master_input_periode: '/periode/input'
                 }
             }
         }
