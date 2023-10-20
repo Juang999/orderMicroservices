@@ -8,10 +8,8 @@ router.post('/', [middleware.authenticate], controller.Client.PartnerController.
 router.get('/mitra', [middleware.authenticate], controller.Client.PartnerController.getSalesPartner)
 router.get('/parent', [middleware.authenticate], controller.Client.PartnerController.getParentSales)
 router.get('/partner', [middleware.authenticate], controller.Client.PartnerController.getPartnerPerParent)
-router.get('/distributor', [middleware.posAuthenticate], controller.Client.PartnerController.getDistributor)
 router.get('/:ptnr_oid/detail', [middleware.authenticate], controller.Client.PartnerController.getDetailCustomer)
 router.get('/warehouse', [middleware.posAuthenticate], controller.Client.PartnerController.getPartnerWithWarehouse)
-router.get('/:ptnr_id/partner-pos', [middleware.posAuthenticate], controller.Client.PartnerController.getPartnerForPOS)
 router.get('/:warehouse_id/location', [middleware.posAuthenticate], controller.Client.PartnerController.getPartnerWithLocation)
 
 module.exports = router
