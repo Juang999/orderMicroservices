@@ -5,18 +5,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var upload = require('express-fileupload');
-var {route_service, Admin, Client, Default} = require('./routes/route')
+let route_service = '/order-service'
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var masterRouter = require('./routes/master');
-var planRouter = require('./routes/Client/plans');
-var visitRouter = require('./routes/Client/visit');
-var partnerRouter = require('./routes/Client/partner');
-var productRouter = require('./routes/Client/product-knowledge');
-var partnerAddressRouter = require('./routes/Client/partner-address');
-var salesQuotationRouter = require('./routes/Client/sales-quotation');
-var partnerContactRouter = require('./routes/Client/partner-contact-address');
+let route_client = '/client'
+let route_default = '/default'
+let route_admin = '/admin'
 
 let clientRoutes = {
     planRouter: require('./routes/Client/plans'),
@@ -35,6 +28,12 @@ let adminRoutes = {
   visitationRouter: require('./routes/Admin/visit')
 }
 
+let neutralRoutes = {
+  usersRouter: require('./routes/users'),
+  indexRouter: require('./routes/index'),
+  masterRouter: require('./routes/master'),
+}
+
 var app = express();
 
 // file-upload expressjs
@@ -51,22 +50,22 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter)
-app.use('/users', usersRouter)
-app.use(`${route_service}${Client.route_client}/plans`, planRouter)
-app.use(`${route_service}${Default.route_default}/master`, masterRouter)
-app.use(`${route_service}${Client.route_client}/visitation`, visitRouter)
-app.use(`${route_service}${Client.route_client}/report`, clientRoutes.reportRouter)
-app.use(`${route_service}${Client.route_client}/partner`, clientRoutes.partnerRouter)
-app.use(`${route_service}${Client.route_client}/product`, clientRoutes.productRouter)
-app.use(`${route_service}${Client.route_client}/sales-quotation`, salesQuotationRouter)
-app.use(`${route_service}${Client.route_client}/inventory`, clientRoutes.inventoryRouter)
-app.use(`${route_service}${Client.route_client}/point-of-sales`, clientRoutes.pointOfSalesRouter)
-app.use(`${route_service}${Client.route_client}/partner-address`, clientRoutes.partnerAddressRouter)
-app.use(`${route_service}${Client.route_client}/partner-contact-address`, clientRoutes.partnerContactRouter)
+app.use('/', neutralRoutes.indexRouter)
+app.use(`${route_service}${route_client}/plans`, clientRoutes.planRouter)
+app.use(`${route_service}${route_default}/users`, neutralRoutes.usersRouter)
+app.use(`${route_service}${route_client}/report`, clientRoutes.reportRouter)
+app.use(`${route_service}${route_default}/master`, neutralRoutes.masterRouter)
+app.use(`${route_service}${route_client}/partner`, clientRoutes.partnerRouter)
+app.use(`${route_service}${route_client}/product`, clientRoutes.productRouter)
+app.use(`${route_service}${route_client}/visitation`, clientRoutes.visitRouter)
+app.use(`${route_service}${route_client}/inventory`, clientRoutes.inventoryRouter)
+app.use(`${route_service}${route_client}/point-of-sales`, clientRoutes.pointOfSalesRouter)
+app.use(`${route_service}${route_client}/partner-address`, clientRoutes.partnerAddressRouter)
+app.use(`${route_service}${route_client}/sales-quotation`, clientRoutes.salesQuotationRouter)
+app.use(`${route_service}${route_client}/partner-contact-address`, clientRoutes.partnerContactRouter)
 
 // adminRoute
-app.use(`${route_service}${Admin.route_admin}/visitation`, adminRoutes.visitationRouter)
+app.use(`${route_service}${route_admin}/visitation`, adminRoutes.visitationRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
