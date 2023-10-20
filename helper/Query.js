@@ -31,6 +31,16 @@ class Query {
             mili_second: 100
         })
     }
+
+    queryBulkCreate = async (sql) => {
+        await TSqlOut.create({
+            sql_uid: uuidv4(),
+            seq: 1,
+            command: sql,
+            waktu: moment().format('YYYY-MM-DD HH:mm:ss'),
+            mili_second: 100  
+        })
+    }
 }
 
 module.exports = new Query()
