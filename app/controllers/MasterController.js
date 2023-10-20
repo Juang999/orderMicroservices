@@ -259,7 +259,12 @@ class MasterController {
 
 	getEntity = (req, res) => {
 		EnMstr.findAll({
-			attributes: ['en_id', 'en_code', 'en_desc']
+			attributes: [
+					'en_id', 
+					'en_code', 
+					'en_desc',
+					[Sequelize.literal("CASE WHEN en_id = 2 THEN 200010 WHEN en_id = 3 THEN 300018 ELSE 10001 END"), 'en_loc_id']
+				]
 		}).then(result => {
 			res.status(200)
 				.json({
