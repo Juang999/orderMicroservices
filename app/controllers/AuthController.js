@@ -8,19 +8,21 @@ const {Sequelize, Op} = require('sequelize')
 const moment = require('moment/moment')
 const { v4:uuidv4 } = require('uuid')
 
-const AuthController = {
-	login: (req, res) => {
-		TConfUser.findOne({
-			where: {
-				usernama: req.body.username,
-				password: req.body.password,
-				user_ptnr_id: {
-					[Op.in]: Sequelize.literal('(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = \'Y\')')
-				}
-			},
-			attributes: ['userid', 'usernama', 'password', 'groupid']
-		}).then(async result => {
-			if (result == null) {
+class AuthController {
+	login = async (req, res) => {
+		try {
+			let user = TConfUser.findOne({
+							where: {
+								usernama: req.body.username,
+								password: req.body.password,
+								user_ptnr_id: {
+									[Op.in]: Sequelize.literal('(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_is_emp = \'Y\')')
+								}
+							},
+							attributes: ['userid', 'usernama', 'password', 'groupid']
+						})
+
+			if (user == null) {
 				res.status(400)
 					.json({
 						status: 'ditolak',
@@ -31,31 +33,30 @@ const AuthController = {
 			}
 
 			let data = {
-				userid: result.userid,
-				name: result.usernama,
-				groupid: result.groupid,
-				security_word: await crypter.encrypt(result.password),
+				userid: user.userid,
+				name: user.usernama,
+				groupid: user.groupid,
+				security_word: await crypter.encrypt(user.password),
 			}
 
 			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 
-			await saveToken(result.userid, token)
+			await this.saveToken(user.userid, token)
 
             res.status(200)
                 .json({
                     status: "berhasil",
                     data: token
                 })
-        }).catch(err => {
-            console.log(err)
-            res.status(400)
+		} catch (error) {
+			res.status(400)
                 .json({
                     status: "gagal",
                     message: err.message
                 })
-        })
-    },
-    authenticate: async (req, res) => {
+		}
+    }
+    authenticate = async (req, res) => {
         try {
             if (!req.body) {
                 res.status(300)
@@ -115,8 +116,8 @@ const AuthController = {
 					message: 'error, please report to customer service'
 				})
 		}
-	},
-	profile: async (req, res) => {
+	}
+	profile = async (req, res) => {
 		try {
 			let auth = await helper.auth(req.get('authorization'))
 
@@ -194,8 +195,8 @@ const AuthController = {
 					error: error.stack
 				})
 		}
-	},
-	loginAdmin: async (req, res) => {
+	}
+	loginAdmin  = async (req, res) => {
 		try {
 			let admin = await TConfUser.findOne({
 				attributes: ['userid', 'usernama', 'password', 'user_ptnr_id', 'groupid'],
@@ -239,7 +240,7 @@ const AuthController = {
 			
 			let token = await jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '24h'})
 			
-			await saveToken(admin.userid, token)
+			await this.saveToken(admin.userid, token)
 			
 			res.status(200)
 				.json({
@@ -256,8 +257,8 @@ const AuthController = {
 					error: error.stack
 				})
 		}
-	},
-	AuthenticateAdmin: async (req, res) => {
+	}
+	AuthenticateAdmin = async (req, res) => {
 		try {
 			let authHeader = req.body.token
     		let token = authHeader && authHeader.split(" ")[1]
@@ -341,8 +342,8 @@ const AuthController = {
 					error: error.stack
 				})
 		}
-	},
-	getProfileAdmin: (req, res) => {
+	}
+	getProfileAdmin = (req, res) => {
 		helper.auth(req.get('authorization'))
 			.then(result => {
 				res.status(200)
@@ -362,8 +363,8 @@ const AuthController = {
 						error: err.stack
 					})
 			})
-	},
-	logout: (req, res) => {
+	}
+	logout = (req, res) => {
 		let authHeader = req.headers["authorization"]
 		let token = authHeader && authHeader.split(" ")[1]
 
@@ -391,28 +392,27 @@ const AuthController = {
 				})
 		})
 	}
-}
-
-let saveToken = async (userid, token) => {
-	let countTokenPerUserId = await TokenStorage.count({
-		where: {
-			token_user_id: userid
-		}
-	})
-
-	if (countTokenPerUserId >= 0) {
-		await TokenStorage.destroy({
+	saveToken = async (userid, token) => {
+		let countTokenPerUserId = await TokenStorage.count({
 			where: {
 				token_user_id: userid
 			}
 		})
-	}
 
-	await TokenStorage.create({
-		token_oid: uuidv4(),
-		token_user_id: userid,
-		token_token: token
-	})
+		if (countTokenPerUserId >= 0) {
+			await TokenStorage.destroy({
+				where: {
+					token_user_id: userid
+				}
+			})
+		}
+
+		await TokenStorage.create({
+			token_oid: uuidv4(),
+			token_user_id: userid,
+			token_token: token
+		})
+	}
 }
 
-module.exports = AuthController
+module.exports = new AuthController()
