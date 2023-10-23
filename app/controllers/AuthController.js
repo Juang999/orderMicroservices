@@ -11,7 +11,7 @@ const { v4:uuidv4 } = require('uuid')
 class AuthController {
 	login = async (req, res) => {
 		try {
-			let user = TConfUser.findOne({
+			let user = await TConfUser.findOne({
 							where: {
 								usernama: req.body.username,
 								password: req.body.password,
@@ -52,7 +52,7 @@ class AuthController {
 			res.status(400)
                 .json({
                     status: "gagal",
-                    message: err.message
+                    message: error.message
                 })
 		}
     }
