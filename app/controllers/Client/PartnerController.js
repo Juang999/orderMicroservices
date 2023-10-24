@@ -271,7 +271,9 @@ class PartnerController {
 			let partner = await PtnrMstr.findAll({
 				attributes: ['ptnr_id', 'ptnr_name'],
 				where: {
-					ptnr_parent: user.user_ptnr_id
+					ptnr_parent: {
+						[Op.in]: Sequelize.literal(`(SELECT ptnr_id FROM public.ptnr_mstr WHERE ptnr_parent IN (SELECT dbgd_ptnr_id FROM public.dbgd_det WHERE dbgd_dbg_oid = (SELECT dbgd_dbg_oid FROM public.dbgd_det WHERE dbgd_ptnr_id = ${user.user_ptnr_id})))`)
+					}
 				}
 			})
 
