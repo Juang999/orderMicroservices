@@ -101,6 +101,8 @@ class InventoryController {
     }
 
     detailInventoryTransferReceipt = (req, res) => {
+        let productName = (req.query.product_name) ? req.query.product_name : ''
+
         PtsfrMstr.findOne({
             attributes: [
                 'ptsfr_oid',
@@ -144,7 +146,12 @@ class InventoryController {
                             required: true,
                             duplicating: false,
                             as: 'detail_product',
-                            attributes: []
+                            attributes: [],
+                            where: {
+                                pt_desc1: {
+                                    [Op.iLike]: `%${productName}%`
+                                }
+                            }
                         }
                     ]
                 }, {
@@ -390,19 +397,31 @@ class InventoryController {
     }
 
     getQtyProduct = async (pt_id, loc_id, en_id) => {
-        let data
-        
-        data = await InvcMstr.findOne({
-            attributes: ['invc_qty_booked', 'invc_qty_available', 'invc_qty', 'invc_qty_old'],
+        let data = await InvcMstr.findOrCreate({
             where: {
                 invc_pt_id: pt_id,
                 invc_loc_id: loc_id
+            },
+            defaults: {
+                invc_oid: uuidv4(),
+                invc_dom_id: 1,
+                invc_si_id: 992,
+                invc_qty_available: 0,
+                invc_qty_booked: 0,
+                invc_qty: 0,
+                invc_qty_old: 0,
+                invc_qty_alloc: 0,
+                invc_total: 0,
+                invc_qty_booking: 0
+            },
+            logging: (sql) => {
+                let array = sql.split(': ')
+
+                if (array[1].includes('CREATE') == true) {
+                    query.bulkCreate(sql)
+                }
             }
         })
-3
-        if (data == null) {
-            data = await this.createDataInventory(loc_id, pt_id, en_id)
-        }
 
         return data
     }
@@ -433,48 +452,6 @@ class InventoryController {
                 })
             }
         })
-    }
-
-    createDataInventory = async (loc_id, pt_id, en_id) => {
-        let newData = await InvcMstr.create({
-            invc_oid: uuidv4(),
-            invc_dom_id: 1,
-            invc_en_id: en_id,
-            invc_si_id: 992,
-            invc_loc_id: loc_id,
-            invc_pt_id: pt_id,
-            invc_qty_available: 0,
-            invc_qty_booked: 0,
-            invc_qty: 0,
-            invc_qty_old: 0,
-            invc_qty_alloc: 0,
-            invc_total: 0,
-            invc_qty_booking: 0
-        }, {
-            logging: async (sql, queryObject) => {
-                let value = queryObject.bind
-
-                await query.insert(sql, {
-                    bind: {
-                        $1: value[0],
-                        $2: value[1],
-                        $3: value[2],
-                        $4: value[3],
-                        $5: value[4],
-                        $6: value[5],
-                        $7: value[6],
-                        $8: value[7],
-                        $9: value[8],
-                        $10: value[9],
-                        $11: value[10],
-                        $12: value[11],
-                        $13: value[12],
-                    }
-                })
-            }
-        })
-
-        return newData
     }
 }
 
