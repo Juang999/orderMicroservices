@@ -24,7 +24,7 @@ class MasterController {
 		})
 	}
 
-	getDefaultPeriode = async (req, res) => {
+	getDefaultPeriode = (req, res) => {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 
@@ -50,7 +50,7 @@ class MasterController {
 		})
 	}
 
-	getPeriode = async (req, res) => {
+	getPeriode = (req, res) => {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 

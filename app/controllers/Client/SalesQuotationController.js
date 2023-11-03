@@ -348,6 +348,8 @@ class SalesQuotationController {
 		let transaction
 	
 		try {
+			// start transaction
+			transaction = await sequelize.transaction()
 			// userAccount and get customer data
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -368,7 +370,6 @@ class SalesQuotationController {
 			// end check debt customer
 	
 			// startTransaction, count data SQ, and create sqCode
-			transaction = await sequelize.transaction()
 			let countDataSQ = await SqMstr.count()
 			const sqCode = `SQ${authUser.detail_user.ptnr_en_id}0${moment().format('MMYY')}00${countDataSQ + 1}`
 
@@ -413,8 +414,8 @@ class SalesQuotationController {
 				sq_is_package: 'N',
 				sq_sales_program: '-',
 				sq_booking: req.body.sq_booking,
-				sq_book_start_date: (req.body.due_date) ? req.body.due_date : moment().format('YYYY-MM-DD HH:mm:ss'),
-				sq_book_end_date: moment(req.body.sq_close_date).format('YYYY-MM-DD'),
+				sq_book_start_date: moment(req.body.sq_start_date).format('YYYY-MM-DD'),
+				sq_book_end_date: moment(req.body.sq_end_date).format('YYYY-MM-DD'),
 				sq_alocated: req.body.sq_alocated,
 				sq_ptsfr_loc_id: parseInt(req.body.sq_loc_id),
 				sq_ptsfr_loc_to_id: 10001,
