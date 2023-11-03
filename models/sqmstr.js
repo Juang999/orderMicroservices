@@ -21,6 +21,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sq_ptnr_id_sold',
         targetKey: 'ptnr_id'
       })
+
+      SqMstr.hasOne(models.PtsfrMstr, {
+        as: 'consigment_item',
+        sourceKey: 'sq_oid',
+        foreignKey: 'ptsfr_sq_oid'
+      })
+
+      SqMstr.hasMany(models.SqdDet, {
+        as: 'detail_sales_quotation',
+        sourceKey: 'sq_oid',
+        foreignKey: 'sqd_sq_oid'
+      })
     }
   }
   SqMstr.init({
@@ -111,7 +123,10 @@ module.exports = (sequelize, DataTypes) => {
     sq_sq_ref_oid: DataTypes.UUID,
     sq_sq_ref_code: DataTypes.STRING,
     sq_dropshipper: DataTypes.STRING,
-    sq_ship_to: DataTypes.STRING
+    sq_ship_to: DataTypes.STRING,
+    sq_pi_area_id: DataTypes.INTEGER,
+    sq_ds_ptnr_id: DataTypes.INTEGER,
+    sq_dbg_ptnr_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

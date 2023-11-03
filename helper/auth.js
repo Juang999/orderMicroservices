@@ -20,6 +20,19 @@ const auth = async (token) => {
         }
 
         let decryptedUser = await TConfUser.findOne({
+            attributes: [
+                'userid',
+                'usernama',
+                'password',
+                'groupid',
+                'en_id',
+                'useractive',
+                'useremail',
+                'usernik',
+                'userpidgin',
+                'user_ptnr_id',
+                'nik_id'
+            ],
             where: {
                 [Op.and]: [
                     {usernama: user.name},
