@@ -1,10 +1,10 @@
 const {PtnrgGrp, PtnrMstr, PsPeriodeMstr, CodeMstr, CuMstr, EnMstr, LocMstr} = require('../../models')
 const {Op, Sequelize} = require('sequelize')
-const helper = require('../../helper/helper')
+const {page} = require('../../helper/helper')
 const moment = require('moment')
 
-const MasterController = {
-	getGroup: (req, res) => {
+class MasterController {
+	getGroup = (req, res) => {
 		PtnrgGrp.findAll({
 			attributes: ['ptnrg_id', 'ptnrg_name']
 		}).then(result => {
@@ -22,19 +22,17 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getCustomer: (req, res) => {
-		let where = {
-			ptnr_is_cust: 'Y'
-		}
+	}
 
-		if (req.query.query) where.ptnr_name = {[Op.like]: `%${req.query.query}%`}
-
-		PtnrMstr.findAll({
-			where: where,
-			limit: 20,
-			offset: 0,
-			attributes: ['ptnr_id', 'ptnr_name']
+	getDefaultPeriode = async (req, res) => {
+		PsPeriodeMstr.findAll({
+			attributes: [
+				'periode_code', 
+				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
+			],
+			where: {
+				periode_start_date: moment().startOf('months').format('YYYY-MM-DD')
+			}
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -50,12 +48,15 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getPeriode: async (req, res) => {
+	}
+
+	getPeriode = async (req, res) => {
 		PsPeriodeMstr.findAll({
 			attributes: [
 				'periode_code', 
-				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
+				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode'],
+				[Sequelize.fn('TO_CHAR', Sequelize.col('periode_start_date'), 'YYYY-MM-DD'), 'start_date'],
+				[Sequelize.fn('TO_CHAR', Sequelize.col('periode_end_date'), 'YYYY-MM-DD'), 'end_date']
 			]
 		}).then(result => {
 			res.status(200)
@@ -72,37 +73,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getPeriodeSales: async (req, res) => {
-		let auth = await helper.auth(req.get('authorization'))
-        
-		PsPeriodeMstr.findAll({
-			attributes: [
-				'periode_code', 
-				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'Month\'), \' \', \'\'), \' \', year(periode_start_date))'), 'periode_periode']
-			],
-			where: {
-				periode_code: {
-					[Op.in]: Sequelize.literal(`(SELECT plans_periode FROM public.plans_mstr WHERE plans_sales_id = ${auth.user_ptnr_id})`)
-				}
-			},
-		}).then(result => {
-			res.status(200)
-				.json({
-					status: 'success',
-					message: 'berhasil mengambil data',
-					data: result
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'failed',
-					message: 'gagal mengambil data',
-					error: err.message
-				})
-		})
-	},
-	getTaxInvoice: (req, res) => {
+	}
+
+	getTaxInvoice = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'fakturpajak_transactioncode'
@@ -124,8 +97,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getAddrType: (req, res) => {
+	}
+
+	getAddrType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'addr_type_mstr'
@@ -146,8 +120,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getContactPerson: (req, res) => {
+	}
+
+	getContactPerson = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'ptnrac_function'
@@ -168,8 +143,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getBpType: (req, res) => {
+	}
+
+	getBpType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'bp_type'
@@ -190,8 +166,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getCitizen: (req, res) => {
+	}
+
+	getCitizen = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'WNegara'
@@ -212,8 +189,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getBloodGroup: (req, res) => {
+	}
+
+	getBloodGroup = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'gol_darah'
@@ -234,8 +212,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getGender: (req, res) => {
+	}
+
+	getGender = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'Jenis_Kelamin'
@@ -256,8 +235,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getCurrency: (req, res) => {
+	}
+
+	getCurrency = (req, res) => {
 		CuMstr.findAll({
 			attributes: ['cu_id', 'cu_name']
 		}).then(result => {
@@ -275,10 +255,16 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getEntity: (req, res) => {
+	}
+
+	getEntity = (req, res) => {
 		EnMstr.findAll({
-			attributes: ['en_id', 'en_code', 'en_desc']
+			attributes: [
+					'en_id', 
+					'en_code', 
+					'en_desc',
+					[Sequelize.literal("CASE WHEN en_id = 2 THEN 200010 WHEN en_id = 3 THEN 300018 ELSE 10001 END"), 'en_loc_id']
+				]
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -294,53 +280,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getTimeStamp: (req, res) => {
-		let timestamp = {
-			day: moment().format('dddd'),
-            
-			month: moment().format('MMMM'),
-			year: moment().format('YYYY'),
-			time: moment().format('HH:mm:ss'),
-			timestamp: moment().format('YYYY-MM-DD HH:mm:ss')
-		}
+	}
 
-		res.status(200)
-			.json({
-				status: 'berhasil',
-				message: 'berhasil mengambil data timestamp',
-				data: timestamp
-			})
-	},
-	getDefaultPeriode: (req, res) => {
-		PsPeriodeMstr.findOne({
-			where: {
-				periode_start_date: {
-					[Op.eq]: moment().startOf('month').format('YYYY-MM-DD')
-				}
-			},
-			attributes: [
-				'periode_code', 
-				[Sequelize.literal('concat(replace(to_char(periode_start_date, \'DD\'), \' \', \'\'), \' \', replace(to_char(periode_start_date, \'month\'), \' \', \'\'), \' \', replace(to_char(periode_start_date, \'YYYY\'), \' \', \'\'))'), 'start_periode'],
-				[Sequelize.literal('concat(replace(to_char(periode_end_date, \'DD\'), \' \', \'\'), \' \', replace(to_char(periode_end_date, \'month\'), \' \', \'\'), \' \', replace(to_char(periode_end_date, \'YYYY\'), \' \', \'\'))'), 'end_periode']
-			]
-		}).then(result => {
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data periode default',
-					data: result
-				})
-		}).catch(err => {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data periode default',
-					error: err.message
-				})
-		})
-	},
-	getLocation: (req, res) => {
+	getLocation = (req, res) => {
 		LocMstr.findAll({
 			where: {
 				loc_id: {
@@ -364,8 +306,9 @@ const MasterController = {
 					error: err.message
 				})
 		})
-	},
-	getPaymentType: (req, res) => {
+	}
+
+	getPaymentType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'payment_type'
@@ -388,8 +331,9 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getPaymentMethod: (req, res) => {
+	}
+
+	getPaymentMethod = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'payment_methode'
@@ -412,8 +356,9 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getCreditTermsMstr: (req, res) => {
+	}
+
+	getCreditTermsMstr = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'creditterms_mstr'
@@ -436,31 +381,35 @@ const MasterController = {
 						error: err.message
 					})
 			})
-	},
-	getLocationGit: (req, res) => {
-		LocMstr.findAll({
+	}
+
+	getSalesProgram = (req, res) => {
+		CodeMstr.findAll({
+			attributes: ['code_id','code_field','code_name'],
 			where: {
-				loc_id: 100025
+				code_field: 'sales_program'
 			},
-			attributes: ['loc_id', 'loc_desc']
+			order: [['code_id', 'asc']]
 		})
-			.then(result => {
-				res.status(200)
-					.json({
-						status: 'berhasil',
-						message: 'berhasil mengambil data',
-						data: result
-					})
-			})
-			.catch(err => {
-				res.status(400)
-					.json({
-						status: 'gagal',
-						message: 'gagal mengambil data',
-						error: err.message
-					})
-			})
+		.then(result => {
+			res.status(200)
+				.json({
+					code: 200,
+					status: 'success',
+					data: result,
+					error: null
+				})
+		})
+		.catch(err => {
+			res.status(400)
+				.json({
+					code: 400,
+					status: 'failed',
+					data: null,
+					error: err.message
+				})
+		})
 	}
 }
 
-module.exports = MasterController
+module.exports = new MasterController()

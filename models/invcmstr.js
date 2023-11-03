@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     invc_last_booked: DataTypes.DATE,
     invc_total: DataTypes.INTEGER,
     invc_qty_booking: DataTypes.INTEGER,
-    invc_qty_show_available: DataTypes.INTEGER
+    invc_shwn_id: DataTypes.INTEGER
   }, {
     sequelize,
     schema: 'public',

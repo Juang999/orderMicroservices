@@ -10,7 +10,17 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      SqdDet.belongsTo(models.SqMstr, {
+        as: 'header_sq',
+        targetKey: 'sq_oid',
+        foreignKey: 'sqd_sq_oid'
+      })
+
+      SqdDet.belongsTo(models.PtMstr, {
+        as: 'detail_product',
+        targetKey: 'pt_id',
+        foreignKey: 'sqd_pt_id'
+      })
     }
   }
   SqdDet.init({

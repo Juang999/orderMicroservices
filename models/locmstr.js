@@ -16,6 +16,36 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'loc_id',
         foreignKey: 'invc_loc_id'
       })
+
+      LocMstr.hasMany(models.SoshipdDet, {
+        as: 'detail_shipment',
+        sourceKey: 'loc_id',
+        foreignKey: 'soshipd_loc_id'
+      })
+
+      LocMstr.belongsTo(models.PtnrMstr, {
+        as: 'location_owner',
+        targetKey: 'ptnr_id',
+        foreignKey: 'loc_ptnr_id'
+      })
+
+      LocMstr.hasMany(models.PtsfrMstr, {
+        as: 'location_to',
+        sourceKey: 'loc_id',
+        foreignKey: 'ptsfr_loc_to_id'
+      })
+
+      LocMstr.belongsTo(models.PartnerLoc, {
+        as: 'parent_location',
+        targetKey: 'loc_id',
+        foreignKey: 'loc_parent_id'
+      })
+
+      LocMstr.belongsTo(models.WhMstr, {
+        as: 'warehouse',
+        targetKey: 'wh_id',
+        foreignKey: 'loc_wh_id'
+      })
     }
   }
   LocMstr.init({

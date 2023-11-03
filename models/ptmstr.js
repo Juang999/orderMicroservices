@@ -61,6 +61,30 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: 'size_id',
         foreignKey: 'pt_size_code_id'
       })
+
+      PtMstr.hasMany(models.SodDet, {
+        as: 'sales_order',
+        sourceKey: 'pt_id',
+        foreignKey: 'sod_pt_id'
+      })
+
+      PtMstr.hasMany(models.SqdDet, {
+        as: 'detail_sales_quotation',
+        sourceKey: 'pt_id',
+        foreignKey: 'sqd_pt_id'
+      })
+
+      PtMstr.hasMany(models.PtsfrdDet, {
+        as: 'detail_product_transfer',
+        sourceKey: 'pt_id',
+        foreignKey: 'ptsfrd_pt_id'
+      })
+
+      PtMstr.hasMany(models.PsdDet, {
+        as: 'has_packaged',
+        sourceKey: 'pt_id',
+        foreignKey: 'psd_pt_bom_id'
+      })
     }
   }
   PtMstr.init({

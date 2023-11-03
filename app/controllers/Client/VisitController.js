@@ -13,8 +13,8 @@ const app = express()
 
 app.use(upload())
 
-const VisitController = {
-	getVisitingSchedule: async (req, res) => {
+class VisitController {
+	getVisitingSchedule = async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -75,8 +75,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	getDetailVisitSchedule: (req, res) => {
+	}
+
+	getDetailVisitSchedule = (req, res) => {
 		VisitMstr.findOne({
 			attributes: [
 				'visit_code', 
@@ -128,7 +129,7 @@ const VisitController = {
 						{
 							model: PtnrMstr,
 							as: 'visited_partner',
-							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name']
+							attributes: ['ptnr_id', 'ptnr_ptnrg_id', 'ptnr_name', 'ptnr_area_id']
 						}
 					],
 					order: [['visit_check_in', 'DESC']]
@@ -149,8 +150,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getDetailVisiting: (req, res) => {
+	}
+
+	getDetailVisiting = (req, res) => {
 		VisitedDet.findOne({
 			where: {
 				visited_oid: req.params.visited_oid
@@ -170,29 +172,40 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	createSchedule: async (req, res) => {
+	}
+
+	createSchedule = async (req, res) => {
+		let {userid, en_id, usernama} = await helper.auth(req.get('authorization'))
+		let visitCode = await this.generateVisitCode(en_id)
+
 		let transaction = await sequelize.transaction()
 		try {
-			let authUser = await helper.auth(req.get('authorization'))
-
-			let lastData = await VisitMstr.findOne({
-				order: [['visit_add_date', 'desc']]
-			})
-
-			let totalData = (lastData.length == 0) ? 1 : parseInt(lastData.visit_code.substring(12)) + 1
-
-			let visit_code = `VST0${authUser.en_id}456${moment().format('MMYY')}${totalData}`
-
 			let visit_mstr = await VisitMstr.create({
-				visit_code: visit_code,
+				visit_code: visitCode,
 				visit_startdate: req.body.start_date,
 				visit_enddate: req.body.end_date,
-				visit_en_id: authUser.en_id,
-				visit_sales_id: authUser.userid,
+				visit_en_id: parseInt(en_id),
+				visit_sales_id: parseInt(userid),
 				visit_add_date: moment().format('YYYY-MM-DD HH:mm:ss'),
-				visit_add_by: authUser.usernama,
+				visit_add_by: usernama,
 				visit_status: 'N'
+			}, {
+				logging: (sql, queryObject) => {
+					let value = queryObject.bind
+
+					helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4],
+							$6: value[5],
+							$7: value[6],
+							$8: value[7],
+						}
+					})
+				}
 			})
 
 			await transaction.commit()
@@ -212,20 +225,38 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	createListCustomerToVisit: async (req, res) => {
+	}
+
+	createListCustomerToVisit = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		VisitedDet.create({
 			visited_oid: uuidv4(),
 			visited_visit_code: req.body.visit_code,
 			visited_type: req.body.type,
-			visited_ptnr_id: req.body.ptnr_id,
+			visited_ptnr_id: parseInt(req.body.ptnr_id),
 			visited_cus_name: req.body.cus_name,
 			visited_cus_address: req.body.cus_address,
 			visited_cus_phone: req.body.cus_phone,
 			visited_add_by: authUser.usernama,
 			visited_add_date: moment().format('YYYY-MM-DD HH:mm:ss')
+		}, {
+			logging: (sql, queryObject) => {
+				let value = queryObject.bind
+
+				helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+					}
+				})
+			}
 		}).then(result => {
 			res.status(200)
 				.json({
@@ -241,8 +272,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	checkIn: async (req, res) => {
+	}
+
+	checkIn = async (req, res) => {
 		try {
 			let authUser = helper.auth(req.get('authorization'))
 
@@ -293,16 +325,32 @@ const VisitController = {
 				visited_address_gps_check_in: req.body.checkin_address,
 				visited_check_in: moment().format('YYYY-MM-DD HH:mm:ss'),
 				visited_foto: `images/checkin/${file.name}`,
-				visited_objective: req.body.objective,
+				visited_objective: parseInt(req.body.objective),
 				visited_upd_by: authUser.usernama,
 				visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 			}, {
 				where: {
 					visited_oid: req.params.visited_oid
+				},
+				logging: (sql, queryObject) => {
+					let value = queryObject.bind
+
+					helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1],
+							$3: value[2],
+							$4: value[3],
+							$5: value[4],
+							$6: value[5],
+							$7: value[6],
+							$8: value[7],
+						}
+					})
 				}
 			})
 
-			await updateStatusSchedule(req.body.visit_code)
+			await this.updateStatusSchedule(req.body.visit_code)
 
 			res.status(200)
 				.json({
@@ -317,8 +365,9 @@ const VisitController = {
 					error: error.message
 				})
 		}
-	},
-	checkOut: async (req, res) => {
+	}
+
+	checkOut = async (req, res) => {
 		let authUser = await helper.auth(req.get('authorization'))
 
 		VisitedDet.update({
@@ -327,12 +376,29 @@ const VisitController = {
 			visited_address_gps_check_out: req.body.checkout_address,
 			visited_check_out: moment().format('YYYY-MM-DD HH:mm:ss'),
 			visited_result: req.body.result,
-			visited_output: req.body.output,
+			visited_output: parseInt(req.body.output),
 			visited_upd_by: authUser.usernama,
 			visited_upd_date: moment().format('YYYY-MM-DD HH:mm:ss')
 		}, {
 			where: {
-				visited_oid: req.params.visited_oid
+				visited_oid: req.params.visited_oid,
+			},
+			logging: (sql, queryObject) => {
+				let value = queryObject.bind
+
+				helper.Query.insert(sql, {
+					bind: {
+						$1: value[0],
+						$2: value[1],
+						$3: value[2],
+						$4: value[3],
+						$5: value[4],
+						$6: value[5],
+						$7: value[6],
+						$8: value[7],
+						$9: value[8],
+					}
+				})
 			}
 		}).then(result => {
 			res.status(200)
@@ -349,11 +415,15 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	deleteFromListSchedule: (req, res) => {
+	}
+
+	deleteFromListSchedule = (req, res) => {
 		VisitedDet.destroy({
 			where: {
 				visited_oid: req.params.visited_oid
+			},
+			logging: (sql) => {
+				helper.Query.delete(sql)
 			}
 		}).then(result => {
 			res.status(200)
@@ -370,11 +440,15 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	deleteSchedule: (req, res) => {
+	}
+
+	deleteSchedule = (req, res) => {
 		VisitMstr.destroy({
 			where: {
 				visit_code: req.params.visit_code
+			},
+			logging: (sql) => {
+				helper.Query.delete(sql)
 			}
 		}).then(result => {
 			res.status(200)
@@ -391,34 +465,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getCustomerPerPeriode: async (req, res) => {
-		try {
-			let customer = await PtnrMstr.findAll({
-				where: {
-					ptnr_id: {
-						[Op.in]: Sequelize.literal(`(SELECT plansd_ptnr_id FROM public.plansd_det WHERE plansd_plans_oid = (SELECT plans_oid FROM public.plans_mstr WHERE plans_periode = (SELECT periode_code FROM public.psperiode_mstr WHERE periode_start_date = '${moment().startOf('month').format('YYYY-MM-DD')}')))`)
-					}
-				},
-				attributes: ['ptnr_name', 'ptnr_id']
-			})
+	}
 
-			res.status(200)
-				.json({
-					status: 'berhasil',
-					message: 'berhasil mengambil data kostumer per periode',
-					data: customer
-				})
-		} catch (error) {
-			res.status(400)
-				.json({
-					status: 'gagal',
-					message: 'gagal mengambil data kostumer per periode',
-					error: error.message
-				})
-		}
-	},
-	getVisitType: (req, res) => {
+	getVisitType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'visiting'
@@ -440,8 +489,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getOutputVisitType: (req, res) => {
+	}
+
+	getOutputVisitType = (req, res) => {
 		CodeMstr.findAll({
 			where: {
 				code_field: 'output-visiting'
@@ -463,8 +513,9 @@ const VisitController = {
 					error: err.message
 				})
 		})
-	},
-	getSalesPerPeriode: async (req, res) => {
+	}
+
+	getSalesPerPeriode = async (req, res) => {
 		try {
 			let authUser = await helper.auth(req.get('authorization'))
 
@@ -499,58 +550,63 @@ const VisitController = {
 				})
 		}
 	}
-}
 
-let updateStatusSchedule = async (visit_code) => {
-	let allCustomer = await VisitedDet.count({
-		where: {
-			visited_visit_code: {
-				[Op.eq]: visit_code
-			}
-		}
-	})
-
-	let visitedToCustomer = await VisitedDet.count({
-		where: {
-			visited_visit_code: {
-				[Op.eq]: visit_code
-			},
-			visited_check_in: {
-				[Op.not]: null
-			}
-		}
-	})
-
-	if (allCustomer - visitedToCustomer == 0) {
-		await VisitMstr.update({
-			visit_status: 'Y'
-		}, {
+	updateStatusSchedule = async (visit_code) => {
+		let allCustomer = await VisitedDet.count({
 			where: {
-				visit_code: {
+				visited_visit_code: {
 					[Op.eq]: visit_code
 				}
 			}
 		})
+	
+		let visitedToCustomer = await VisitedDet.count({
+			where: {
+				visited_visit_code: {
+					[Op.eq]: visit_code
+				},
+				visited_check_in: {
+					[Op.not]: null
+				}
+			}
+		})
+	
+		if (allCustomer - visitedToCustomer == 0) {
+			await VisitMstr.update({
+				visit_status: 'Y'
+			}, {
+				where: {
+					visit_code: {
+						[Op.eq]: visit_code
+					}
+				},
+				logging: async (sql, queryObject) => {
+					let value = queryObject.bind
+					
+					await helper.Query.insert(sql, {
+						bind: {
+							$1: value[0],
+							$2: value[1]
+						}
+					})
+				}
+			})
+	
+			return
+		} else {
+			return
+		}
+	}
 
-		return
-	} else {
-		return
+	generateVisitCode = async (en_id) => {
+		let visitCode = await VisitMstr.findOne({
+			order: [['visit_add_date', 'desc']]
+		})
+	
+		let totalPlannigSchedule = (!visitCode) ? 1 : parseInt(visitCode.visit_code.substring(12)) + 1
+	
+		return `VST0${en_id}456${moment().format('MMYY')}${totalPlannigSchedule}`
 	}
 }
 
-let checkCheckinClient = async (visited_oid) => {
-	let dataCheckIn = await VisitedDet.findOne({
-		where: {
-			visited_oid: visited_oid
-		}, 
-		attributes: ['vissited_oid', 'visited_check_in']
-	})
-
-	if (dataCheckIn) {
-		return true
-	} else {
-		return false
-	}
-}
-
-module.exports = VisitController
+module.exports = new VisitController()

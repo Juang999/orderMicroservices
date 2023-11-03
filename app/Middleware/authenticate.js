@@ -7,7 +7,6 @@ const crypter = new cryptr('thisIsSecretPassword')
 
 let testMiddleware = async (req, res, next) => {    
     let authHeader = req.headers["authorization"]
-
     let token = authHeader && authHeader.split(" ")[1]
 
     if (!token) {
@@ -21,9 +20,9 @@ let testMiddleware = async (req, res, next) => {
         return
     }
 
-    let checkTokenExtitence = await TokenStorage.findOne({where: {token_token: token}})
+    let checkTokenExtitence = await TokenStorage.findOne({attributes: ['token_token'], where: {token_token: token}})
 
-    if (checkTokenExtitence == null) {
+    if (!checkTokenExtitence) {
         res.status(300)
             .json({
                 code: 300,
@@ -36,53 +35,14 @@ let testMiddleware = async (req, res, next) => {
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if (err) {
-            if (err.message == 'jwt expired') {
-                res.status(400)
-                    .json({
-                        code: 400,
-                        status: 401,
-                        error: err.message
-                    })
-                
-                return
-            } else {
-                res.status(400)
-                    .json({
-                        code: 400,
-                        status: "failed",
-                        error: "failed login"
-                    })
-    
-                    return
-            }
-        }
-
-        let authUser = await TConfUser.findOne({
-            where: {
-                usernama: user.name
-            },
-            attributes: ['usernama', 'password']
-        })
-
-        if (!authUser) {
-            res.status(403)
+            res.status(400)
                 .json({
-                    code: 403,
-                    message: "unauthorize"
+                    code: 400,
+                    status: 'failed',
+                    error: err.message
                 })
 
             return
-        }
-
-        let verifyPassword = await crypter.decrypt(user.security_word)
-        if (verifyPassword != authUser.password) {
-            res.status(403)
-                .json({
-                    code: 403,
-                    result: false
-                })
-        
-                return
         }
 
         next()
